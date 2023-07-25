@@ -2,6 +2,7 @@
 
 namespace ProcessWire;
 
+use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\RootPage;
 
@@ -12,7 +13,6 @@ use RockCommerce\RootPage;
  */
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
-
   public static function getModuleInfo()
   {
     return [
@@ -24,6 +24,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'icon' => 'money',
       'requires' => [
         'RockMigrations>=3.27',
+        'RockMoney>=1.0.2',
       ],
       'installs' => [],
     ];
@@ -36,12 +37,23 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->watch($this);
+
+    // load page classes
+    require_once __DIR__ . "/RockCommercePage.php";
     $rm->pageClassLoader(__DIR__ . "/classes", "RockCommerce");
   }
 
-  /** PUBLIC API */
-
-  /** END PUBLIC API */
+  public function createOrder(string $subject, float $price, array $data = []): Order
+  {
+    $order = $this->wire->pages->newPage('template=' . Order::tpl);
+    $order->set('title', $subject);
+    $order->set(Order::field_price, $price);
+    foreach ($data as $k => $v) {
+      $order->set(Order::prefix . $k, $v);
+    }
+    $order->save();
+    return $order;
+  }
 
   public function migrate()
   {
@@ -62,6 +74,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       name: 'orders',
       title: 'Orders',
     );
+  }
+
+  public function ordersPage(): Orders
+  {
+    return $this->wire->pages->get([
+      'parent' => $this->rootPage(),
+      'template' => Orders::tpl,
+    ]);
+  }
+
+  public function rootPage(): RootPage
+  {
+    return $this->wire->pages->get([
+      'parent' => 1,
+      'template' => RootPage::tpl,
+    ]);
   }
 
   public function ___install(): void
