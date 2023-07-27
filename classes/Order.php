@@ -7,7 +7,11 @@ use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use ProcessWire\RockMigrations;
+use ProcessWire\RockMollie;
+use ProcessWire\WireData;
+use ProcessWire\WireException;
 use RockMigrations\MagicPage;
+use RockMoney\Money;
 
 class Order extends Page
 {
@@ -19,6 +23,7 @@ class Order extends Page
 
   const field_price = self::prefix . "price";
   const field_payment = self::prefix . "payment";
+  const field_paymentstatus = self::prefix . "paymentstatus";
 
   public function __construct()
   {
@@ -53,12 +58,12 @@ class Order extends Page
     $form->add($rm->inputfield([
       'type' => 'markup',
       'name' => 'payment-details',
-      'label' => 'Payment Details',
-      'value' => $rm->renderTable($this->meta('payment'), [
-        'tableclass' => 'uk-table-divider',
-      ]),
+      'label' => 'Initial Payment Details',
+      'value' => '<p>Payment details that have been received at the time of creating the order and payment.</p>'
+        . $rm->renderTable($this->meta('payment'), [
+          'tableclass' => 'uk-table-divider',
+        ]),
       'collapsed' => Inputfield::collapsedYesAjax,
-      'notes' => 'Payment details that have been received at the time of creating the order and payment.',
     ]));
   }
 
@@ -71,15 +76,81 @@ class Order extends Page
     ]);
   }
 
-  public function getPageListLabel()
+  /** backend */
+
+  public function badge($str, $cls = '')
   {
-    $rm = $this->rockmigrations();
-    $date = $rm->pageListBadge(date("d.m.Y H:i:s", $this->created));
-    $price = $rm->pageListBadge($this->price(), ['muted' => false]);
-    return $date . $price . $this->title;
+    return "<span class='uk-alert $cls rc-badge'>$str</span>";
   }
 
-  /** backend */
+  public function getPageListLabel()
+  {
+    $date = $this->badge(date("d.m.Y H:i:s", $this->created));
+    $price = $this->badge($this->price());
+    $status = $this->statusBadge();
+    return $date
+      . $status
+      . $price
+      . $this->title;
+  }
+
+  /**
+   * Get payment from mollie
+   */
+  public function getPayment(): Payment|false
+  {
+    try {
+      /** @var RockMollie $mollie */
+      $mollie = $this->wire->modules->get('RockMollie');
+      return $mollie->api()->payments->get($this->paymentId());
+    } catch (\Throwable $th) {
+      $this->rockcommerce()->log($th->getMessage());
+    }
+    return false;
+  }
+
+  public function paymentId(): string
+  {
+    return $this->getFormatted(self::field_payment);
+  }
+
+  public function createPayment(): Payment|false
+  {
+    if ($this->paymentId()) throw new WireException("A payment for this order has already been created.");
+
+    // create mollie payment
+    /** @var RockMollie $mollie */
+    $mollie = $this->wire->modules->get('RockMollie');
+    $rc = $this->rockcommerce();
+    try {
+      $price = $this->price(1);
+      if (!$price instanceof Money) throw new WireException("Invalid Price");
+      $payment = $mollie->api()->payments->create([
+        "amount" => [
+          "currency" => (string)$price->money->getCurrency(),
+          "value" => $price->formatMollie(),
+        ],
+        "description" => (string)$this->title,
+        "redirectUrl" => $rc->redirectUrl($this),
+        "webhookUrl" => $rc->webhookUrl(),
+        "metadata" => ["orderid" => $this->name],
+      ]);
+      $this->setPayment($payment);
+      return $payment;
+    } catch (\Throwable $th) {
+      $this->wire->log($th->getMessage());
+    }
+
+    return false;
+  }
+
+  public function getDetails(): WireData
+  {
+    $details = new WireData();
+    $info = $this->meta('details');
+    if (is_array($info)) $details->setArray($info);
+    return $details;
+  }
 
   public function migrate()
   {
@@ -105,6 +176,15 @@ class Order extends Page
           'collapsed' => Inputfield::collapsedNoLocked,
           'notes' => 'The id of the payment of the payment provider.',
         ],
+        self::field_paymentstatus => [
+          'type' => 'text',
+          'label' => 'Payment-Status',
+          'icon' => '',
+          'textformatters' => [
+            'TextformatterEntities',
+          ],
+          'collapsed' => Inputfield::collapsedNoLocked,
+        ],
       ],
       'templates' => [
         self::tpl => [
@@ -112,13 +192,16 @@ class Order extends Page
             'title' => [
               'required' => false,
               'collapsed' => Inputfield::collapsedHidden,
-              'columnWidth' => 33,
+              'columnWidth' => 40,
             ],
             self::field_price => [
-              'columnWidth' => 33,
+              'columnWidth' => 20,
             ],
             self::field_payment => [
-              'columnWidth' => 33,
+              'columnWidth' => 20,
+            ],
+            self::field_paymentstatus => [
+              'columnWidth' => 20,
             ],
           ],
           'parentTemplates' => [
@@ -128,12 +211,38 @@ class Order extends Page
         ],
       ],
     ]);
-    $rm->createViewFile($this);
   }
 
+  /**
+   * Save payment ID and payment info to this order
+   */
   public function setPayment(Payment $payment): void
   {
     $this->setAndSave(self::field_payment, $payment->id);
     $this->meta('payment', json_encode($payment));
+    $this->setPaymentStatus($payment->status);
+  }
+
+  public function setPaymentStatus(string $status): void
+  {
+    $this->setAndSave(self::field_paymentstatus, $status);
+  }
+
+  public function statusBadge(): string
+  {
+    $str = $this->paymentstatus(1);
+    if (!$str) return '';
+    switch ($str) {
+      case 'paid':
+        $cls = 'uk-alert-success';
+        break;
+      case 'open':
+        $cls = 'uk-alert-warning';
+        break;
+      default:
+        $cls = '';
+        break;
+    }
+    return $this->badge($str, $cls);
   }
 }
