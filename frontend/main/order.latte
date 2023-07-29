@@ -1,0 +1,26 @@
+{var $order = $rockcommerce->getOrder()}
+{if $order}
+  {switch $status = $order->paymentstatus(1)}
+    {case "paid"}
+      <h2>{__('Thank you for your business!')}</h2>
+      <p>An invoice has been sent to <strong>foo@bar.com</strong>.</p>
+      <hr>
+      <p class="uk-margin-small-bottom uk-text-bold">
+        {__('Status of your order')}
+      </p>
+      <div class="uk-alert uk-alert-success uk-text-bold uk-margin-small-top">
+        {$status}
+      </div>
+    {default}
+      <p class="uk-margin-small-bottom uk-text-bold">
+        {__('Status of your order')}
+      </p>
+      <div class="uk-alert uk-text-bold uk-margin-small-top">
+        {$status}
+      </div>
+  {/switch}
+{else}
+  <div class="uk-alert uk-alert-danger uk-text-bold">
+    {__('Invalid order ID')}
+  </div>
+{/if}

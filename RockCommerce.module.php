@@ -25,6 +25,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'singular' => true,
       'icon' => 'money',
       'requires' => [
+        'RockFrontend>=3.3.0',
         'RockMigrations>=3.27',
         'RockMoney>=1.0.2',
         'RockMollie>=1.0.0',
@@ -85,8 +86,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     echo "$str\n\n";
   }
 
-  public function getOrder(string $orderid): Order|false
+  public function getOrder(string $orderid = null): Order|false
   {
+    if ($orderid === null) $orderid = $this->wire->input->get('id', 'string');
     $order = $this->wire->pages->get([
       'template' => Order::tpl,
       'name' => $orderid,
@@ -143,7 +145,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
       parent: 1,
-      name: "rockcommerce",
+      name: "rc",
       title: "RockCommerce",
       status: ["hidden"],
     );
@@ -163,6 +165,26 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
   }
 
+  /**
+   * Method that renders the frontend folder when the rootpage is viewed
+   * The heavy lifting is done by RockFrontend so that other modules can use
+   * the same concept as well :)
+   */
+  public function renderFrontend(): string
+  {
+    return $this->rockfrontend()->viewFolders([
+      '/site/templates/RockCommerce',
+      '/site/modules/RockCommerce/frontend',
+    ], [
+      'trailingSlash' => $this->rootPage()->trailingslash(),
+    ]);
+  }
+
+  public function rockfrontend(): RockFrontend
+  {
+    return $this->wire->modules->get('RockFrontend');
+  }
+
   public function rockmollie(): RockMollie
   {
     return $this->wire->modules->get('RockMollie');
@@ -176,10 +198,16 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
   }
 
-  public function redirectUrl(Order $order): string
+  /**
+   * Return a rockcommerce url in form /rc/whatever
+   *
+   * Usage:
+   * $rc->url("/foo/bar") --> /rc/foo/bar
+   * $rc->url("/foo/bar", true) --> https://example.com/rc/foo/bar
+   */
+  public function url($str, $http = false): string
   {
-    return $this->wire->pages->get(1)->httpUrl()
-      . "rockcommerce/orders/?id={$order->name}";
+    return $this->rootPage()->url($http) . ltrim($str, "/");
   }
 
   public function webhookUrl(): string

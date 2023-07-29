@@ -1,0 +1,36 @@
+// variables
+@global-primary-background: @rc-col-primary;
+@global-link-color: darken(@rc-col-primary, 10%);
+@global-link-hover-color: @rc-col-primary;
+@alert-success-color: green;
+
+// make page full height
+html,
+body {
+  height: 100%;
+  background-color: @rc-bg-muted;
+}
+
+// body card
+.rc-body {
+  width: 100%;
+  max-width: 600px;
+}
+
+// rounded
+.hook-card() {
+  border-radius: @rc-rounded;
+}
+.uk-input,
+.uk-button,
+.uk-alert {
+  border-radius: @rc-rounded;
+}
+
+// section paddings and margins
+.rc-section {
+  padding: rfGrow(10px, 50px) 0;
+}
+.rc-section-large {
+  padding: rfGrow(10px, 80px) 0;
+}

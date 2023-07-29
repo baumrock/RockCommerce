@@ -39,6 +39,7 @@ class Order extends Page
   public function editFormContent(InputfieldWrapper $form): void
   {
     $rm = $this->rockmigrations();
+    $rc = $this->rockcommerce();
     $form->prepend($rm->inputfield([
       'type' => 'markup',
       'label' => 'Order ID',
@@ -65,6 +66,10 @@ class Order extends Page
         ]),
       'collapsed' => Inputfield::collapsedYesAjax,
     ]));
+    if ($f = $form->get(self::field_paymentstatus)) {
+      $url = $rc->url("order?id=" . $this->name);
+      $f->notes = "[Status-Page]($url)";
+    }
   }
 
   public function onCreate(): void
@@ -131,7 +136,7 @@ class Order extends Page
           "value" => $price->formatMollie(),
         ],
         "description" => (string)$this->title,
-        "redirectUrl" => $rc->redirectUrl($this),
+        "redirectUrl" => $this->redirectUrl(),
         "webhookUrl" => $rc->webhookUrl(),
         "metadata" => ["orderid" => $this->name],
       ]);
@@ -211,6 +216,11 @@ class Order extends Page
         ],
       ],
     ]);
+  }
+
+  public function redirectUrl(): string
+  {
+    return $this->rockcommerce()->url("order?id={$this->name}", true);
   }
 
   /**
