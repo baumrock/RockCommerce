@@ -1,0 +1,39 @@
+<ul uk-accordion="multiple: true">
+  <li class="uk-open">
+    <a
+      class="uk-accordion-title"
+      href="#"
+      >Ihre Bestellung</a
+    >
+    <div class="uk-accordion-content">
+      <table
+        class="uk-table uk-table-responsive uk-table-middle uk-table-small uk-table-striped"
+      >
+        <tr>
+          <th>Amount</th>
+          <th>Description</th>
+          <th class="uk-text-center">Price</th>
+        </tr>
+        <tr>
+          <td>{amount}</td>
+          <td class="uk-width-expand">{subject}</td>
+          <td class="uk-text-center uk-text-nowrap">
+            <span
+              data-price="{price}"
+              id="price"
+              >{price}</span
+            >
+          </td>
+        </tr>
+      </table>
+    </div>
+  </li>
+  <li>
+    <a
+      class="uk-accordion-title"
+      href="#"
+      >Rechnungsangaben</a
+    >
+    <div class="uk-accordion-content">{forename} {surname}</div>
+  </li>
+</ul>
