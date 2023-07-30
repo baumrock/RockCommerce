@@ -2,9 +2,13 @@
 
 namespace ProcessWire;
 
+use RockCommerce\InvoiceGroup;
+use RockCommerce\Invoices;
 use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\RootPage;
+use RockCommerce\Webhook;
+use RockCommerce\Webhooks;
 
 /**
  * @author Bernhard Baumrock, 24.07.2023
@@ -14,6 +18,10 @@ use RockCommerce\RootPage;
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
   const webhookurl = "/rockcommerce/webhook";
+  const viewFolders = [
+    '/site/templates/RockCommerce',
+    '/site/modules/RockCommerce/frontend',
+  ];
 
   public static function getModuleInfo()
   {
@@ -46,7 +54,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // load page classes
     require_once __DIR__ . "/RockCommercePage.php";
-    $rm->pageClassLoader(__DIR__ . "/classes", "RockCommerce");
+    $rm->pageClassLoader($this);
 
     // hooks
     $this->wire->addHookAfter(self::webhookurl, $this, "handleWebhook");
@@ -59,6 +67,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if ($this->wire->page->template == 'admin') {
       $rm->addStyles(__DIR__ . "/less/backend.less");
     }
+  }
+
+  public function badge($str, $cls = '')
+  {
+    return "<span class='uk-alert $cls rc-badge'>$str</span>";
   }
 
   public function createOrder(string $subject, float $price, array $data = []): Order
@@ -102,10 +115,23 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $method = $this->wire->input->requestMethod();
     if ($method !== 'POST') return; // 404
 
+    // create webhook log page
+    $log = $this->wire->pages->new("template=" . Webhook::tpl
+      . ",parent=" . $this->webhooksPage());
+
+    // save received input
+    $inputdata = $this->wire->input->post->getArray();
+    $log->meta(Webhook::meta_input, json_encode($inputdata));
+    ob_start();
+
     // we never need tracy on webhooks
     \Tracy\Debugger::$showBar = false;
 
     echo "RockCommerce Rocks!\n\n";
+
+    $actual_link = "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+    echo "$actual_link\n\n";
 
     // get payment and update order status
     $paymentid = $this->wire->input->post->id;
@@ -120,7 +146,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $this->debug($th->getMessage(), true);
     }
 
+    // save output to log
+    $output = ob_get_clean();
+    $log->meta(Webhook::meta_output, $output);
+
     // dont render any html
+    echo $output;
     return true;
   }
 
@@ -140,8 +171,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
-
-    // create data pages
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
       parent: 1,
@@ -155,6 +184,35 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       name: 'orders',
       title: 'Orders',
     );
+    $rm->createPage(
+      template: Webhooks::tpl,
+      parent: $rootPage,
+      name: "webhooks",
+      title: "Webhooks",
+      status: ["hidden", "locked"],
+    );
+    $invoicesPage = $rm->createPage(
+      template: Invoices::tpl,
+      parent: $rootPage,
+      name: "invoices",
+      title: "Invoices",
+      status: ["hidden", "locked"],
+    );
+    $rm->createPage(
+      template: InvoiceGroup::tpl,
+      parent: $invoicesPage,
+      name: "rockcommerce",
+      title: "RockCommerce",
+      status: ["hidden", "locked"],
+    );
+  }
+
+  public function invoicesPage(): Invoices
+  {
+    return $this->wire->pages->get([
+      'template' => Invoices::tpl,
+      'parent' => $this->rootPage(),
+    ]);
   }
 
   public function ordersPage(): Orders
@@ -172,12 +230,24 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function renderFrontend(): string
   {
-    return $this->rockfrontend()->viewFolders([
-      '/site/templates/RockCommerce',
-      '/site/modules/RockCommerce/frontend',
-    ], [
+    return $this->rockfrontend()->viewFolders(self::viewFolders, [
       'trailingSlash' => $this->rootPage()->trailingslash(),
     ]);
+  }
+
+  /**
+   * Render a frontend file on one of the frontend folders
+   */
+  public function viewFile(string $file): string|false
+  {
+    /** @var RockMigrations $rm */
+    $rm = $this->wire->modules->get('RockMigrations');
+    $root = $this->wire->config->paths->root;
+    foreach (self::viewFolders as $dir) {
+      $path = $rm->path("$root/$dir/$file");
+      if (is_file($path)) return $path;
+    }
+    return false;
   }
 
   public function rockfrontend(): RockFrontend
@@ -208,6 +278,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function url($str, $http = false): string
   {
     return $this->rootPage()->url($http) . ltrim($str, "/");
+  }
+
+  public function webhooksPage(): Webhooks
+  {
+    return $this->wire->pages->get([
+      'template' => Webhooks::tpl,
+      'parent' => $this->rootPage(),
+    ]);
   }
 
   public function webhookUrl(): string

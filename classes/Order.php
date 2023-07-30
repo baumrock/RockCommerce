@@ -83,15 +83,10 @@ class Order extends Page
 
   /** backend */
 
-  public function badge($str, $cls = '')
-  {
-    return "<span class='uk-alert $cls rc-badge'>$str</span>";
-  }
-
   public function getPageListLabel()
   {
-    $date = $this->badge(date("d.m.Y H:i:s", $this->created));
-    $price = $this->badge($this->price());
+    $date = $this->rockcommerce()->badge(date("d.m.Y H:i:s", $this->created));
+    $price = $this->rockcommerce()->badge($this->price());
     $status = $this->statusBadge();
     return $date
       . $status
@@ -253,6 +248,6 @@ class Order extends Page
         $cls = '';
         break;
     }
-    return $this->badge($str, $cls);
+    return $this->rockcommerce()->badge($str, $cls);
   }
 }

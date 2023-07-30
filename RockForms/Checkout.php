@@ -4,6 +4,7 @@ namespace RockForms;
 
 use ProcessWire\ModulePage;
 use ProcessWire\RockCommerce;
+use ProcessWire\RockMigrations;
 use ProcessWire\WireException;
 use RockPageBuilder\Block;
 
@@ -22,21 +23,23 @@ class Checkout extends RockForm
     $form = $this;
     $form->setRockFormsRenderer('UIkit');
 
-    $form->addMarkup("<h2>" . __("Ihre Bestellung") . "</h2>");
-    $form->addMarkup("<h3 class='uk-text-primary'>{$this->subject()}</h3>");
-    $form->addInteger("amount", __("Menge"))
+    $form->addInteger("amount")
       ->setDefaultValue(1)
       ->setRequired()
       ->setHtmlAttribute("min", 1)
       ->setHtmlAttribute("onkeyup", "updatePrice(event)")
       ->setHtmlAttribute("onchange", "updatePrice(event)");
-    $form->addMarkup("<h3>Preis: <span data-price='$price' id=price>$price</span></h3>");
 
-    $form->addMarkup("<h2>" . __("Rechnungsangaben") . "</h2>");
     $form->addText("forename", __("Vorname"))->setRequired();
     $form->addText("surname", __("Nachname"))->setRequired();
 
-    $form->addSubmit("submit", __("Weiter zur Zahlung"))
+    $file = $this->rockcommerce()->viewFile("main/.checkoutform.html");
+    $markup = $this->wire->files->render($file);
+    $markup = str_replace('{price}', $price, $markup);
+    $markup = str_replace('{subject}', $this->subject(1), $markup);
+    $form->addMarkup($markup);
+
+    $form->addSubmit("submit", __("Kostenpflichtig bestellen"))
       ->getControlPrototype()
       ->addClass('uk-width-1-1');
 
@@ -45,7 +48,11 @@ class Checkout extends RockForm
         let util = UIkit.util;
         let amount = e.target.value;
         let $price = util.$("#price");
-        $price.innerText = amount * util.data($price, "price");
+        let EUR = new Intl.NumberFormat("de-DE", {
+          style: "currency",
+          currency: "EUR",
+        });
+        $price.innerText = EUR.format(amount * util.data($price, "price"));
       }
       </script>');
   }
@@ -111,6 +118,11 @@ class Checkout extends RockForm
       $this->addMarkup("<div class='uk-alert uk-alert-danger uk-text-center uk-margin-remove'>Invalid Module or License</div>");
       return false;
     }
+  }
+
+  public function rockcommerce(): RockCommerce
+  {
+    return $this->wire->modules->get('RockCommerce');
   }
 
   public function subject(): string

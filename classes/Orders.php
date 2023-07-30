@@ -26,6 +26,7 @@ class Orders extends Page
           ],
           'noLang' => 1, // single language
           'sortfield' => '-id',
+          'icon' => 'check',
         ],
       ],
     ]);
