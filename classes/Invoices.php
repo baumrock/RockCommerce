@@ -26,7 +26,7 @@ class Invoices extends Page
           ],
           'noLang' => 1, // single language
           'sortfield' => '-id',
-          'icon' => 'cubes',
+          'icon' => 'money',
         ],
       ],
     ]);

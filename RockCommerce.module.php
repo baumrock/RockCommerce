@@ -74,15 +74,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return "<span class='uk-alert $cls rc-badge'>$str</span>";
   }
 
-  public function createOrder(string $subject, float $price, array $data = []): Order
-  {
+  public function createOrder(
+    string $subject,
+    float $price,
+    string $email,
+    array $pageProperties = [],
+    array $meta = [],
+  ): Order {
     $order = $this->wire->pages->newPage('template=' . Order::tpl);
     $order->set('title', $subject);
     $order->set(Order::field_price, $price);
-    foreach ($data as $k => $v) {
+    $order->set(RockMigrations::field_email, $email);
+    foreach ($pageProperties as $k => $v) {
       $order->set(Order::prefix . $k, $v);
     }
     $order->save();
+    $order->meta('details', $meta);
     return $order;
   }
 

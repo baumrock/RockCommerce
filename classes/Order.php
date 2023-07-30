@@ -53,7 +53,7 @@ class Order extends Page
       'name' => 'order-details',
       'label' => 'Order Details',
       'value' => $rm->renderTable($this->meta('details')),
-      'collapsed' => Inputfield::collapsedYesAjax,
+      'collapsed' => Inputfield::collapsedNo,
       'notes' => 'Additional information for the order.',
     ]));
     $form->add($rm->inputfield([
@@ -203,6 +203,7 @@ class Order extends Page
             self::field_paymentstatus => [
               'columnWidth' => 20,
             ],
+            RockMigrations::field_email,
           ],
           'parentTemplates' => [
             Orders::tpl,

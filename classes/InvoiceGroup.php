@@ -13,6 +13,15 @@ class InvoiceGroup extends Page
   const tpl = "rockcommerce_invoicegroup";
   const prefix = "rockcommerce_invoicegroup_";
 
+  /** magic */
+
+  public function onCreate(): void
+  {
+    $this->status = 1;
+  }
+
+  /** backend */
+
   public function migrate()
   {
     /** @var RockMigrations $rm */
@@ -25,7 +34,7 @@ class InvoiceGroup extends Page
           'childTemplates' => [
             Invoice::tpl,
           ],
-          'icon' => 'cubes',
+          'icon' => 'files-o',
         ],
       ],
     ]);

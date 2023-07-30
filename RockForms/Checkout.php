@@ -4,7 +4,6 @@ namespace RockForms;
 
 use ProcessWire\ModulePage;
 use ProcessWire\RockCommerce;
-use ProcessWire\RockMigrations;
 use ProcessWire\WireException;
 use RockPageBuilder\Block;
 
@@ -30,8 +29,9 @@ class Checkout extends RockForm
       ->setHtmlAttribute("onkeyup", "updatePrice(event)")
       ->setHtmlAttribute("onchange", "updatePrice(event)");
 
-    $form->addText("forename", __("Vorname"))->setRequired();
-    $form->addText("surname", __("Nachname"))->setRequired();
+    $form->addText("forename", __("Forename"))->setRequired();
+    $form->addText("surname", __("Surname"))->setRequired();
+    $form->addEmail("email", __("E-Mail-Address"))->setRequired();
 
     $file = $this->rockcommerce()->viewFile("main/.checkoutform.html");
     $markup = $this->wire->files->render($file);
@@ -78,8 +78,18 @@ class Checkout extends RockForm
     /** @var RockCommerce $rc */
     $rc = $this->wire->modules->get('RockCommerce');
     try {
-      $order = $rc->createOrder($this->subject(), $price);
-      $order->meta('details', (array)$values);
+      $order = $rc->createOrder(
+        subject: $this->subject(),
+        price: $price,
+        email: $values->email,
+        meta: [
+          'amount' => $values->amount,
+          'forename' => $values->forename,
+          'surname' => $values->surname,
+          'module' => $values->module,
+          'license' => $values->license,
+        ],
+      );
       $payment = $order->createPayment();
     } catch (\Throwable $th) {
       $this->addError("Something went wrong - error has been logged");
