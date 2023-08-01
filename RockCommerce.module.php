@@ -373,6 +373,16 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'icon' => 'life-ring',
     ]);
 
+    // admin email address
+    $inputfields->add([
+      'type' => 'email',
+      'name' => 'adminmail',
+      'label' => 'Admin E-Mail',
+      'icon' => 'envelope-o',
+      'value' => $this->adminmail,
+      'notes' => "Send an email to this address on every new order.",
+    ]);
+
     // webhook url
     $inputfields->add([
       'type' => 'URL',

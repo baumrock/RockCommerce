@@ -11,6 +11,7 @@ use ProcessWire\RockMigrations;
 use ProcessWire\RockMollie;
 use ProcessWire\WireData;
 use ProcessWire\WireException;
+use ProcessWire\WireMail;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
@@ -150,9 +151,38 @@ class Order extends Page
     return false;
   }
 
-  public function paymentId(): string
+  /**
+   * Create an invoice page for this order
+   * If an invoice already exists we exit early.
+   * This can happen if the webhook is triggered multiple times.
+   */
+  public function createInvoice($parentName = "rockcommerce"): Invoice
   {
-    return $this->getFormatted(self::field_payment);
+    $invoice = $this->getInvoice();
+    if ($invoice) return $invoice;
+
+    $parent = $this->wire->pages->get([
+      'parent' => $this->rockcommerce()->invoicesPage(),
+      'name' => $parentName,
+    ]);
+    /** @var Invoice $invoice */
+    $invoice = $this->wire->pages->newPage([
+      'template' => Invoice::tpl,
+      'parent' => $parent,
+    ]);
+
+    // save invoice so that we can add the reference to this order
+    $invoice->save();
+
+    // add reference to invoice
+    $this->setAndSave(self::field_invoice, $invoice);
+
+    // create the PDF now that the reference is in place
+    // we flush the cache to make sure that all references are correct
+    $this->wire->pages->uncacheAll();
+    $invoice->createPdf();
+
+    return $invoice;
   }
 
   public function createPayment(): Payment|false
@@ -191,6 +221,13 @@ class Order extends Page
     $info = $this->meta('details');
     if (is_array($info)) $details->setArray($info);
     return $details;
+  }
+
+  public function getInvoice(): Invoice|false
+  {
+    // use bracket syntax to make sure we get the single page object
+    // see https://github.com/processwire/processwire-issues/issues/1795
+    return $this->getFormatted(self::field_invoice . "[0]");
   }
 
   public function migrate()
@@ -267,50 +304,72 @@ class Order extends Page
     ]);
   }
 
-  public function getInvoice(): Invoice|false
+  public function ___notifyAdmin()
   {
-    // use bracket syntax until .first is fixed
-    // see https://github.com/processwire/processwire-issues/issues/1795
-    return $this->get(self::field_invoice . "[0]");
+    $mailto = $this->rockcommerce()->adminmail;
+    if (!$mailto) return;
+
+    try {
+      $host = $this->wire->config->httpHost;
+      $url = $this->editUrl(true);
+      $inv = $this->invoice()->editUrl(true);
+
+      $body = "<h2>{$this->title}</h2>
+        <p>Price: {$this->price()}</p>
+        <p>E-Mail: {$this->email()}</p>
+        <p>Order: <a href='$url'>$url</a></p>
+        <p>Invoice: <a href='$inv'>$inv</a></p>
+        ";
+
+      $mail = new WireMail();
+      $mail->from("RockCommerce@$host", "RockCommerce");
+      $mail->to($mailto);
+      $mail->subject("New Order at $host");
+      $mail->bodyHTML($body);
+      $mail->send();
+
+      return $body;
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+    }
   }
 
-  /**
-   * Create an invoice page for this order
-   * If an invoice already exists we exit early.
-   * This can happen if the webhook is triggered multiple times.
-   */
-  public function createInvoice($parentName = "rockcommerce"): Invoice
+  public function paymentId(): string
   {
-    $invoice = $this->getInvoice();
-    if ($invoice) return $invoice;
-
-    $parent = $this->wire->pages->get([
-      'parent' => $this->rockcommerce()->invoicesPage(),
-      'name' => $parentName,
-    ]);
-    /** @var Invoice $invoice */
-    $invoice = $this->wire->pages->newPage([
-      'template' => Invoice::tpl,
-      'parent' => $parent,
-    ]);
-
-    // save invoice so that we can add the reference to this order
-    $invoice->save();
-
-    // add reference to invoice
-    $this->setAndSave(self::field_invoice, $invoice);
-
-    // create the PDF now that the reference is in place
-    // we flush the cache to make sure that all references are correct
-    $this->wire->pages->uncacheAll();
-    $invoice->createPdf();
-
-    return $invoice;
+    return $this->getFormatted(self::field_payment);
   }
 
   public function redirectUrl(): string
   {
     return $this->rockcommerce()->url("order?id={$this->name}", true);
+  }
+
+  public function ___sendInvoice()
+  {
+    try {
+      $html = $this->wire->files->fileGetContents(__DIR__ . "/../mails/rockcommerce.html");
+      $html = str_replace('{{host}}', $this->wire->input->httpHostUrl(true), $html);
+
+      $content = "<h2 style='text-align: center;'>Thank you for your order!</h2>
+        <p>Please find your invoice attached to this email. <strong>Keep it in a save space as you find your License Key on it.</strong></p>
+        <p>Keep rocking and see you in the ProcessWire stratosphere! 🚀<br>
+        Bernhard</p>";
+      $html = str_replace('{{body}}', $content, $html);
+
+      $host = $this->wire->config->httpHost;
+
+      $mail = new WireMail();
+      $mail->from("RockCommerce@$host", "RockCommerce");
+      $mail->to($this->email());
+      $mail->subject("Thank you for your order!");
+      $mail->bodyHTML($html);
+      $mail->attachment($this->invoice()->pdf()->filename);
+      $mail->send();
+
+      return $html;
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+    }
   }
 
   /**
