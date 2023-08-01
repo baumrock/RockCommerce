@@ -213,6 +213,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     foreach ($overrides as $k => $v) $this->set($k, $v);
   }
 
+  public function mailfrom(): string
+  {
+    $host = $this->wire->config->httpHost;
+    return $this->mailfrom ?: "RockCommerce@$host";
+  }
+
+  public function mailfromName(): string
+  {
+    return $this->mailfromName ?: "RockCommerce";
+  }
+
   public function migrate()
   {
     /** @var RockMigrations $rm */
@@ -376,15 +387,42 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'icon' => 'life-ring',
     ]);
 
+    $fs = new InputfieldFieldset();
+    $fs->label = 'Mail Settings';
+    $fs->icon = 'cogs';
+
     // admin email address
-    $inputfields->add([
+    $fs->add([
       'type' => 'email',
       'name' => 'adminmail',
       'label' => 'Admin E-Mail',
       'icon' => 'envelope-o',
       'value' => $this->adminmail,
       'notes' => "Send an email to this address on every new order.",
+      'columnWidth' => 33,
     ]);
+
+    // email address used to send emails
+    $fs->add([
+      'type' => 'email',
+      'name' => 'mailfrom',
+      'label' => 'Mailfrom E-Mail Address',
+      'icon' => 'envelope-o',
+      'value' => $this->mailfrom,
+      'columnWidth' => 33,
+    ]);
+
+    // email name used to send emails
+    $fs->add([
+      'type' => 'text',
+      'name' => 'mailfromName',
+      'label' => 'Mailfrom E-Mail Name',
+      'icon' => 'user-o',
+      'value' => $this->mailfromName,
+      'columnWidth' => 33,
+    ]);
+
+    $inputfields->add($fs);
 
     // webhook url
     $inputfields->add([

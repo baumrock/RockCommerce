@@ -322,7 +322,8 @@ class Order extends Page
         ";
 
       $mail = new WireMail();
-      $mail->from("RockCommerce@$host", "RockCommerce");
+      $rc = $this->rockcommerce();
+      $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($mailto);
       $mail->subject("New Order at $host");
       $mail->bodyHTML($body);
@@ -359,7 +360,8 @@ class Order extends Page
       $host = $this->wire->config->httpHost;
 
       $mail = new WireMail();
-      $mail->from("RockCommerce@$host", "RockCommerce");
+      $rc = $this->rockcommerce();
+      $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($this->email(1));
       $mail->subject("Thank you for your order!");
       $mail->bodyHTML($html);
