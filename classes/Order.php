@@ -291,7 +291,9 @@ class Order extends Page
             self::field_paymentstatus => [
               'columnWidth' => 20,
             ],
-            RockMigrations::field_email,
+            RockMigrations::field_email => [
+              'collapsed' => Inputfield::collapsedNoLocked,
+            ],
             self::field_invoice,
           ],
           'parentTemplates' => [
@@ -312,13 +314,11 @@ class Order extends Page
     try {
       $host = $this->wire->config->httpHost;
       $url = $this->editUrl(true);
-      $inv = $this->invoice()->editUrl(true);
 
       $body = "<h2>{$this->title}</h2>
-        <p>Price: {$this->price()}</p>
-        <p>E-Mail: {$this->email()}</p>
+        <p>Price: {$this->price(1)}</p>
+        <p>E-Mail: {$this->email(1)}</p>
         <p>Order: <a href='$url'>$url</a></p>
-        <p>Invoice: <a href='$inv'>$inv</a></p>
         ";
 
       $mail = new WireMail();
@@ -330,7 +330,7 @@ class Order extends Page
 
       return $body;
     } catch (\Throwable $th) {
-      $this->log($th->getMessage());
+      $this->log("notifyAdmin: " . $th->getMessage());
     }
   }
 
@@ -360,7 +360,7 @@ class Order extends Page
 
       $mail = new WireMail();
       $mail->from("RockCommerce@$host", "RockCommerce");
-      $mail->to($this->email());
+      $mail->to($this->email(1));
       $mail->subject("Thank you for your order!");
       $mail->bodyHTML($html);
       $mail->attachment($this->invoice()->pdf()->filename);
@@ -368,7 +368,7 @@ class Order extends Page
 
       return $html;
     } catch (\Throwable $th) {
-      $this->log($th->getMessage());
+      $this->log("sendInvoice: " . $th->getMessage());
     }
   }
 

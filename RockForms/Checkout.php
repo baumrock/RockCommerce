@@ -137,8 +137,7 @@ class Checkout extends RockForm
       $this->wire->log->save($rc, $th->getMessage());
     }
 
-    // send invoice and notification to admin
-    $order->sendInvoice();
+    // notify admin about order
     $order->notifyAdmin();
 
     // redirect to mollie checkout

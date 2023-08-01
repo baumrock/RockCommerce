@@ -179,8 +179,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
         // create invoice
         if ($payment->status == 'paid') {
+          $this->debug("Create Invoice ...");
           $invoice = $order->createInvoice();
-          $this->debug("Created Invoice: " . $invoice);
+
+          $this->debug("Send Invoice $invoice to client ...");
+          $order->sendInvoice();
         }
       } else {
         throw new WireException("No order found");
