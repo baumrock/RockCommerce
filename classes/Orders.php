@@ -25,6 +25,7 @@ class Orders extends Page
             Order::tpl,
           ],
           'noLang' => 1, // single language
+          'noParents' => 1,
           'sortfield' => '-id',
           'icon' => 'check',
         ],

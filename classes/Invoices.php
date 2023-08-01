@@ -25,6 +25,7 @@ class Invoices extends Page
             InvoiceGroup::tpl,
           ],
           'noLang' => 1, // single language
+          'noParents' => 1,
           'sortfield' => '-id',
           'icon' => 'money',
         ],

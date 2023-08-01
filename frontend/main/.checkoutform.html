@@ -6,7 +6,7 @@
     <tr>
       <th>Amount</th>
       <th>Description</th>
-      <th>Price</th>
+      <th class="uk-text-right">Price</th>
     </tr>
     <tr>
       <td>{amount}</td>
@@ -15,14 +15,27 @@
         <span
           data-price="{price}"
           id="price"
-          >{price},00 €</span
         >
+          {price},00 €
+        </span>
       </td>
     </tr>
   </table>
 
   <h3 class="uk-heading-line uk-text-center"><span>Details</span></h3>
-  <div class="uk-margin">{forename}</div>
-  <div class="uk-margin">{surname}</div>
   <div class="uk-margin">{email}</div>
+  <div class="uk-margin">{type}</div>
+  <div
+    class="person"
+    hidden
+  >
+    <div class="uk-margin">{forename}</div>
+    <div class="uk-margin">{surname}</div>
+  </div>
+  <div class="company">
+    <div class="uk-margin">{company}</div>
+    <div class="uk-margin">{vatid}</div>
+  </div>
+  <div class="uk-margin">{recipient}</div>
+  <div class="uk-margin">{instant}</div>
 </div>

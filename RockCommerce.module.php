@@ -19,7 +19,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 {
   const webhookurl = "/rockcommerce/webhook";
   const viewFolders = [
-    '/site/templates/RockCommerce',
+    '/site/templates/RockCommerce/frontend',
     '/site/modules/RockCommerce/frontend',
   ];
 
@@ -74,6 +74,29 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return "<span class='uk-alert $cls rc-badge'>$str</span>";
   }
 
+  /**
+   * Delete old webhook pages
+   * This is triggered on every new webhook request.
+   * The maximum setting can be adjusted on the Webhooks page.
+   */
+  public function cleanupOldWebhookPages(): void
+  {
+    $max = $this->webhooksPage()->max();
+    $keep = $this->wire->pages->findIDs([
+      'template' => Webhook::tpl,
+      'sort' => '-id',
+      'limit' => $max,
+    ]);
+    $selector = [
+      "template" => Webhook::tpl,
+      "id!=" => $keep,
+    ];
+    while ($p = $this->wire->pages->get($selector) and $p->id) {
+      $this->wire->pages->delete($p);
+      $this->wire->pages->uncacheAll();
+    }
+  }
+
   public function createOrder(
     string $subject,
     float $price,
@@ -126,6 +149,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $log = $this->wire->pages->new("template=" . Webhook::tpl
       . ",parent=" . $this->webhooksPage());
 
+    // cleanup old webhook pages
+    $this->cleanupOldWebhookPages();
+
     // save received input
     $inputdata = $this->wire->input->post->getArray();
     $log->meta(Webhook::meta_input, json_encode($inputdata));
@@ -147,8 +173,18 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $this->debug("Payment ID: $paymentid");
       $payment = $this->rockmollie()->api()->payments->get($paymentid);
       $order = $this->getOrder($payment->metadata->orderid);
-      $this->debug("Order: " . $order);
-      if ($order) $order->setPaymentStatus($payment->status);
+      if ($order) {
+        $this->debug("Order: " . $order);
+        $order->setPaymentStatus($payment->status);
+
+        // create invoice
+        if ($payment->status == 'paid') {
+          $invoice = $order->createInvoice();
+          $this->debug("Created Invoice: " . $invoice);
+        }
+      } else {
+        throw new WireException("No order found");
+      }
     } catch (\Throwable $th) {
       $this->debug($th->getMessage(), true);
     }
@@ -196,7 +232,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       parent: $rootPage,
       name: "webhooks",
       title: "Webhooks",
-      status: ["hidden", "locked"],
+      status: ["hidden"],
     );
     $invoicesPage = $rm->createPage(
       template: Invoices::tpl,
@@ -210,7 +246,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       parent: $invoicesPage,
       name: "rockcommerce",
       title: "RockCommerce",
-      status: ["hidden", "locked"],
+      status: ["hidden"],
     );
   }
 

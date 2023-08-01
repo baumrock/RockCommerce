@@ -65,6 +65,7 @@ class RootPage extends Page
           'noAppendTemplateFile' => true,
           'noSettings' => true,
           'icon' => 'shopping-cart',
+          'noParents' => 1,
         ],
       ],
     ]);

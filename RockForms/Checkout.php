@@ -29,9 +29,31 @@ class Checkout extends RockForm
       ->setHtmlAttribute("onkeyup", "updatePrice(event)")
       ->setHtmlAttribute("onchange", "updatePrice(event)");
 
-    $form->addText("forename", __("Forename"))->setRequired();
-    $form->addText("surname", __("Surname"))->setRequired();
-    $form->addEmail("email", __("E-Mail-Address"))->setRequired();
+    $form->addRadioList("type", $this->labels('type'), [
+      'person' => 'Human Person',
+      'company' => 'Company',
+    ])
+      ->setDefaultValue('company')
+      ->addCondition($form::EQUAL, 'person')
+      ->toggle('.person')
+      ->elseCondition()
+      ->toggle('.company');
+    $form->addTextArea("recipient", $this->labels('recipient'))
+      ->setHtmlAttribute("rows", 3)
+      ->setHtmlAttribute("placeholder", "Some Street 123\n1234 Some City")
+      ->setRequired();
+    $form->addText("forename", $this->labels('forename'))
+      ->addConditionOn($form['type'], $form::EQUAL, 'person')
+      ->setRequired();
+    $form->addText("surname", $this->labels('surname'))
+      ->addConditionOn($form['type'], $form::EQUAL, 'person')
+      ->setRequired();
+    $form->addText("company", $this->labels('company'))
+      ->addConditionOn($form['type'], $form::EQUAL, 'company')
+      ->setRequired();
+    $form->addText("vatid", $this->labels('vatid'));
+    $form->addEmail("email", $this->labels('email'))->setRequired();
+    $form->addCheckbox("instant", $this->labels('instant'))->setRequired();
 
     $file = $this->rockcommerce()->viewFile("main/.checkoutform.html");
     $markup = $this->wire->files->render($file);
@@ -57,6 +79,23 @@ class Checkout extends RockForm
       </script>');
   }
 
+  public function labels(string $prop = null)
+  {
+    $labels = [
+      'type' => __("Order Type"),
+      'recipient' => __("Recipient Address"),
+      'forename' => __("Forename"),
+      'surname' => __("Surname"),
+      'company' => __("Company Name"),
+      'vatid' => __("VAT ID"),
+      'email' => __("E-Mail-Address"),
+      'instant' => __("I want an instant fulfillment and acknowledge that I lose my right of withdrawal."),
+    ];
+    if (!$prop) return $labels;
+    if (!array_key_exists($prop, $labels)) return;
+    return $labels[$prop];
+  }
+
   public function processInput()
   {
     $input = $this->wire->input;
@@ -69,8 +108,9 @@ class Checkout extends RockForm
     $values = $this->getValues();
     $values->module = $module->id;
     $values->license = $license->id;
+    $values->until = $license->until();
+
     $price = $license->price(1) * $values->amount;
-    // bd($values);
 
     // create order and payment
     $order = false;
@@ -82,13 +122,7 @@ class Checkout extends RockForm
         subject: $this->subject(),
         price: $price,
         email: $values->email,
-        meta: [
-          'amount' => $values->amount,
-          'forename' => $values->forename,
-          'surname' => $values->surname,
-          'module' => $values->module,
-          'license' => $values->license,
-        ],
+        meta: (array)$values,
       );
       $payment = $order->createPayment();
     } catch (\Throwable $th) {
@@ -137,7 +171,9 @@ class Checkout extends RockForm
 
   public function subject(): string
   {
-    return $this->module()->title . " - " . $this->license()->name(1);
+    $license = $this->license()->name(1);
+    if ($license == 'RockSuite') return $license;
+    return $this->module()->title . " - " . $license;
   }
 
   private function module(): ModulePage

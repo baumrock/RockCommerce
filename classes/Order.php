@@ -3,6 +3,7 @@
 namespace RockCommerce;
 
 use Mollie\Api\Resources\Payment;
+use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
@@ -24,6 +25,7 @@ class Order extends Page
   const field_price = self::prefix . "price";
   const field_payment = self::prefix . "payment";
   const field_paymentstatus = self::prefix . "paymentstatus";
+  const field_invoice = self::prefix . "invoice";
 
   public function __construct()
   {
@@ -48,13 +50,24 @@ class Order extends Page
       'notes' => "API: \$order->name\n" .
         'Order created at ' . date("d.m.Y H:i:s", $this->created),
     ]));
+
+    $invoice = $this->invoice(1);
+    $url = $invoice ? $invoice->editUrl() : '';
+    $form->add($rm->inputfield([
+      'type' => 'markup',
+      'label' => 'Invoice',
+      'value' => "<a href='$url'>$url</a>",
+      'icon' => 'file-pdf-o',
+      'notes' => 'API: $order->createInvoice()',
+    ]));
     $form->add($rm->inputfield([
       'type' => 'markup',
       'name' => 'order-details',
       'label' => 'Order Details',
-      'value' => $rm->renderTable($this->meta('details')),
+      'value' => $rm->renderTable($this->details()),
       'collapsed' => Inputfield::collapsedNo,
-      'notes' => 'Additional information for the order.',
+      'notes' => 'Additional information for the order.'
+        . "\nAPI: \$order->details() or \$order->details('item')",
     ]));
     $form->add($rm->inputfield([
       'type' => 'markup',
@@ -79,6 +92,34 @@ class Order extends Page
       'min' => 20,
       'max' => 40,
     ]);
+  }
+
+  /** frontend */
+
+  /**
+   * Get date of order in given format
+   */
+  public function date(string $format = "d.m.Y"): string
+  {
+    return date($format, $this->created);
+  }
+
+  /**
+   * Get order details
+   *
+   * Usage:
+   * $order->details(); // get array of all order details
+   * $order->details('forename'); // get single value
+   */
+  public function details($prop = null)
+  {
+    $details = $this->meta('details');
+    if (!is_array($details)) $details = [];
+    if ($prop) {
+      if (array_key_exists($prop, $details)) return $details[$prop];
+      return null;
+    }
+    return $details;
   }
 
   /** backend */
@@ -185,6 +226,16 @@ class Order extends Page
           ],
           'collapsed' => Inputfield::collapsedNoLocked,
         ],
+        self::field_invoice => [
+          'type' => 'page',
+          'label' => 'Invoice',
+          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
+          'inputfield' => 'InputfieldPageListSelect',
+          'findPagesSelector' => 'template=' . Invoice::tpl,
+          'labelFieldName' => 'title',
+          'collapsed' => Inputfield::collapsedHidden,
+          'icon' => 'file-pdf-o',
+        ],
       ],
       'templates' => [
         self::tpl => [
@@ -204,14 +255,57 @@ class Order extends Page
               'columnWidth' => 20,
             ],
             RockMigrations::field_email,
+            self::field_invoice,
           ],
           'parentTemplates' => [
             Orders::tpl,
           ],
+          'noParents' => 1,
           'noLang' => 1, // single language
         ],
       ],
     ]);
+  }
+
+  public function getInvoice(): Invoice|false
+  {
+    // use bracket syntax until .first is fixed
+    // see https://github.com/processwire/processwire-issues/issues/1795
+    return $this->get(self::field_invoice . "[0]");
+  }
+
+  /**
+   * Create an invoice page for this order
+   * If an invoice already exists we exit early.
+   * This can happen if the webhook is triggered multiple times.
+   */
+  public function createInvoice($parentName = "rockcommerce"): Invoice
+  {
+    $invoice = $this->getInvoice();
+    if ($invoice) return $invoice;
+
+    $parent = $this->wire->pages->get([
+      'parent' => $this->rockcommerce()->invoicesPage(),
+      'name' => $parentName,
+    ]);
+    /** @var Invoice $invoice */
+    $invoice = $this->wire->pages->newPage([
+      'template' => Invoice::tpl,
+      'parent' => $parent,
+    ]);
+
+    // save invoice so that we can add the reference to this order
+    $invoice->save();
+
+    // add reference to invoice
+    $this->setAndSave(self::field_invoice, $invoice);
+
+    // create the PDF now that the reference is in place
+    // we flush the cache to make sure that all references are correct
+    $this->wire->pages->uncacheAll();
+    $invoice->createPdf();
+
+    return $invoice;
   }
 
   public function redirectUrl(): string
