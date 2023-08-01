@@ -26,6 +26,7 @@
                     src="{{host}}/site/assets/files/1237/logo-mit-slogan.svg"
                     target="_blank"
                     height="80px"
+                    alt="Logo"
                 ></mj-image>
                 <mj-text>{{body}}</mj-text>
             </mj-column>
