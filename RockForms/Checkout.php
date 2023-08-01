@@ -21,6 +21,8 @@ class Checkout extends RockForm
     // setup form
     $form = $this;
     $form->setRockFormsRenderer('UIkit');
+    $form->getElementPrototype()
+      ->setAttribute("onsubmit", "showLoading(event)");
 
     $form->addInteger("amount")
       ->setDefaultValue(1)
@@ -53,6 +55,7 @@ class Checkout extends RockForm
       ->setRequired();
     $form->addText("vatid", $this->labels('vatid'));
     $form->addEmail("email", $this->labels('email'))->setRequired();
+
     $form->addCheckbox("instant", $this->labels('instant'))->setRequired();
 
     $file = $this->rockcommerce()->viewFile("main/.checkoutform.html");
@@ -75,6 +78,10 @@ class Checkout extends RockForm
           currency: "EUR",
         });
         $price.innerText = EUR.format(amount * util.data($price, "price"));
+      }
+      function showLoading(e) {
+        if(!Nette.validateForm(e.target)) return;
+        UIkit.modal.dialog("<div class=\'uk-padding uk-text-center\'><strong>Processing your request ...</strong><div class=uk-margin-top><span class=loader></span></div></div>");
       }
       </script>');
   }
@@ -130,6 +137,10 @@ class Checkout extends RockForm
       $this->wire->log->save($rc, $th->getMessage());
     }
 
+    // send invoice and notification to admin
+    $order->sendInvoice();
+    $order->notifyAdmin();
+
     // redirect to mollie checkout
     if ($payment) {
       $this->wire->session->redirect($payment->_links->checkout->href);
@@ -141,9 +152,7 @@ class Checkout extends RockForm
 
   public function renderSuccess($values)
   {
-    $name = $values->forename;
-    if ($values->surname) $name .= " " . $values->surname;
-    return "<div class='uk-alert uk-alert-success'>Thank you for submitting the form, $name!</div>";
+    return false;
   }
 
   /* helpers */
