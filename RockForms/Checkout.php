@@ -16,7 +16,7 @@ class Checkout extends RockForm
     if ($this->checkInput() === false) return;
 
     // variables
-    $price = $this->license()->price(1);
+    $price = $this->license()->actualPrice();
 
     // setup form
     $form = $this;
@@ -62,6 +62,10 @@ class Checkout extends RockForm
     $markup = $this->wire->files->render($file);
     $markup = str_replace('{price}', $price, $markup);
     $markup = str_replace('{subject}', $this->subject(1), $markup);
+
+    $module = $this->wire->pages->get($this->wire->input->get('module', 'int'));
+    if (!$module instanceof ModulePage) throw new WireException("Invalid value for module");
+    $markup = str_replace('{back}', $module->url, $markup);
     $form->addMarkup($markup);
 
     $form->addSubmit("submit", __("Kostenpflichtig bestellen"))
@@ -117,7 +121,7 @@ class Checkout extends RockForm
     $values->license = $license->id;
     $values->until = $license->until();
 
-    $price = $license->price(1) * $values->amount;
+    $price = $license->actualPrice() * $values->amount;
 
     // create order and payment
     $order = false;
@@ -137,7 +141,8 @@ class Checkout extends RockForm
       $this->wire->log->save($rc, $th->getMessage());
     }
 
-    // notify admin about order
+    // notify admin about order in any case
+    // this is to monitor if anything goes wrong often
     $order->notifyAdmin();
 
     // redirect to mollie checkout
