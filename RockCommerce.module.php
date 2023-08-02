@@ -32,12 +32,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'autoload' => true,
       'singular' => true,
       'icon' => 'money',
-      'requires' => [
-        'RockFrontend>=3.3.0',
-        'RockMigrations>=3.27',
-        'RockMoney>=1.0.2',
-        'RockMollie>=1.0.0',
-      ],
+      // temp disable dependencies
+      // 'requires' => [
+      //   'RockFrontend>=3.3.0',
+      //   'RockMigrations>=3.27',
+      //   'RockMoney>=1.0.2',
+      //   'RockMollie>=1.0.0',
+      // ],
       'installs' => [],
     ];
   }
