@@ -39,6 +39,7 @@
     <h1 class="f30">Invoice <small class="text-primary">{$invoice->number()}</small></h1>
     <div class="f8 mt3">baumrock.com, Hellwagstraße 4-8/4/27, 1200 Wien</div>
     <div class="pt1 f10">
+      {$order->details('forename')} {$order->details('surname')} {$order->details('company')}<br>
       {$order->details('recipient')|breakLines}<br>
       {$site->country($order->details('country'))}
     </div>
