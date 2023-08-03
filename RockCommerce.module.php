@@ -9,6 +9,7 @@ use RockCommerce\Orders;
 use RockCommerce\RootPage;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
+use RockMoney\Money;
 
 /**
  * @author Bernhard Baumrock, 24.07.2023
@@ -76,6 +77,23 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Logic triggered by mollie webhook
+   * Hookable if custom actions should be needed.
+   */
+  public function ___callWebhook(string $paymentid): void
+  {
+    $this->debug("Payment ID: $paymentid");
+    $payment = $this->rockmollie()->api()->payments->get($paymentid);
+    $order = $this->getOrder($payment->metadata->orderid);
+    if ($order) {
+      $this->debug("Order: " . $order);
+      $order->setPaymentStatus($payment->status);
+    } else {
+      throw new WireException("No order found");
+    }
+  }
+
+  /**
    * Delete old webhook pages
    * This is triggered on every new webhook request.
    * The maximum setting can be adjusted on the Webhooks page.
@@ -100,14 +118,18 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function createOrder(
     string $subject,
-    float $price,
+    Money $net,
+    Money $vat,
+    Money $total,
     string $email,
     array $pageProperties = [],
     array $meta = [],
   ): Order {
     $order = $this->wire->pages->newPage('template=' . Order::tpl);
     $order->set('title', $subject);
-    $order->set(Order::field_price, $price);
+    $order->set(Order::field_net, $net);
+    $order->set(Order::field_vat, $vat);
+    $order->set(Order::field_total, $total);
     $order->set(RockMigrations::field_email, $email);
     foreach ($pageProperties as $k => $v) {
       $order->set(Order::prefix . $k, $v);
@@ -168,27 +190,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     echo "$actual_link\n\n";
 
     // get payment and update order status
-    $paymentid = $this->wire->input->post->id;
+    $paymentid = $this->wire->input->post('id', 'string');
     if (!$paymentid) return true;
     try {
-      $this->debug("Payment ID: $paymentid");
-      $payment = $this->rockmollie()->api()->payments->get($paymentid);
-      $order = $this->getOrder($payment->metadata->orderid);
-      if ($order) {
-        $this->debug("Order: " . $order);
-        $order->setPaymentStatus($payment->status);
-
-        // create invoice
-        if ($payment->status == 'paid') {
-          $this->debug("Create Invoice ...");
-          $invoice = $order->createInvoice();
-
-          $this->debug("Send Invoice $invoice to client ...");
-          $order->sendInvoice();
-        }
-      } else {
-        throw new WireException("No order found");
-      }
+      $this->callWebhook($paymentid);
     } catch (\Throwable $th) {
       $this->debug($th->getMessage(), true);
     }

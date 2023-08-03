@@ -47,9 +47,14 @@
   }
 </style>
 <div>
-  <h4 class="uk-text-center uk-margin-remove uk-text-bold">Checkout</h4>
+  <h3 class="uk-text-center uk-margin-remove uk-text-bold">Checkout</h3>
+  <div class="uk-text-center">{subject}</div>
+
+  <div class="uk-margin">{type}</div>
+  <div class="uk-margin">{country}</div>
+
   <table
-    class="uk-table uk-table-responsive uk-table-middle uk-table-small uk-table-striped"
+    class="uk-table uk-table-responsive uk-table-middle uk-table-small uk-table-striped uk-margin-remove-bottom"
   >
     <tr>
       <th>Amount</th>
@@ -64,7 +69,7 @@
           <a href="{back}#pricing">Change Plan</a>
         </div>
       </td>
-      <td class="uk-text-nowrap">
+      <td class="uk-text-nowrap uk-text-right@m">
         <span
           data-price="{price}"
           id="price"
@@ -75,9 +80,12 @@
     </tr>
   </table>
 
-  <hr />
+  <hr class="uk-margin-remove-top" />
 
-  <div class="uk-margin">{type}</div>
+  <p class="uk-text-small uk-text-muted tax uk-hidden">
+    For individual buyers from Austria we have to charge 20% tax.
+  </p>
+
   <div class="uk-margin">{email}</div>
   <div
     class="individual"
@@ -93,3 +101,36 @@
   <div class="uk-margin">{recipient}</div>
   <div class="uk-margin">{instant}</div>
 </div>
+<script>
+  function updatePrice() {
+    let util = UIkit.util;
+    let amount = util.$("input[name=amount]").value * 1;
+    let $price = util.$("#price");
+    let EUR = new Intl.NumberFormat("de-DE", {
+      style: "currency",
+      currency: "EUR",
+    });
+    let tax = 1;
+    let type = util.$("input[name=type]:checked").value;
+    let country = util.$("select[name=country]").value;
+    if (type === "individual" && country === "aut") {
+      tax = 1.2;
+      util.removeClass(util.$$(".tax"), "uk-hidden");
+    } else {
+      util.addClass(util.$$(".tax"), "uk-hidden");
+    }
+    let net = util.data($price, "price") * 1;
+    let price = amount * net * tax * 1;
+    console.log(amount, $price, price, net);
+    $price.innerText = EUR.format(price);
+  }
+  function showLoading(e) {
+    if (!Nette.validateForm(e.target)) return;
+    UIkit.modal.dialog(
+      "<div class='uk-padding uk-text-center'>" +
+        "<strong>Processing your request ...</strong>" +
+        "<div class=uk-margin-top><span class=loader></span></div>" +
+        "</div>"
+    );
+  }
+</script>

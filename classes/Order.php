@@ -28,6 +28,10 @@ class Order extends Page
   const field_paymentstatus = self::prefix . "paymentstatus";
   const field_invoice = self::prefix . "invoice";
 
+  const field_net = self::prefix . "net";
+  const field_vat = self::prefix . "vat";
+  const field_total = self::prefix . "total";
+
   public function __construct()
   {
     try {
@@ -41,13 +45,15 @@ class Order extends Page
 
   public function editFormContent(InputfieldWrapper $form): void
   {
+    $this->manualCreateInvoice();
+
     $rm = $this->rockmigrations();
     $rc = $this->rockcommerce();
     $form->prepend($rm->inputfield([
       'type' => 'markup',
       'label' => 'Order ID',
-      'value' => $this->name,
-      'columnWidth' => 33,
+      'value' => "<div class='uk-text-truncate'>{$this->name}</div>",
+      'columnWidth' => 25,
       'notes' => "API: \$order->name\n" .
         'Order created at ' . date("d.m.Y H:i:s", $this->created),
     ]));
@@ -59,7 +65,9 @@ class Order extends Page
       'label' => 'Invoice',
       'value' => "<a href='$url'>$url</a>",
       'icon' => 'file-pdf-o',
-      'notes' => 'API: $order->createInvoice()',
+      'entityEncodeText' => false,
+      'notes' => "API: \$order->createInvoice()
+        <a href='./?id=$this&createinvoice=1'>Create Invoice</a>",
     ]));
     $form->add($rm->inputfield([
       'type' => 'markup',
@@ -128,7 +136,7 @@ class Order extends Page
   public function getPageListLabel()
   {
     $date = $this->rockcommerce()->badge(date("d.m.Y H:i:s", $this->created));
-    $price = $this->rockcommerce()->badge($this->price());
+    $price = $this->rockcommerce()->badge($this->net());
     $status = $this->statusBadge();
     return $date
       . $status
@@ -194,12 +202,12 @@ class Order extends Page
     $mollie = $this->wire->modules->get('RockMollie');
     $rc = $this->rockcommerce();
     try {
-      $price = $this->price(1);
-      if (!$price instanceof Money) throw new WireException("Invalid Price");
+      $total = $this->total(1);
+      if (!$total instanceof Money) throw new WireException("Invalid Price");
       $payment = $mollie->api()->payments->create([
         "amount" => [
-          "currency" => (string)$price->money->getCurrency(),
-          "value" => $price->formatMollie(),
+          "currency" => (string)$total->money->getCurrency(),
+          "value" => $total->formatMollie(),
         ],
         "description" => (string)$this->title,
         "redirectUrl" => $this->redirectUrl(),
@@ -230,6 +238,17 @@ class Order extends Page
     return $this->getFormatted(self::field_invoice . "[0]");
   }
 
+  /**
+   * Method to create an invoice via link in the backend
+   */
+  public function manualCreateInvoice(): void
+  {
+    if (!$this->wire->input->get('createinvoice')) return;
+
+    $this->createInvoice();
+    $this->wire->session->redirect($this->editUrl());
+  }
+
   public function migrate()
   {
     /** @var RockMigrations $rm */
@@ -243,6 +262,28 @@ class Order extends Page
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
           'notes' => 'The final amount that you charge the client including all taxes.',
+        ],
+        self::field_net => [
+          'type' => 'RockMoney',
+          'label' => 'NET',
+          'icon' => 'money',
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'tags' => 'RockCommerce',
+        ],
+        self::field_vat => [
+          'type' => 'RockMoney',
+          'label' => 'VAT',
+          'icon' => 'money',
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'tags' => 'RockCommerce',
+        ],
+        self::field_total => [
+          'type' => 'RockMoney',
+          'label' => 'TOTAL',
+          'icon' => 'money',
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'tags' => 'RockCommerce',
+          'notes' => 'This is the total amount charged by the payment provider.',
         ],
         self::field_payment => [
           'type' => 'text',
@@ -276,24 +317,34 @@ class Order extends Page
       ],
       'templates' => [
         self::tpl => [
-          'fields' => [
+          'fields-' => [
             'title' => [
               'required' => false,
               'collapsed' => Inputfield::collapsedHidden,
-              'columnWidth' => 40,
+              'columnWidth' => 100,
             ],
-            self::field_price => [
-              'columnWidth' => 20,
-            ],
-            self::field_payment => [
-              'columnWidth' => 20,
-            ],
-            self::field_paymentstatus => [
-              'columnWidth' => 20,
-            ],
+
             RockMigrations::field_email => [
               'collapsed' => Inputfield::collapsedNoLocked,
+              'columnWidth' => 25,
             ],
+            self::field_payment => [
+              'columnWidth' => 25,
+            ],
+            self::field_paymentstatus => [
+              'columnWidth' => 25,
+            ],
+
+            self::field_net => [
+              'columnWidth' => 33,
+            ],
+            self::field_vat => [
+              'columnWidth' => 33,
+            ],
+            self::field_total => [
+              'columnWidth' => 33,
+            ],
+
             self::field_invoice,
           ],
           'parentTemplates' => [
@@ -357,21 +408,28 @@ class Order extends Page
         Bernhard</p>";
       $html = str_replace('{{body}}', $content, $html);
 
-      $host = $this->wire->config->httpHost;
-
       $mail = new WireMail();
       $rc = $this->rockcommerce();
       $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($this->email(1));
       $mail->subject("Thank you for your order!");
       $mail->bodyHTML($html);
-      $mail->attachment($this->invoice()->pdf()->filename);
+      $mail->attachment($this->invoice()->pdf(1)->filename);
       $mail->send();
 
       return $html;
     } catch (\Throwable $th) {
       $this->log("sendInvoice: " . $th->getMessage());
     }
+  }
+
+  /**
+   * Hookable method that defines what happens if an order is marked as paid
+   */
+  public function ___setPaid(): void
+  {
+    $this->createInvoice();
+    $this->sendInvoice();
   }
 
   /**
@@ -387,6 +445,7 @@ class Order extends Page
   public function setPaymentStatus(string $status): void
   {
     $this->setAndSave(self::field_paymentstatus, $status);
+    if ($status === 'paid') $this->setPaid();
   }
 
   public function statusBadge(): string

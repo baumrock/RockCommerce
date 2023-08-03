@@ -4,7 +4,9 @@ namespace RockForms;
 
 use ProcessWire\ModulePage;
 use ProcessWire\RockCommerce;
+use ProcessWire\RockMigrations;
 use ProcessWire\WireException;
+use RockMoney\Money;
 use RockPageBuilder\Block;
 
 class Checkout extends RockForm
@@ -15,7 +17,12 @@ class Checkout extends RockForm
     // check get parameters for validity
     if ($this->checkInput() === false) return;
 
+    $module = $this->wire->pages->get($this->wire->input->get('module', 'int'));
+    if (!$module instanceof ModulePage) throw new WireException("Invalid value for module");
+
     // variables
+    /** @var Site $site */
+    $site = $this->wire->modules->get('Site');
     $price = $this->license()->actualPrice();
 
     // setup form
@@ -28,21 +35,22 @@ class Checkout extends RockForm
       ->setDefaultValue(1)
       ->setRequired()
       ->setHtmlAttribute("min", 1)
-      ->setHtmlAttribute("onkeyup", "updatePrice(event)")
-      ->setHtmlAttribute("onchange", "updatePrice(event)");
+      ->setHtmlAttribute("onkeyup", "updatePrice()")
+      ->setHtmlAttribute("onchange", "updatePrice()");
 
     $form->addRadioList("type", $this->labels('type'), [
       'individual' => 'Individual',
       'company' => 'Company',
     ])
       ->setDefaultValue('company')
+      ->setHtmlAttribute("onchange", "updatePrice()")
       ->addCondition($form::EQUAL, 'individual')
       ->toggle('.individual')
       ->elseCondition()
       ->toggle('.company');
     $form->addTextArea("recipient", $this->labels('recipient'))
       ->setHtmlAttribute("rows", 3)
-      ->setHtmlAttribute("placeholder", "Some Street 123\n1234 Some City")
+      ->setHtmlAttribute("placeholder", "Your Street 123\n1234 Your City")
       ->setRequired();
     $form->addText("forename", $this->labels('forename'))
       ->addConditionOn($form['type'], $form::EQUAL, 'individual')
@@ -52,6 +60,10 @@ class Checkout extends RockForm
       ->setRequired();
     $form->addText("company", $this->labels('company'))
       ->addConditionOn($form['type'], $form::EQUAL, 'company')
+      ->setRequired();
+    $form->addSelect("country", $this->labels('country'), $site->countries())
+      ->setHtmlAttribute("onchange", "updatePrice()")
+      ->setPrompt('Please select a country')
       ->setRequired();
     $form->addText("vatid", $this->labels('vatid'));
     $form->addEmail("email", $this->labels('email'))->setRequired();
@@ -63,31 +75,12 @@ class Checkout extends RockForm
     $markup = str_replace('{price}', $price, $markup);
     $markup = str_replace('{subject}', $this->subject(1), $markup);
 
-    $module = $this->wire->pages->get($this->wire->input->get('module', 'int'));
-    if (!$module instanceof ModulePage) throw new WireException("Invalid value for module");
     $markup = str_replace('{back}', $module->url, $markup);
     $form->addMarkup($markup);
 
     $form->addSubmit("submit", __("Kostenpflichtig bestellen"))
       ->getControlPrototype()
       ->addClass('uk-width-1-1');
-
-    $form->addMarkup('<script>
-      function updatePrice(e) {
-        let util = UIkit.util;
-        let amount = e.target.value;
-        let $price = util.$("#price");
-        let EUR = new Intl.NumberFormat("de-DE", {
-          style: "currency",
-          currency: "EUR",
-        });
-        $price.innerText = EUR.format(amount * util.data($price, "price"));
-      }
-      function showLoading(e) {
-        if(!Nette.validateForm(e.target)) return;
-        UIkit.modal.dialog("<div class=\'uk-padding uk-text-center\'><strong>Processing your request ...</strong><div class=uk-margin-top><span class=loader></span></div></div>");
-      }
-      </script>');
   }
 
   public function labels(string $prop = null)
@@ -98,9 +91,10 @@ class Checkout extends RockForm
       'forename' => __("Forename"),
       'surname' => __("Surname"),
       'company' => __("Company Name"),
+      'country' => __("Country"),
       'vatid' => __("VAT ID"),
       'email' => __("E-Mail-Address"),
-      'instant' => __("I want an instant fulfillment and acknowledge that I lose my right of withdrawal."),
+      'instant' => __("I understand and agree to waive my right of withdrawal for instant fulfillment."),
     ];
     if (!$prop) return $labels;
     if (!array_key_exists($prop, $labels)) return;
@@ -121,7 +115,12 @@ class Checkout extends RockForm
     $values->license = $license->id;
     $values->until = $license->until();
 
-    $price = $license->actualPrice() * $values->amount;
+    $net = new Money($license->actualPrice());
+    $vat = new Money(0);
+    if ($values->type === 'individual' and $values->country === 'aut') {
+      $vat = $net->times(0.2);
+    }
+    $total = $net->plus($vat);
 
     // create order and payment
     $order = false;
@@ -131,7 +130,9 @@ class Checkout extends RockForm
     try {
       $order = $rc->createOrder(
         subject: $this->subject(),
-        price: $price,
+        net: $net,
+        vat: $vat,
+        total: $total,
         email: $values->email,
         meta: (array)$values,
       );

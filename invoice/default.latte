@@ -39,13 +39,16 @@
     <h1 class="f30">Invoice <small class="text-primary">{$invoice->number()}</small></h1>
     <div class="f8 mt3">baumrock.com, Hellwagstraße 4-8/4/27, 1200 Wien</div>
     <div class="pt1 f10">
-      {$order->details('recipient')|breakLines}
+      {$order->details('recipient')|breakLines}<br>
+      {$site->country($order->details('country'))}
     </div>
   </div>
   <div class="w70 float-right text-right">
     <div class="f10 mt1">Payment Status: <strong class="text-primary">{$order->paymentstatus()}</strong></div>
     <div class="f10 mt1">Invoice Date: <strong class="text-primary">{$order->date()}</strong></div>
     <div class="f10 mt1">Date of Delivery: <strong>{$order->date()}</strong></div>
+    <div class="f10 mt1">Customer Type: <strong>{$order->details('type')}</strong></div>
+    <div class="f10 mt1">E-Mail: <strong>{$order->email()}</strong></div>
     <div class="f10 mt1" n:if="$order->details('vatid')">VAT ID: <strong>{$order->details('vatid')}</strong></div>
   </div>
 </div>
@@ -53,8 +56,8 @@
 <div class="my10">
   <h2 class="text-left">
     Thank you for your order!
-    <img class="ml2" src="{$config->urls->siteModules}RockCommerce/invoice/rocket.png">
-    <img class="ml" src="{$config->urls->siteModules}RockCommerce/invoice/hug.png">
+    <img class="ml2" src="{$config->paths->siteModules}RockCommerce/invoice/rocket.png">
+    <img class="ml" src="{$config->paths->siteModules}RockCommerce/invoice/hug.png">
   </h2>
   <p class="mt5 text-justify">
     Congratulations! You have just unlocked the <span class="text-primary font-bold">Rockstar Customer</span> status by choosing our service!
@@ -72,9 +75,9 @@
     <tr>
       <td class="p1 text-left">{$order->details('amount')}x</td>
       <td class="p1 text-left">{$order->title}</td>
-      <td class="p1 text-right">1.234,00€</td>
-      <td class="p1 text-right">123,00€</td>
-      <td class="p1 text-right font-bold f16">{$order->price()}</td>
+      <td class="p1 text-right">{$order->net()}</td>
+      <td class="p1 text-right">{$order->vat()}</td>
+      <td class="p1 text-right font-bold f16">{$order->total()}</td>
     </tr>
   </table>
 
@@ -121,7 +124,7 @@
 
   <p class="f10 mt5">
     Keep rocking and see you in the ProcessWire stratosphere!
-    <img class="ml1" src="{$config->urls->siteModules}RockCommerce/invoice/rocket.png" style="height:3mm">
+    <img class="ml1" src="{$config->paths->siteModules}RockCommerce/invoice/rocket.png" style="height:3mm">
   </p>
   <p class="mt2 font-bold font-italic">
     Bernhard
