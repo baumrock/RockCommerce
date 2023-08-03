@@ -32,12 +32,12 @@ class Checkout extends RockForm
       ->setHtmlAttribute("onchange", "updatePrice(event)");
 
     $form->addRadioList("type", $this->labels('type'), [
-      'person' => 'Human Person',
+      'individual' => 'Individual',
       'company' => 'Company',
     ])
       ->setDefaultValue('company')
-      ->addCondition($form::EQUAL, 'person')
-      ->toggle('.person')
+      ->addCondition($form::EQUAL, 'individual')
+      ->toggle('.individual')
       ->elseCondition()
       ->toggle('.company');
     $form->addTextArea("recipient", $this->labels('recipient'))
@@ -45,10 +45,10 @@ class Checkout extends RockForm
       ->setHtmlAttribute("placeholder", "Some Street 123\n1234 Some City")
       ->setRequired();
     $form->addText("forename", $this->labels('forename'))
-      ->addConditionOn($form['type'], $form::EQUAL, 'person')
+      ->addConditionOn($form['type'], $form::EQUAL, 'individual')
       ->setRequired();
     $form->addText("surname", $this->labels('surname'))
-      ->addConditionOn($form['type'], $form::EQUAL, 'person')
+      ->addConditionOn($form['type'], $form::EQUAL, 'individual')
       ->setRequired();
     $form->addText("company", $this->labels('company'))
       ->addConditionOn($form['type'], $form::EQUAL, 'company')
