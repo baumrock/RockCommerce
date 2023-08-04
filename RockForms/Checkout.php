@@ -115,7 +115,7 @@ class Checkout extends RockForm
     $values->license = $license->id;
     $values->until = $license->until();
 
-    $net = new Money($license->actualPrice());
+    $net = new Money($license->actualPrice() * $values->amount);
     $vat = new Money(0);
     if ($values->type === 'individual' and $values->country === 'aut') {
       $vat = $net->times(0.2);
