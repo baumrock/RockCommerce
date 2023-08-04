@@ -201,7 +201,14 @@ class Invoice extends Page
    */
   public function getPageListLabel()
   {
-    return $this->rockcommerce()->badge($this->number(1) ?: 'Invoice');
+    $rc = $this->rockcommerce();
+    $order = $this->getOrder();
+    $label = $rc->badge($this->number(1) ?: 'Invoice');
+    if (!"$order") return $label;
+    return $label
+      . $rc->badge($order->title)
+      . $rc->badge($order->net())
+      . $rc->badge($order->name());
   }
 
   public function migrate()

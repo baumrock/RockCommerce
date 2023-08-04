@@ -131,17 +131,28 @@ class Order extends Page
     return $details;
   }
 
+  /**
+   * Get full name of person/company
+   */
+  public function name(): string
+  {
+    return trim($this->details('forename')
+      . " " . $this->details('surname')
+      . " " . $this->details('company'));
+  }
+
   /** backend */
 
   public function getPageListLabel()
   {
-    $date = $this->rockcommerce()->badge(date("d.m.Y H:i:s", $this->created));
-    $price = $this->rockcommerce()->badge($this->net());
+    $rc = $this->rockcommerce();
+    $date = $rc->badge(date("d.m.Y H:i:s", $this->created));
     $status = $this->statusBadge();
     return $date
       . $status
-      . $price
-      . $this->title;
+      . $rc->badge($this->net())
+      . $rc->badge($this->title)
+      . $rc->badge($this->name());
   }
 
   /**

@@ -73,6 +73,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function badge($str, $cls = '')
   {
+    if (!"$str") return;
     return "<span class='uk-alert $cls rc-badge'>$str</span>";
   }
 
