@@ -78,6 +78,8 @@ class Invoice extends Page
 
   public function onSaved(): void
   {
+    // create pdf after the page has been saved so that the invoice
+    // number and all necessary data is already available
     $this->createPdf();
   }
 
@@ -126,7 +128,11 @@ class Invoice extends Page
         'invoice' => $this,
       ])
       ->saveHTML($html)
-      ->saveToField($this, self::field_pdf, $this->name . ".pdf");
+      ->saveToField(
+        $this,
+        self::field_pdf,
+        "{$this->number()}-{$this->name}.pdf"
+      );
   }
 
   /** frontend */
