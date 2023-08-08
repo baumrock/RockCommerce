@@ -51,7 +51,6 @@
   <div class="uk-text-center">{subject}</div>
 
   <div class="uk-margin">{type}</div>
-  <div class="uk-margin">{country}</div>
 
   <table
     class="uk-table uk-table-responsive uk-table-middle uk-table-small uk-table-striped uk-margin-remove-bottom"
@@ -83,7 +82,7 @@
   <hr class="uk-margin-remove-top" />
 
   <p class="uk-text-small uk-text-muted tax uk-hidden">
-    For individual buyers from Austria we have to charge 20% tax.
+    For individual buyers from an EU country we have to charge 20% tax.
   </p>
 
   <div class="uk-margin">{email}</div>
@@ -99,6 +98,7 @@
     <div class="uk-margin">{vatid}</div>
   </div>
   <div class="uk-margin">{recipient}</div>
+  <div class="uk-margin">{country}</div>
   <div class="uk-margin">{instant}</div>
 </div>
 <script>
@@ -112,8 +112,7 @@
     });
     let tax = 1;
     let type = util.$("input[name=type]:checked").value;
-    let country = util.$("select[name=country]").value;
-    if (type === "individual" && country === "aut") {
+    if (type === "individual-eu") {
       tax = 1.2;
       util.removeClass(util.$$(".tax"), "uk-hidden");
     } else {

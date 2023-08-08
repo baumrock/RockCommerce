@@ -39,8 +39,9 @@ class Checkout extends RockForm
       ->setHtmlAttribute("onchange", "updatePrice()");
 
     $form->addRadioList("type", $this->labels('type'), [
-      'individual' => 'Individual',
-      'company' => 'Company',
+      'company' => 'Company (without tax)',
+      'individual-eu' => 'Individual from EU Country (with tax)',
+      'individual-non-eu' => 'Individual from non-EU Country (without tax)',
     ])
       ->setDefaultValue('company')
       ->setHtmlAttribute("onchange", "updatePrice()")
@@ -117,9 +118,7 @@ class Checkout extends RockForm
 
     $net = new Money($license->actualPrice() * $values->amount);
     $vat = new Money(0);
-    if ($values->type === 'individual' and $values->country === 'aut') {
-      $vat = $net->times(0.2);
-    }
+    if ($values->type === 'individual-eu') $vat = $net->times(0.2);
     $total = $net->plus($vat);
 
     // create order and payment
