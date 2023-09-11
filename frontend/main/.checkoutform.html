@@ -1,0 +1,135 @@
+<style>
+  .loader {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    border: 3px solid;
+    border-color: #666 #666 transparent;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
+  .loader::after {
+    content: "";
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    border: 3px solid;
+    border-color: transparent #00bb86 #00bb86;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    animation: rotationBack 0.5s linear infinite;
+    transform-origin: center center;
+  }
+
+  @keyframes rotation {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes rotationBack {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(-360deg);
+    }
+  }
+</style>
+<div>
+  <h3 class="uk-text-center uk-margin-remove uk-text-bold">Checkout</h3>
+  <div class="uk-text-center">{subject}</div>
+
+  <div class="uk-margin">{type}</div>
+
+  <table
+    class="uk-table uk-table-responsive uk-table-middle uk-table-small uk-table-striped uk-margin-remove-bottom"
+  >
+    <tr>
+      <th>Amount</th>
+      <th>Description</th>
+      <th class="uk-text-right@m">Price</th>
+    </tr>
+    <tr>
+      <td>{amount}</td>
+      <td class="uk-width-expand">
+        {subject}
+        <div class="uk-text-small uk-text-muted">
+          <a href="{back}#pricing">Change Plan</a>
+        </div>
+      </td>
+      <td class="uk-text-nowrap uk-text-right@m">
+        <span
+          data-price="{price}"
+          id="price"
+        >
+          {price},00 €
+        </span>
+      </td>
+    </tr>
+  </table>
+
+  <hr class="uk-margin-remove-top" />
+
+  <p class="uk-text-small uk-text-muted tax uk-hidden">
+    For individual buyers from an EU country we have to charge 20% tax.
+  </p>
+
+  <div class="uk-margin">{email}</div>
+  <div
+    class="individual"
+    hidden
+  >
+    <div class="uk-margin">{forename}</div>
+    <div class="uk-margin">{surname}</div>
+  </div>
+  <div class="company">
+    <div class="uk-margin">{company}</div>
+    <div class="uk-margin">{vatid}</div>
+  </div>
+  <div class="uk-margin">{recipient}</div>
+  <div class="uk-margin">{country}</div>
+  <div class="uk-margin">{instant}</div>
+</div>
+<script>
+  function updatePrice() {
+    let util = UIkit.util;
+    let amount = util.$("input[name=amount]").value * 1;
+    let $price = util.$("#price");
+    let EUR = new Intl.NumberFormat("de-DE", {
+      style: "currency",
+      currency: "EUR",
+    });
+    let tax = 1;
+    let type = util.$("input[name=type]:checked").value;
+    if (type === "individual-eu") {
+      tax = 1.2;
+      util.removeClass(util.$$(".tax"), "uk-hidden");
+    } else {
+      util.addClass(util.$$(".tax"), "uk-hidden");
+    }
+    let net = util.data($price, "price") * 1;
+    let price = amount * net * tax * 1;
+    console.log(amount, $price, price, net);
+    $price.innerText = EUR.format(price);
+  }
+  function showLoading(e) {
+    if (!Nette.validateForm(e.target)) return;
+    UIkit.modal.dialog(
+      "<div class='uk-padding uk-text-center'>" +
+        "<strong>Processing your request ...</strong>" +
+        "<div class=uk-margin-top><span class=loader></span></div>" +
+        "</div>"
+    );
+  }
+</script>

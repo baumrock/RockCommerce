@@ -1,0 +1,160 @@
+{var $card = 'bg-muted p5 mt5 r2'}
+<style>
+@page {
+  footer: html_footer;
+  header: html_header;
+  margin-header: 10mm;
+  margin-top: 35mm;
+  margin-footer: 0mm;
+}
+</style>
+<htmlpageheader name="header" style="display:none">
+  <table class="w-full">
+    <tr>
+      <td class="">
+        <img
+          n:if="$invoice->logo()"
+          src="{$invoice->logo()->filename}"
+          style="height:15mm"
+        >
+      </td>
+      <td class="text-right">
+        <table>
+          <tr>
+            <td style="border-right: 2mm solid #efefef;" class="nowrap pr2 text-right f9">
+              <strong class="text-primary">Contact</strong><br>
+              office@baumrock.com<br>
+              +43 680 146 22 63<br>
+              baumrock.com
+            </td>
+          </tr>
+        </table>
+      </td>
+    <tr>
+  </table>
+</htmlpageheader>
+
+<div class="section py10 px15 bg-muted">
+  <div class="w100 float-left">
+    <h1 class="f30">Invoice <small class="text-primary">{$invoice->number()}</small></h1>
+    <div class="f8 mt3">baumrock.com, Hellwagstraße 4-8/4/27, 1200 Wien</div>
+    <div class="pt1 f10">
+      {$order->details('forename')} {$order->details('surname')} {$order->details('company')}<br>
+      {$order->details('recipient')|breakLines}<br>
+      {$site->country($order->details('country'))}
+    </div>
+  </div>
+  <div class="w70 float-right text-right">
+    <div class="f10 mt1">Payment Status: <strong class="text-primary">{$order->paymentstatus()}</strong></div>
+    <div class="f10 mt1">Invoice Date: <strong class="text-primary">{$order->date()}</strong></div>
+    <div class="f10 mt1">Date of Delivery: <strong>{$order->date()}</strong></div>
+    <div class="f10 mt1">Customer Type: <strong>{$order->details('type')}</strong></div>
+    <div class="f10 mt1">E-Mail: <strong>{$order->email()}</strong></div>
+    <div class="f10 mt1" n:if="$order->details('vatid')">VAT ID: <strong>{$order->details('vatid')}</strong></div>
+  </div>
+</div>
+
+<div class="my10">
+  <h2 class="text-left">
+    Thank you for your order!
+    <img class="ml2" src="{$config->paths->siteModules}RockCommerce/invoice/rocket.png">
+    <img class="ml" src="{$config->paths->siteModules}RockCommerce/invoice/hug.png">
+  </h2>
+  <p class="mt5 text-justify">
+    Congratulations! You have just unlocked the <span class="text-primary font-bold">Rockstar Customer</span> status by choosing our service!
+    If you ever need more rock-solid awesomeness, remember, we're just a call away.
+  </p>
+
+  <table class="w-full mt7">
+    <tr>
+      <td style='border-right: 1mm solid white;' class="f8 bg-muted p1">Amount</td>
+      <td style='border-right: 1mm solid white;' class="f8 bg-muted p1">Description</td>
+      <td style='border-right: 1mm solid white;' class="f8 bg-muted p1 text-right">Net</td>
+      <td style='border-right: 1mm solid white;' class="f8 bg-muted p1 text-right">Vat</td>
+      <td style='border-right: 1mm solid white;' class="f8 bg-muted p1 text-right">Total</td>
+    </tr>
+    <tr>
+      <td class="p1 text-left w1">{$order->details('amount')}x</td>
+      <td class="p1 text-left">{$order->title}</td>
+      <td class="p1 text-right w1 pl5">{$order->net()}</td>
+      <td class="p1 text-right w1 pl5">{$order->vat()}</td>
+      <td class="p1 text-right w1 pl5 font-bold f16">{$order->total()}</td>
+    </tr>
+  </table>
+
+  <h3 class="mt5 text-primary">License Information</h3>
+
+  {var $downloadUrl = $rockcommerce->url('download', true)}
+  <div class="{$card}" style="border: 1mm solid #00bb86">
+    <table>
+      <tr>
+        <td class="pr5 ">License Key</td>
+        <td class="">{$order->name}</td>
+      </tr>
+      <tr>
+        <td class="pr5 pt3">Download URL</td>
+        <td class="pt3"><a href={$downloadUrl}>{$downloadUrl}</a></td>
+      </tr>
+    </table>
+    <div class="pt5 f9">Please keep this information secure and do not share it with others.</div>
+  </div>
+
+  <div n:if="false">
+    <h4 class="mt7">Order Details</h4>
+
+    <div class="{$card}">
+      {var $form = $rockforms->getForm('Checkout')}
+      {var $pt}{* first item no padding top *}
+      <table>
+        <tr
+          n:foreach="$order->details() as $k=>$v"
+          n:if="$v
+            and $k!==fieldLabels
+            and $k!==module
+            and $k!==license
+            and $k!==amount
+          "
+        >
+          <td class="f10 {$pt} pr5">{$form->labels($k)}</td>
+          <td class="f10 {$pt}">{$v}</td>
+          {do $pt = 'pt1'}{* padding top for following items *}
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <p class="f10 mt5">
+    Keep rocking and see you in the ProcessWire stratosphere!
+    <img class="ml1" src="{$config->paths->siteModules}RockCommerce/invoice/rocket.png" style="height:3mm">
+  </p>
+  <p class="mt2 font-bold font-italic">
+    Bernhard
+  </p>
+
+</div>
+
+<htmlpagefooter name="footer" style="display:none">
+  <div class="section bg-muted py10 px15">
+    <table class="w-full f8">
+      <tr>
+        <td class="text-left w50">
+          PDF created with RockPdf<br>
+          Checkout powered by RockCommerce<br>
+        </td>
+        <td class="text-center">
+          {if $invoice->logo()}
+            <img
+              src="{$invoice->logo()->filename}"
+              style="height:10mm"
+            >
+          {else}
+            &nbsp;
+          {/if}
+        </td>
+        <td class="text-right w50">
+          <span n:syntax=off>Page {PAGENO}/{nb}</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+</htmlpagefooter>

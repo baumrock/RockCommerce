@@ -2,25 +2,95 @@
 
 namespace RockCommerce;
 
+use Mollie\Api\Resources\Payment;
+use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
-use ProcessWire\InputfieldForm;
+use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use ProcessWire\RockMigrations;
+use ProcessWire\RockMollie;
+use ProcessWire\WireData;
+use ProcessWire\WireException;
+use ProcessWire\WireMail;
 use RockMigrations\MagicPage;
+use RockMoney\Money;
 
 class Order extends Page
 {
   use MagicPage;
+  use RockCommercePage;
 
   const tpl = "rockcommerce_order";
   const prefix = "rockcommerce_order_";
 
+  const field_price = self::prefix . "price";
+  const field_payment = self::prefix . "payment";
+  const field_paymentstatus = self::prefix . "paymentstatus";
+  const field_invoice = self::prefix . "invoice";
+
+  const field_net = self::prefix . "net";
+  const field_vat = self::prefix . "vat";
+  const field_total = self::prefix . "total";
+
+  public function __construct()
+  {
+    try {
+      $this->template = $this->rockmigrations()->getTemplate(self::tpl, true);
+      $this->parent = $this->rockcommerce()->ordersPage();
+    } catch (\Throwable $th) {
+    }
+  }
+
   /** magic */
 
-  public function editForm(InputfieldForm $form): void
+  public function editFormContent(InputfieldWrapper $form): void
   {
-    if ($f = $form->get('title')) {
-      $f->collapsed = Inputfield::collapsedHidden;
+    $this->manualCreateInvoice();
+
+    $rm = $this->rockmigrations();
+    $rc = $this->rockcommerce();
+    $form->prepend($rm->inputfield([
+      'type' => 'markup',
+      'label' => 'Order ID',
+      'value' => "<div class='uk-text-truncate'>{$this->name}</div>",
+      'columnWidth' => 25,
+      'notes' => "API: \$order->name\n" .
+        'Order created at ' . date("d.m.Y H:i:s", $this->created),
+    ]));
+
+    $invoice = $this->invoice(1);
+    $url = $invoice ? $invoice->editUrl() : '';
+    $form->add($rm->inputfield([
+      'type' => 'markup',
+      'label' => 'Invoice',
+      'value' => "<a href='$url'>$url</a>",
+      'icon' => 'file-pdf-o',
+      'entityEncodeText' => false,
+      'notes' => "API: \$order->createInvoice()
+        <a href='./?id=$this&createinvoice=1'>Create Invoice</a>",
+    ]));
+    $form->add($rm->inputfield([
+      'type' => 'markup',
+      'name' => 'order-details',
+      'label' => 'Order Details',
+      'value' => $rm->renderTable($this->details()),
+      'collapsed' => Inputfield::collapsedNo,
+      'notes' => 'Additional information for the order.'
+        . "\nAPI: \$order->details() or \$order->details('item')",
+    ]));
+    $form->add($rm->inputfield([
+      'type' => 'markup',
+      'name' => 'payment-details',
+      'label' => 'Initial Payment Details',
+      'value' => '<p>Payment details that have been received at the time of creating the order and payment.</p>'
+        . $rm->renderTable($this->meta('payment'), [
+          'tableclass' => 'uk-table-divider',
+        ]),
+      'collapsed' => Inputfield::collapsedYesAjax,
+    ]));
+    if ($f = $form->get(self::field_paymentstatus)) {
+      $url = $rc->url("order?id=" . $this->name);
+      $f->notes = "[Status-Page]($url)";
     }
   }
 
@@ -33,22 +103,377 @@ class Order extends Page
     ]);
   }
 
+  /** frontend */
+
+  /**
+   * Get date of order in given format
+   */
+  public function date(string $format = "d.m.Y"): string
+  {
+    return date($format, $this->created);
+  }
+
+  /**
+   * Get order details
+   *
+   * Usage:
+   * $order->details(); // get array of all order details
+   * $order->details('forename'); // get single value
+   */
+  public function details($prop = null)
+  {
+    $details = $this->meta('details');
+    if (!is_array($details)) $details = [];
+    if ($prop) {
+      if (array_key_exists($prop, $details)) return $details[$prop];
+      return null;
+    }
+    return $details;
+  }
+
+  /**
+   * Get full name of person/company
+   */
+  public function name(): string
+  {
+    return trim($this->details('forename')
+      . " " . $this->details('surname')
+      . " " . $this->details('company'));
+  }
+
   /** backend */
+
+  public function getPageListLabel()
+  {
+    $rc = $this->rockcommerce();
+    $date = $rc->badge(date("d.m.Y H:i:s", $this->created));
+    $status = $this->statusBadge();
+    return $date
+      . $status
+      . $rc->badge($this->net())
+      . $rc->badge($this->title)
+      . $rc->badge($this->name());
+  }
+
+  /**
+   * Get payment from mollie
+   */
+  public function getPayment(): Payment|false
+  {
+    try {
+      /** @var RockMollie $mollie */
+      $mollie = $this->wire->modules->get('RockMollie');
+      return $mollie->api()->payments->get($this->paymentId());
+    } catch (\Throwable $th) {
+      $this->rockcommerce()->log($th->getMessage());
+    }
+    return false;
+  }
+
+  /**
+   * Create an invoice page for this order
+   * If an invoice already exists we exit early.
+   * This can happen if the webhook is triggered multiple times.
+   */
+  public function createInvoice($parentName = "rockcommerce"): Invoice
+  {
+    $invoice = $this->getInvoice();
+    if ($invoice) return $invoice;
+
+    $parent = $this->wire->pages->get([
+      'parent' => $this->rockcommerce()->invoicesPage(),
+      'name' => $parentName,
+    ]);
+    /** @var Invoice $invoice */
+    $invoice = $this->wire->pages->newPage([
+      'template' => Invoice::tpl,
+      'parent' => $parent,
+    ]);
+
+    // save invoice so that we can add the reference to this order
+    $invoice->save();
+
+    // add reference to invoice
+    $this->setAndSave(self::field_invoice, $invoice);
+
+    // create the PDF now that the reference is in place
+    // we flush the cache to make sure that all references are correct
+    $this->wire->pages->uncacheAll();
+    $invoice->createPdf();
+
+    return $invoice;
+  }
+
+  public function createPayment(): Payment|false
+  {
+    if ($this->paymentId()) throw new WireException("A payment for this order has already been created.");
+
+    // create mollie payment
+    /** @var RockMollie $mollie */
+    $mollie = $this->wire->modules->get('RockMollie');
+    $rc = $this->rockcommerce();
+    try {
+      $total = $this->total(1);
+      if (!$total instanceof Money) throw new WireException("Invalid Price");
+      $payment = $mollie->api()->payments->create([
+        "amount" => [
+          "currency" => (string)$total->money->getCurrency(),
+          "value" => $total->formatMollie(),
+        ],
+        "description" => (string)$this->title,
+        "redirectUrl" => $this->redirectUrl(),
+        "webhookUrl" => $rc->webhookUrl(),
+        "metadata" => ["orderid" => $this->name],
+      ]);
+      $this->setPayment($payment);
+      return $payment;
+    } catch (\Throwable $th) {
+      $this->wire->log($th->getMessage());
+    }
+
+    return false;
+  }
+
+  public function getDetails(): WireData
+  {
+    $details = new WireData();
+    $info = $this->meta('details');
+    if (is_array($info)) $details->setArray($info);
+    return $details;
+  }
+
+  public function getInvoice(): Invoice|false
+  {
+    // use bracket syntax to make sure we get the single page object
+    // see https://github.com/processwire/processwire-issues/issues/1795
+    return $this->getFormatted(self::field_invoice . "[0]");
+  }
+
+  /**
+   * Method to create an invoice via link in the backend
+   */
+  public function manualCreateInvoice(): void
+  {
+    if (!$this->wire->input->get('createinvoice')) return;
+
+    $this->createInvoice();
+    $this->wire->session->redirect($this->editUrl());
+  }
 
   public function migrate()
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->migrate([
-      'fields' => [],
+      'fields' => [
+        self::field_price => [
+          'type' => 'RockMoney',
+          'label' => 'Price',
+          'icon' => 'money',
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'tags' => 'RockCommerce',
+          'notes' => 'The final amount that you charge the client including all taxes.',
+        ],
+        self::field_net => [
+          'type' => 'RockMoney',
+          'label' => 'NET',
+          'icon' => 'money',
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'tags' => 'RockCommerce',
+        ],
+        self::field_vat => [
+          'type' => 'RockMoney',
+          'label' => 'VAT',
+          'icon' => 'money',
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'tags' => 'RockCommerce',
+        ],
+        self::field_total => [
+          'type' => 'RockMoney',
+          'label' => 'TOTAL',
+          'icon' => 'money',
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'tags' => 'RockCommerce',
+          'notes' => 'This is the total amount charged by the payment provider.',
+        ],
+        self::field_payment => [
+          'type' => 'text',
+          'label' => 'Payment',
+          'icon' => 'money',
+          'textformatters' => [
+            'TextformatterEntities',
+          ],
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'notes' => 'The id of the payment of the payment provider.',
+        ],
+        self::field_paymentstatus => [
+          'type' => 'text',
+          'label' => 'Payment-Status',
+          'icon' => '',
+          'textformatters' => [
+            'TextformatterEntities',
+          ],
+          'collapsed' => Inputfield::collapsedNoLocked,
+        ],
+        self::field_invoice => [
+          'type' => 'page',
+          'label' => 'Invoice',
+          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
+          'inputfield' => 'InputfieldPageListSelect',
+          'findPagesSelector' => 'template=' . Invoice::tpl,
+          'labelFieldName' => 'title',
+          'collapsed' => Inputfield::collapsedHidden,
+          'icon' => 'file-pdf-o',
+        ],
+      ],
       'templates' => [
         self::tpl => [
+          'fields-' => [
+            'title' => [
+              'required' => false,
+              'collapsed' => Inputfield::collapsedHidden,
+              'columnWidth' => 100,
+            ],
+
+            RockMigrations::field_email => [
+              'collapsed' => Inputfield::collapsedNoLocked,
+              'columnWidth' => 25,
+            ],
+            self::field_payment => [
+              'columnWidth' => 25,
+            ],
+            self::field_paymentstatus => [
+              'columnWidth' => 25,
+            ],
+
+            self::field_net => [
+              'columnWidth' => 33,
+            ],
+            self::field_vat => [
+              'columnWidth' => 33,
+            ],
+            self::field_total => [
+              'columnWidth' => 33,
+            ],
+
+            self::field_invoice,
+          ],
           'parentTemplates' => [
             Orders::tpl,
           ],
+          'noParents' => 1,
           'noLang' => 1, // single language
         ],
       ],
     ]);
+  }
+
+  public function ___notifyAdmin()
+  {
+    $mailto = $this->rockcommerce()->adminmail;
+    if (!$mailto) return;
+
+    try {
+      $host = $this->wire->config->httpHost;
+      $url = $this->editUrl(true);
+
+      $body = "<h2>{$this->title}</h2>
+        <p>Price: {$this->price(1)}</p>
+        <p>E-Mail: {$this->email(1)}</p>
+        <p>Order: <a href='$url'>$url</a></p>
+        ";
+
+      $mail = new WireMail();
+      $rc = $this->rockcommerce();
+      $mail->from($rc->mailfrom(), $rc->mailfromName());
+      $mail->to($mailto);
+      $mail->subject("New Order at $host");
+      $mail->bodyHTML($body);
+      $mail->send();
+
+      return $body;
+    } catch (\Throwable $th) {
+      $this->log("notifyAdmin: " . $th->getMessage());
+    }
+  }
+
+  public function paymentId(): string
+  {
+    return $this->getFormatted(self::field_payment);
+  }
+
+  public function redirectUrl(): string
+  {
+    return $this->rockcommerce()->url("order?id={$this->name}", true);
+  }
+
+  public function ___sendInvoice()
+  {
+    try {
+      $html = $this->wire->files->fileGetContents(__DIR__ . "/../mails/rockcommerce.html");
+      $html = str_replace('{{host}}', $this->wire->input->httpHostUrl(true), $html);
+
+      $content = "<h2 style='text-align: center;'>Thank you for your order!</h2>
+        <p>Please find your invoice attached to this email. <strong>Keep it in a save space as you find your License Key on it.</strong></p>
+        <p>Keep rocking and see you in the ProcessWire stratosphere! 🚀<br>
+        Bernhard</p>";
+      $html = str_replace('{{body}}', $content, $html);
+
+      $mail = new WireMail();
+      $rc = $this->rockcommerce();
+      $mail->from($rc->mailfrom(), $rc->mailfromName());
+      $mail->to($this->email(1));
+      $mail->subject("Thank you for your order!");
+      $mail->bodyHTML($html);
+      $mail->attachment($this->invoice()->pdf(1)->filename);
+      $mail->send();
+
+      return $html;
+    } catch (\Throwable $th) {
+      $this->log("sendInvoice: " . $th->getMessage());
+    }
+  }
+
+  /**
+   * Hookable method that defines what happens if an order is marked as paid
+   */
+  public function ___setPaid(): void
+  {
+    $this->createInvoice();
+    $this->sendInvoice();
+  }
+
+  /**
+   * Save payment ID and payment info to this order
+   */
+  public function setPayment(Payment $payment): void
+  {
+    $this->setAndSave(self::field_payment, $payment->id);
+    $this->meta('payment', json_encode($payment));
+    $this->setPaymentStatus($payment->status);
+  }
+
+  public function setPaymentStatus(string $status): void
+  {
+    $this->setAndSave(self::field_paymentstatus, $status);
+    if ($status === 'paid') $this->setPaid();
+  }
+
+  public function statusBadge(): string
+  {
+    $str = $this->paymentstatus(1);
+    if (!$str) return '';
+    switch ($str) {
+      case 'paid':
+        $cls = 'uk-alert-success';
+        break;
+      case 'open':
+        $cls = 'uk-alert-warning';
+        break;
+      default:
+        $cls = '';
+        break;
+    }
+    return $this->rockcommerce()->badge($str, $cls);
   }
 }
