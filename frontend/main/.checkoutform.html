@@ -47,10 +47,10 @@
   }
 </style>
 <div>
-  <h3 class="uk-text-center uk-margin-remove uk-text-bold">Checkout</h3>
-  <div class="uk-text-center">{subject}</div>
+  <div class="uk-text-center uk-text-bold uk-text-primary">Checkout</div>
+  <h3 class="uk-text-center uk-margin-remove">{subject}</h3>
 
-  <div class="uk-margin">{type}</div>
+  <div class="uk-margin-small">{type}</div>
 
   <table
     class="uk-table uk-table-responsive uk-table-middle uk-table-small uk-table-striped uk-margin-remove-bottom"
@@ -69,12 +69,14 @@
         </div>
       </td>
       <td class="uk-text-nowrap uk-text-right@m">
-        <span
-          data-price="{price}"
-          id="price"
-        >
-          {price},00 €
-        </span>
+        <div>
+          Net:
+          <span
+            data-price="{price}"
+            id="price"
+          ></span>
+        </div>
+        <div class="uk-text-bold">Gross: <span id="gross"></span></div>
       </td>
     </tr>
   </table>
@@ -82,7 +84,7 @@
   <hr class="uk-margin-remove-top" />
 
   <p class="uk-text-small uk-text-muted tax uk-hidden">
-    For individual buyers from an EU country we have to charge 20% tax.
+    For your order type we have to apply 20% tax.
   </p>
 
   <div class="uk-margin">{email}</div>
@@ -99,29 +101,54 @@
   </div>
   <div class="uk-margin">{recipient}</div>
   <div class="uk-margin">{country}</div>
-  <div class="uk-margin">{instant}</div>
+
+  <div>{instant}</div>
+  <div>{terms}</div>
 </div>
+
+<div
+  id="htmx-modal"
+  class="uk-modal-container"
+  uk-modal
+>
+  <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
+    <button
+      class="uk-modal-close-default"
+      type="button"
+      uk-close
+    ></button>
+
+    <div class="content"></div>
+    <div class="loading uk-hidden">
+      <div class="uk-flex uk-flex-center uk-section">
+        <div uk-spinner></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   function updatePrice() {
     let util = UIkit.util;
     let amount = util.$("input[name=amount]").value * 1;
-    let $price = util.$("#price");
+    let $net = util.$("#price");
     let EUR = new Intl.NumberFormat("de-DE", {
       style: "currency",
       currency: "EUR",
     });
     let tax = 1;
-    let type = util.$("input[name=type]:checked").value;
-    if (type === "individual-eu") {
+    // let type = util.$("input[name=type]:checked").value;
+    let type = util.$("[name=type]").value;
+    if (type === "aut-company" || type === "eu-individual") {
       tax = 1.2;
       util.removeClass(util.$$(".tax"), "uk-hidden");
     } else {
       util.addClass(util.$$(".tax"), "uk-hidden");
     }
-    let net = util.data($price, "price") * 1;
-    let price = amount * net * tax * 1;
-    console.log(amount, $price, price, net);
-    $price.innerText = EUR.format(price);
+    let net = util.data($net, "price") * 1;
+    // console.log(amount, $net, price, net);
+    $net.innerText = EUR.format(net * amount);
+    util.$("#gross").innerText = EUR.format(amount * net * tax);
   }
   function showLoading(e) {
     if (!Nette.validateForm(e.target)) return;
@@ -132,4 +159,12 @@
         "</div>"
     );
   }
+  updatePrice();
+
+  // reset loading spinner for hx-modal
+  UIkit.util.on("#htmx-modal", "beforeshow", function (e) {
+    let util = UIkit.util;
+    let $modal = e.target;
+    util.$(".content", $modal).innerHTML = util.$(".loading", $modal).innerHTML;
+  });
 </script>

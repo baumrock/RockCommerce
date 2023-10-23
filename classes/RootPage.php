@@ -19,6 +19,7 @@ class RootPage extends Page
   const field_logo = self::prefix . "logo";
   const field_trailingslash = self::prefix . "trailingslash";
   const field_terms = self::prefix . "terms";
+  const field_pagetitle = self::prefix . "pagetitle";
 
   public function editForm(InputfieldForm $form): void
   {
@@ -54,21 +55,19 @@ class RootPage extends Page
           'notes' => 'This will only affect pages under /rockcommerce'
             . "\nNote that the default checkout uses links without trailing slashes, so it will be slightly more efficient if you leave them disabled.",
         ],
-        self::field_terms => [
-          'type' => 'textareaLanguage',
-          'inputfieldClass' => 'InputfieldTinyMCE',
-          'contentType' => FieldtypeTextarea::contentTypeHTML,
-          'label' => 'Terms',
-          'rows' => 5,
+        self::field_pagetitle => [
+          'type' => $this->wire->languages ? 'textLanguage' : 'language',
+          'label' => 'Page Title',
           'icon' => 'align-left',
-          'inlineMode' => true,
-          // 'rpb-nolabel' => true, // hide label in backend
-          'settingsFile' => '/site/modules/RockMigrations/TinyMCE/text.json',
+          'textformatters' => [
+            'TextformatterEntities',
+          ],
         ],
       ],
       'templates' => [
         self::tpl => [
           'fields' => [
+            self::field_pagetitle,
             self::field_logo,
             self::field_trailingslash,
             self::field_terms,

@@ -2,6 +2,8 @@
 
 namespace ProcessWire;
 
+use RockCommerce\RootPage;
+
 /** @var RockFrontend $rockfrontend */
 /** @var RockCommerce $rc */
 $rc = $this->wire->modules->get('RockCommerce');
@@ -26,7 +28,7 @@ $rf->scripts()
   <?= $rf->view('head_top') ?>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RockCommerce Main Frontend</title>
+  <title><?= $page->get(RootPage::field_pagetitle) ?: 'Checkout' ?></title>
   <?= $rf->view('head_bottom') ?>
 </head>
 
