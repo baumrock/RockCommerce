@@ -414,7 +414,7 @@ class Order extends Page
       $html = str_replace('{{host}}', $this->wire->input->httpHostUrl(true), $html);
 
       $content = "<h2 style='text-align: center;'>Thank you for your order!</h2>
-        <p>Please find your invoice attached to this email. <strong>Keep it in a save space as you find your License Key on it.</strong></p>
+        <p>Please find your invoice attached to this email. <strong>Keep it in a safe space as you find your License Key on it.</strong></p>
         <p>Keep rocking and see you in the ProcessWire stratosphere! 🚀<br>
         Bernhard</p>";
       $html = str_replace('{{body}}', $content, $html);
