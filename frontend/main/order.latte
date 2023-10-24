@@ -5,7 +5,8 @@
     {switch $status = $order->paymentstatus(1)}
       {case "paid"}
         <h2>{__('Thank you for your business!')}</h2>
-        <p>The invoice has been sent to <strong>{$order->email()}</strong></p>
+        <div>The invoice has been sent to <strong>{$order->email()}</strong></div>
+        <div class="uk-margin-small-top uk-text-small">Please also check your spam folder!</div>
         <hr>
         <p class="uk-margin-small uk-text-small">
           {__('Status of your order')}

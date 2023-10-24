@@ -5,6 +5,7 @@ namespace RockForms;
 use ProcessWire\ModulePage;
 use ProcessWire\RockCommerce;
 use ProcessWire\WireException;
+use RockCommerce\Order;
 use RockMoney\Money;
 use RockPageBuilder\Block;
 
@@ -152,6 +153,13 @@ class Checkout extends RockForm
         email: $values->email,
         meta: (array)$values,
       );
+
+      // add attachments to order
+      $files = $this->wire->pages->get(1259)->pdf();
+      $attachments = $order->getUnformatted(Order::field_attachments);
+      foreach ($files as $file) $attachments->add($file);
+      $order->setAndSave(Order::field_attachments, $attachments);
+
       $payment = $order->createPayment();
     } catch (\Throwable $th) {
       $this->addError("Something went wrong - error has been logged");

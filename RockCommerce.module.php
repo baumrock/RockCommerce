@@ -117,7 +117,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }
   }
 
-  public function createOrder(
+  public function ___createOrder(
     string $subject,
     Money $net,
     Money $vat,

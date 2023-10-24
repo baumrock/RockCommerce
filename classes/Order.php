@@ -3,6 +3,7 @@
 namespace RockCommerce;
 
 use Mollie\Api\Resources\Payment;
+use ProcessWire\FieldtypeFile;
 use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
@@ -27,6 +28,7 @@ class Order extends Page
   const field_payment = self::prefix . "payment";
   const field_paymentstatus = self::prefix . "paymentstatus";
   const field_invoice = self::prefix . "invoice";
+  const field_attachments = self::prefix . "attachments";
 
   const field_net = self::prefix . "net";
   const field_vat = self::prefix . "vat";
@@ -45,7 +47,16 @@ class Order extends Page
 
   public function editFormContent(InputfieldWrapper $form): void
   {
-    $this->manualCreateInvoice();
+    // create invoice manually
+    if ($this->wire->input->get('createinvoice')) {
+      $this->createInvoice();
+      $this->wire->session->redirect($this->editUrl());
+    }
+    // send invoice manually
+    if ($this->wire->input->get('sendinvoice')) {
+      $this->sendInvoice();
+      $this->wire->session->redirect($this->editUrl());
+    }
 
     $rm = $this->rockmigrations();
     $rc = $this->rockcommerce();
@@ -67,7 +78,11 @@ class Order extends Page
       'icon' => 'file-pdf-o',
       'entityEncodeText' => false,
       'notes' => "API: \$order->createInvoice()
-        <a href='./?id=$this&createinvoice=1'>Create Invoice</a>",
+        Usually the invoice is created when the webhook is triggered.
+        Manual actions:
+        <a href='./?id=$this&createinvoice=1'>Create invoice manually</a>
+        <a href='./?id=$this&sendinvoice=1'>Send invoice to client</a>
+        ",
     ]));
     $form->add($rm->inputfield([
       'type' => 'markup',
@@ -249,17 +264,6 @@ class Order extends Page
     return $this->getFormatted(self::field_invoice . "[0]");
   }
 
-  /**
-   * Method to create an invoice via link in the backend
-   */
-  public function manualCreateInvoice(): void
-  {
-    if (!$this->wire->input->get('createinvoice')) return;
-
-    $this->createInvoice();
-    $this->wire->session->redirect($this->editUrl());
-  }
-
   public function migrate()
   {
     /** @var RockMigrations $rm */
@@ -325,6 +329,16 @@ class Order extends Page
           'collapsed' => Inputfield::collapsedHidden,
           'icon' => 'file-pdf-o',
         ],
+        self::field_attachments => [
+          'type' => 'file',
+          'label' => 'Attachments',
+          'maxFiles' => 0,
+          'descriptionRows' => 0,
+          'extensions' => 'pdf zip',
+          'icon' => 'file-archive-o',
+          'outputFormat' => FieldtypeFile::outputFormatArray,
+          'collapsed' => Inputfield::collapsedBlank,
+        ],
       ],
       'templates' => [
         self::tpl => [
@@ -357,6 +371,7 @@ class Order extends Page
             ],
 
             self::field_invoice,
+            self::field_attachments,
           ],
           'parentTemplates' => [
             Orders::tpl,
@@ -407,6 +422,9 @@ class Order extends Page
     return $this->rockcommerce()->url("order?id={$this->name}", true);
   }
 
+  /**
+   * Send invoice and order attachments to client
+   */
   public function ___sendInvoice()
   {
     try {
@@ -425,7 +443,20 @@ class Order extends Page
       $mail->to($this->email(1));
       $mail->subject("Thank you for your order!");
       $mail->bodyHTML($html);
-      $mail->attachment($this->invoice()->pdf(1)->filename);
+
+      // attach the invoice to this mail
+      // we rename it to the plain number as the random hash is useless here
+      $invoice = $this->getInvoice();
+      $mail->attachment(
+        $invoice->pdf(1)->filename,
+        $invoice->number() . ".pdf"
+      );
+
+      // attach terms of service
+      $attachments = $this->getFormatted(self::field_attachments . "[]");
+      foreach ($attachments as $file) $mail->attachment($file->filename);
+
+      // send mail
       $mail->send();
 
       return $html;
