@@ -449,7 +449,7 @@ class Order extends Page
       $invoice = $this->getInvoice();
       $mail->attachment(
         $invoice->pdf(1)->filename,
-        $invoice->number() . ".pdf"
+        "invoice-" . $invoice->number() . ".pdf"
       );
 
       // attach terms of service
