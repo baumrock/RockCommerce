@@ -1,40 +1,55 @@
 <mjml>
-    <mj-head>
-        <mj-font
-            name="Ubuntu"
-            href="https://fonts.googleapis.com/css?family=Ubuntu"
-        />
-        <mj-attributes>
-            <mj-class name="blue" color="blue" />
-            <mj-class name="big" font-size="20px" />
-            <mj-all font-family="Ubuntu, Tahoma" />
-        </mj-attributes>
-    </mj-head>
-    <mj-body background-color="#efefef">
-        <mj-section
-            background-color="#ffffff"
-            background-repeat="repeat"
-            padding-bottom="30px"
-            padding-top="30px"
-            text-align="center"
-            vertical-align="top"
+  <mj-head>
+    <mj-font
+      name="Ubuntu"
+      href="https://fonts.googleapis.com/css?family=Ubuntu"
+    />
+    <mj-attributes>
+      <mj-class
+        name="blue"
+        color="blue"
+      />
+      <mj-class
+        name="big"
+        font-size="20px"
+      />
+      <mj-all font-family="Ubuntu, Tahoma" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#efefef">
+    <mj-section
+      background-color="#ffffff"
+      background-repeat="repeat"
+      padding-bottom="30px"
+      padding-top="30px"
+      text-align="center"
+      vertical-align="top"
+    >
+      <mj-column>
+        <mj-image
+          align="center"
+          padding="25px"
+          src="{{host}}/site/templates/img/logo-mit-slogan.svg"
+          target="_blank"
+          height="80px"
+          alt="Logo"
+        ></mj-image>
+        <mj-text>{{body}}</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section>
+      <mj-text
+        font-size="10px"
+        color="#a0a0a0"
+        align="center"
+      >
+        RockCommerce by
+        <a
+          href="https://www.baumrock.com"
+          style="color: #a0a0a0"
+          >baumrock.com</a
         >
-            <mj-column>
-                <mj-image
-                    align="center"
-                    padding="25px"
-                    src="{{host}}/site/assets/files/1237/logo-mit-slogan.svg"
-                    target="_blank"
-                    height="80px"
-                    alt="Logo"
-                ></mj-image>
-                <mj-text>{{body}}</mj-text>
-            </mj-column>
-        </mj-section>
-        <mj-section>
-            <mj-text font-size="10px" color="#a0a0a0" align="center">
-                powered by RockCommerce by <a href="https://www.baumrock.com" style="color: #a0a0a0">baumrock.com</a>
-            </mj-text>
-        </mj-section>
-    </mj-body>
+      </mj-text>
+    </mj-section>
+  </mj-body>
 </mjml>
