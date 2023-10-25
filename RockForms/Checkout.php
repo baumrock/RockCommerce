@@ -31,13 +31,6 @@ class Checkout extends RockForm
     $form = $this;
     $form->setRockFormsRenderer('UIkit');
 
-    if (!$this->wire->input->get->preview) {
-      $form->addMarkup("<div class='uk-padding uk-text-center'>
-      <strong>Coming soon :)</strong>
-      </div>");
-      return;
-    }
-
     $form->addInteger("amount")
       ->setDefaultValue(1)
       ->setRequired()
