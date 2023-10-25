@@ -30,8 +30,6 @@ class Checkout extends RockForm
     // setup form
     $form = $this;
     $form->setRockFormsRenderer('UIkit');
-    $form->getElementPrototype()
-      ->setAttribute("onsubmit", "showLoading(event)");
 
     $form->addInteger("amount")
       ->setDefaultValue(1)
