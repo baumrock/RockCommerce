@@ -31,6 +31,13 @@ class Checkout extends RockForm
     $form = $this;
     $form->setRockFormsRenderer('UIkit');
 
+    if (!$this->wire->input->get->preview) {
+      $form->addMarkup("<div class='uk-padding uk-text-center'>
+      <strong>Coming soon :)</strong>
+      </div>");
+      return;
+    }
+
     $form->addInteger("amount")
       ->setDefaultValue(1)
       ->setRequired()
@@ -97,6 +104,12 @@ class Checkout extends RockForm
     $form->addSubmit("submit", __("Place Order"))
       ->getControlPrototype()
       ->addClass('uk-width-1-1');
+
+    $form->addMarkup('
+      <p class="uk-text-center uk-margin-small-top uk-text-muted uk-text-small">
+      In the next step you will be redirected to the payment service provider.
+      </p>
+    ');
   }
 
   public function labels(string $prop = null)
