@@ -29,7 +29,7 @@
         <mj-image
           align="center"
           padding="25px"
-          src="{{host}}/site/templates/img/logo-mit-slogan.svg"
+          src="{{host}}/site/templates/img/logo-mit-slogan.svg?v=1"
           target="_blank"
           height="80px"
           alt="Logo"
@@ -37,13 +37,27 @@
         <mj-text>{{body}}</mj-text>
       </mj-column>
     </mj-section>
-    <mj-section>
+    <mj-section
+        padding-top="10px"
+        padding-bottom="0"
+    >
       <mj-text
         font-size="10px"
         color="#a0a0a0"
         align="center"
       >
-        RockCommerce by
+        Powered by RockCommerce and RockMails
+      </mj-text>
+    </mj-section>
+    <mj-section
+        padding-top="5px"
+    >
+      <mj-text
+        font-size="10px"
+        color="#a0a0a0"
+        align="center"
+      >
+        by
         <a
           href="https://www.baumrock.com"
           style="color: #a0a0a0"

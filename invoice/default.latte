@@ -82,21 +82,11 @@
     </tr>
   </table>
 
-  <h3 class="mt5 text-primary">License Information</h3>
-
-  {var $downloadUrl = $rockcommerce->url('download', true)}
-  <div class="{$card}" style="border: 1mm solid #00bb86">
-    <table>
-      <tr>
-        <td class="pr5 ">License Key</td>
-        <td class="">{$order->name}</td>
-      </tr>
-      <tr>
-        <td class="pr5 pt3">Download URL</td>
-        <td class="pt3"><a href={$downloadUrl}>{$downloadUrl}</a></td>
-      </tr>
-    </table>
-    <div class="pt5 f9">Please keep this information secure and do not share it with others.</div>
+  <div
+    n:if="$order->details('type') == 'eu-company'"
+    class="mt5"
+  >
+    Invoice without VAT because there is a reverse of the tax liability (reverse charge).
   </div>
 
   <div n:if="false">

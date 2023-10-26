@@ -431,8 +431,10 @@ class Order extends Page
       $html = $this->wire->files->fileGetContents(__DIR__ . "/../mails/rockcommerce.html");
       $html = str_replace('{{host}}', $this->wire->input->httpHostUrl(true), $html);
 
-      $content = "<h2 style='text-align: center;'>Thank you for your order!</h2>
-        <p>Please find your invoice attached to this email. <strong>Keep it in a safe space as you find your License Key on it.</strong></p>
+      $content = "<p>Thank you for your order!</p>
+        <h2>Your License Key: {$this->name}</h2>
+
+        <p style='margin-top:20px;'>Please find your invoice attached to this email.</p>
         <p>Keep rocking and see you in the ProcessWire stratosphere! 🚀<br>
         Bernhard</p>";
       $html = str_replace('{{body}}', $content, $html);
@@ -441,6 +443,7 @@ class Order extends Page
       $rc = $this->rockcommerce();
       $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($this->email(1));
+      $mail->to('office@baumrock.com');
       $mail->subject("Thank you for your order!");
       $mail->bodyHTML($html);
 
