@@ -431,8 +431,13 @@ class Order extends Page
       $html = $this->wire->files->fileGetContents(__DIR__ . "/../mails/rockcommerce.html");
       $html = str_replace('{{host}}', $this->wire->input->httpHostUrl(true), $html);
 
+      $licenseName = "";
+      $license = $this->wire->pages->get("id=" . $this->details('license'));
+      if ($license->id) $licenseName = " (" . $license->name() . ")";
+
       $content = "<p>Thank you for your order!</p>
         <h2>Your License Key: {$this->name}</h2>
+        <h3>Download here: <a href=https://www.baumrock.com/rc/download>https://www.baumrock.com/rc/download</a></h3>
 
         <p style='margin-top:20px;'>Please find your invoice attached to this email.</p>
         <p>Keep rocking and see you in the ProcessWire stratosphere! 🚀<br>
@@ -444,7 +449,7 @@ class Order extends Page
       $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($this->email(1));
       $mail->to('office@baumrock.com');
-      $mail->subject("Thank you for your order!");
+      $mail->subject("Thank you for your order!$licenseName");
       $mail->bodyHTML($html);
 
       // attach the invoice to this mail
