@@ -33,14 +33,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'autoload' => true,
       'singular' => true,
       'icon' => 'money',
-      // temp disable dependencies
-      // 'requires' => [
-      //   'RockFrontend>=3.3.0',
-      //   'RockMigrations>=3.27',
-      //   'RockMoney>=1.0.2',
-      //   'RockMollie>=1.0.0',
-      // ],
-      'installs' => [],
+      'requires' => [
+        'RockFrontend>=3.3.0',
+        'RockMigrations>=3.27',
+        'RockMoney>=1.0.2',
+        'RockMollie>=1.0.0',
+      ],
+      'installs' => [
+        'ProcessRockCommerce',
+      ],
     ];
   }
 
@@ -53,6 +54,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->watch($this);
+
+    /** @var RockGrid $grid */
+    $grid = $this->wire->modules->get('RockGrid');
+    $grid->addDir(__DIR__ . "/RockGrid");
 
     // load page classes
     require_once __DIR__ . "/RockCommercePage.php";
