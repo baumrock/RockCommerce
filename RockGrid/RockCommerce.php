@@ -43,6 +43,7 @@ class RockCommerce extends Grid
     // and customized options for working with PW page data in grids
     $data = $this->findRaw([
       'template' => Order::tpl,
+      'sort' => '-id',
     ], [
       'id',
       'title',
@@ -65,6 +66,8 @@ class RockCommerce extends Grid
    */
   public function pagefieldSubvalue($row, $field1, $field2)
   {
+    $row->Invoice = "";
+    if (!property_exists($row, $field1)) return;
     $array = $row->{$field1};
     if (is_array($array)) {
       unset($row->$field1);

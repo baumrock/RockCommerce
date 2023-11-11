@@ -36,7 +36,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'requires' => [
         'RockFrontend>=3.3.0',
         'RockMigrations>=3.27',
-        'RockMoney>=1.0.2',
+        'RockMoney>=1.0.1',
         'RockMollie>=1.0.0',
       ],
       'installs' => [
