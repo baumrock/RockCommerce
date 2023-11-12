@@ -32,6 +32,10 @@ $(document).on("RockGrid", function () {
           col.title = "Status";
           col.width = 100;
           col.hozAlign = "center";
+          col.formatter = (cell) => {
+            let val = cell.getValue();
+            return "<span class='badge " + val + "'>" + val + "</span>";
+          };
         } else if (name == "Invoice") {
           col.width = 100;
         } else if (name == "rockcommerce_order_invoice") {

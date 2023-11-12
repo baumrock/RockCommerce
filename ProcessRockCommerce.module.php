@@ -39,6 +39,14 @@ class ProcessRockCommerce extends Process
   public function init()
   {
     parent::init(); // always remember to call the parent init
+
+    /** @var RockMigrations $rm */
+    $rm = $this->wire->modules->get('RockMigrations');
+    if ($rm) $rm->saveCSS(
+      __DIR__ . "/ProcessRockCommerce.less",
+      minify: true,
+      keepCSS: false,
+    );
   }
 
   /**
@@ -50,6 +58,11 @@ class ProcessRockCommerce extends Process
     $this->browserTitle('RockCommerce Dashboard');
     /** @var InputfieldForm $form */
     $form = $this->wire->modules->get('InputfieldForm');
+
+    /** @var RockFrontend $rf */
+    $rf = $this->wire->modules->get('RockFrontend');
+    $style = $rf->toUrl(__DIR__ . "/ProcessRockCommerce.min.css");
+    $this->wire->config->styles->add($style);
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
