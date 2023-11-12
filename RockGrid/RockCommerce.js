@@ -38,10 +38,6 @@ $(document).on("RockGrid", function () {
           };
         } else if (name == "Invoice") {
           col.width = 100;
-        } else if (name == "rockcommerce_order_invoice") {
-          col.formatter = (cell) => {
-            console.log(cell.getValue());
-          };
         } else if (name == "created") {
           col.title = "Date";
           col.hozAlign = "right";
@@ -73,7 +69,6 @@ $(document).on("rockgrid-init", (e, grid) => {
     // calc total net revenue
     $.each(rows, (i, row) => {
       let net = row.getData().rockcommerce_order_net * 1;
-      console.log(net);
       sum += net;
     });
     $("#net-rev").text(rg.money(sum, "de-DE", "EUR"));
