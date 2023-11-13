@@ -47,15 +47,31 @@ class RockCommerce extends Grid
     ], [
       'id',
       'title',
-      Order::field_invoice . "." . Invoice::field_number => 'Invoice',
-      Order::field_net,
-      Order::field_paymentstatus,
-      'created',
+      Order::field_invoice . "." . Invoice::field_number => 'invoice',
+      Order::field_net => 'net',
+      Order::field_paymentstatus => 'status',
+      'created' => 'date',
+      'meta.details' => 'recipient',
     ]);
 
     // convert invoice number to plain number
     foreach ($data as $row) {
       $this->pagefieldSubvalue($row, Order::field_invoice, Invoice::field_number);
+
+      // transform details meta data
+      $meta = @$row->meta['details'] ?: [];
+      $meta = (object)$meta;
+      $name = array_filter([
+        @$meta->company,
+        @$meta->forename,
+        @$meta->surname,
+      ]);
+      $row->recipient = implode(" ", $name);
+
+      $row->country = strtoupper((string)@$meta->country);
+
+      unset($row->meta);
+      // bd($row);
     }
 
     return $data;
@@ -66,13 +82,13 @@ class RockCommerce extends Grid
    */
   public function pagefieldSubvalue($row, $field1, $field2)
   {
-    $row->Invoice = "";
+    $row->invoice = "";
     if (!property_exists($row, $field1)) return;
     $array = $row->{$field1};
     if (is_array($array)) {
       unset($row->$field1);
       foreach ($array as $value) {
-        $row->Invoice = @$value[$field2];
+        $row->invoice = @$value[$field2];
         return;
       }
     }

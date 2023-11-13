@@ -24,11 +24,11 @@ $(document).on("RockGrid", function () {
         } else if (name == "title") {
           rg.setColDef(col, "edit");
           col.title = "Order Subject";
-        } else if (name == "rockcommerce_order_net") {
+        } else if (name == "net") {
           col.title = "Net";
           RockGrid.setColDef(col, "money");
           col.width = 100;
-        } else if (name == "rockcommerce_order_paymentstatus") {
+        } else if (name == "status") {
           col.title = "Status";
           col.width = 100;
           col.hozAlign = "center";
@@ -36,9 +36,12 @@ $(document).on("RockGrid", function () {
             let val = cell.getValue();
             return "<span class='badge " + val + "'>" + val + "</span>";
           };
-        } else if (name == "Invoice") {
+        } else if (name == "recipient") {
+          col.title = "Recipient";
+        } else if (name == "invoice") {
+          col.title = "Invoice";
           col.width = 100;
-        } else if (name == "created") {
+        } else if (name == "date") {
           col.title = "Date";
           col.hozAlign = "right";
           col.width = 180;
@@ -49,6 +52,10 @@ $(document).on("RockGrid", function () {
               "</span>"
             );
           };
+        } else if (name == "country") {
+          col.title = "Country";
+          col.width = 100;
+          col.hozAlign = "center";
         }
       });
       return definitions;
@@ -68,7 +75,7 @@ $(document).on("rockgrid-init", (e, grid) => {
 
     // calc total net revenue
     $.each(rows, (i, row) => {
-      let net = row.getData().rockcommerce_order_net * 1;
+      let net = row.getData().net * 1;
       sum += net;
     });
     $("#net-rev").text(rg.money(sum, "de-DE", "EUR"));
