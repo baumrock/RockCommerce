@@ -87,3 +87,70 @@ $(document).on("rockgrid-init", (e, grid) => {
     $("#avg-net").text(rows.length ? rg.money(sum / rows.length) : 0);
   });
 });
+
+// chart
+$(document).on("rockgrid-init", (e, grid) => {
+  if (grid.name !== "RockCommerce") return;
+  let table = grid.table;
+  var chart = document.getElementById("chart");
+  var myChart = echarts.init(chart);
+
+  // prepare options
+  let options = {
+    title: {
+      // text: 'ECharts Sample'
+    },
+    tooltip: {
+      trigger: "axis",
+    },
+    legend: {
+      data: ["Sales", "Net Revenue"],
+    },
+    xAxis: {
+      type: "time",
+    },
+    yAxis: [
+      {
+        type: "value",
+        name: "Sales",
+      },
+      {
+        type: "value",
+        name: "Net Revenue",
+      },
+    ],
+  };
+
+  // listen to table filtered event
+  table.on("dataFiltered", (filters, rows) => {
+    let sales = {};
+    let revenue = {};
+
+    // calc total net revenue
+    $.each(rows, (i, row) => {
+      let data = row.getData();
+      let date = data.date;
+      let day = date.split(" ")[0];
+      sales[day] = (sales[day] || 0) + 1;
+      revenue[day] = (revenue[day] || 0) + data.net;
+    });
+
+    // update chart
+    options.series = [
+      {
+        name: "Sales",
+        type: "bar",
+        data: Object.entries(sales),
+        barGap: "0%",
+        barCategoryGap: "20%",
+      },
+      {
+        name: "Net Revenue",
+        type: "bar",
+        yAxisIndex: 1,
+        data: Object.entries(revenue),
+      },
+    ];
+    myChart.setOption(options);
+  });
+});

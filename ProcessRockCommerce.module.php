@@ -64,6 +64,9 @@ class ProcessRockCommerce extends Process
     $style = $rf->toUrl(__DIR__ . "/ProcessRockCommerce.min.css");
     $this->wire->config->styles->add($style);
 
+    // add echarts library
+    $this->wire->config->scripts->add($rf->toUrl(__DIR__ . "/echarts.min.js"));
+
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $form->add([
@@ -87,10 +90,16 @@ class ProcessRockCommerce extends Process
       'value' => '<span id=avg-net>&nbsp;</span>',
       'icon' => 'money',
     ]);
+    $form->add([
+      'type' => 'markup',
+      'name' => 'chart',
+      'value' => '<div id="chart" style="width: 100%; height: 400px;"></div>',
+    ]);
     $rm->wrapFields($form, [
       'net-rev' => ['columnWidth' => 33],
       'num-orders' => ['columnWidth' => 33],
       'avg-net' => ['columnWidth' => 33],
+      'chart',
     ], [
       'label' => 'Stats',
       'icon' => 'bar-chart',
