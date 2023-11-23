@@ -95,6 +95,15 @@ $(document).on("rockgrid-init", (e, grid) => {
   var chart = document.getElementById("chart");
   var myChart = echarts.init(chart);
 
+  var today = new Date();
+  var formattedToday =
+    today.getFullYear() +
+    "-" +
+    (today.getMonth() + 1).toString().padStart(2, "0") +
+    "-" +
+    today.getDate().toString().padStart(2, "0");
+  var firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
   // prepare options
   let options = {
     title: {
@@ -108,6 +117,8 @@ $(document).on("rockgrid-init", (e, grid) => {
     },
     xAxis: {
       type: "time",
+      // min: firstDayOfMonth,
+      // max: formattedToday,
     },
     yAxis: [
       {
@@ -117,6 +128,10 @@ $(document).on("rockgrid-init", (e, grid) => {
       {
         type: "value",
         name: "Net Revenue",
+        alignTicks: true,
+        axisLabel: {
+          formatter: "{value}€",
+        },
       },
     ],
   };
