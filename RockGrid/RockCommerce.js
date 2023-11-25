@@ -136,8 +136,29 @@ $(document).on("rockgrid-init", (e, grid) => {
     ],
   };
 
-  // listen to table filtered event
-  table.on("dataFiltered", (filters, rows) => {
+  // cumulate data function
+  let cumulate = function (values) {
+    const dataArray = Object.entries(values);
+
+    // sort by date
+    dataArray.sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+    // now that the data is sorted we can return early
+    // if the cumulate checkbox is not checked
+    if (!$("#cumulate").is(":checked")) return dataArray;
+
+    // cumulate data
+    let cumulativeSum = 0;
+    const cumulativeData = dataArray.map(([date, value]) => {
+      cumulativeSum += value;
+      return [date, cumulativeSum];
+    });
+
+    return cumulativeData;
+  };
+
+  // draw chart function
+  let drawChart = function (rows) {
     let sales = {};
     let revenue = {};
 
@@ -155,7 +176,7 @@ $(document).on("rockgrid-init", (e, grid) => {
       {
         name: "Sales",
         type: "bar",
-        data: Object.entries(sales),
+        data: cumulate(sales), // Object.entries(sales),
         barGap: "0%",
         barCategoryGap: "20%",
       },
@@ -163,9 +184,19 @@ $(document).on("rockgrid-init", (e, grid) => {
         name: "Net Revenue",
         type: "bar",
         yAxisIndex: 1,
-        data: Object.entries(revenue),
+        data: cumulate(revenue),
       },
     ];
     myChart.setOption(options);
+  };
+
+  // trigger the filtered event whenever the checkbox changes
+  $("#cumulate").change(function () {
+    drawChart(table.getRows());
+  });
+
+  // listen to table filtered event
+  table.on("dataFiltered", (filters, rows) => {
+    drawChart(rows);
   });
 });

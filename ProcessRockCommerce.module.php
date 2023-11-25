@@ -90,10 +90,16 @@ class ProcessRockCommerce extends Process
       'value' => '<span id=avg-net>&nbsp;</span>',
       'icon' => 'money',
     ]);
+
+    $cumulate = new InputfieldCheckbox();
+    $cumulate->id = 'cumulate';
+    $cumulate->label = ' Cumulative';
+
     $form->add([
       'type' => 'markup',
       'name' => 'chart',
-      'value' => '<div id="chart" style="width: 100%; height: 400px;"></div>',
+      'value' => $cumulate->render() .
+        '<div id="chart" style="width: 100%; height: 400px;"></div>',
     ]);
     $rm->wrapFields($form, [
       'net-rev' => ['columnWidth' => 33],
