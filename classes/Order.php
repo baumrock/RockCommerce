@@ -24,6 +24,9 @@ class Order extends Page
   const tpl = "rockcommerce_order";
   const prefix = "rockcommerce_order_";
 
+  const status_paid = 'paid';
+  const status_open = 'open';
+
   const field_price = self::prefix . "price";
   const field_payment = self::prefix . "payment";
   const field_paymentstatus = self::prefix . "paymentstatus";
@@ -105,7 +108,10 @@ class Order extends Page
     ]));
     if ($f = $form->get(self::field_paymentstatus)) {
       $url = $rc->url("order?id=" . $this->name);
-      $f->notes = "[Status-Page]($url)";
+      $editlink = $rc->processUrl("edit-status/?id=$this");
+      $f->entityEncodeText = false;
+      $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
+        <a href=$editlink>Edit Status</a>";
     }
   }
 
@@ -514,5 +520,13 @@ class Order extends Page
         break;
     }
     return $this->rockcommerce()->badge($str, $cls);
+  }
+
+  public static function statuses(): array
+  {
+    return [
+      self::status_open,
+      self::status_paid,
+    ];
   }
 }

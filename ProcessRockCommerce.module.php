@@ -2,6 +2,8 @@
 
 namespace ProcessWire;
 
+use RockCommerce\Order;
+
 /**
  * @author Bernhard Baumrock, 10.11.2023
  * @license COMMERCIAL DO NOT DISTRIBUTE
@@ -25,7 +27,7 @@ class ProcessRockCommerce extends Process
       'installs' => [],
 
       'permission' => self::permission,
-      'permissions' => [self::permission => 'May run the RockCommerce Dashboard module'],
+      'permissions' => [self::permission => 'May view RockCommerce GUI Endpoints'],
 
       // page that you want created to execute this module
       'page' => [
@@ -95,10 +97,15 @@ class ProcessRockCommerce extends Process
     $cumulate->id = 'cumulate';
     $cumulate->label = ' Cumulative';
 
+    $selected = new InputfieldCheckbox();
+    $selected->id = 'selected';
+    $selected->label = ' Only Selected';
+
     $form->add([
       'type' => 'markup',
       'name' => 'chart',
       'value' => $cumulate->render() .
+        '<span class=uk-margin-small-left>' . $selected->render() . '</span>' .
         '<div id="chart" style="width: 100%; height: 400px;"></div>',
     ]);
     $rm->wrapFields($form, [
@@ -107,7 +114,7 @@ class ProcessRockCommerce extends Process
       'avg-net' => ['columnWidth' => 33],
       'chart',
     ], [
-      'label' => 'Stats',
+      'label' => 'Stats for paid and open orders',
       'icon' => 'bar-chart',
     ]);
 
@@ -119,5 +126,51 @@ class ProcessRockCommerce extends Process
     ]);
 
     return $form->render();
+  }
+
+  public function executeEditStatus(): string
+  {
+    $id = $this->wire->input->post->id ?: $this->wire->input->get->id;
+    $order = $this->wire->pages->get($id);
+    if (!$order instanceof Order) throw new WireException("Invalid ID $id");
+
+    $setStatus = $this->wire->input->post('status', Order::statuses());
+    if ($setStatus) {
+      $order->setAndSave(Order::field_paymentstatus, $setStatus);
+      $this->wire->session->redirect($order->editUrl());
+    }
+
+    $this->headline("Edit Status of Order #$order ({$order->title})");
+    $this->browserTitle("Edit Status of Order #$order ({$order->title})");
+
+    /** @var InputfieldForm $form */
+    $form = $this->wire->modules->get('InputfieldForm');
+
+    $f = new InputfieldSelect();
+    $f->name = 'status';
+    $f->label = "Status";
+    $f->value = $order->paymentstatus();
+    $f->required = true;
+    foreach (Order::statuses() as $status) {
+      $f->addOption($status);
+    }
+    $form->add($f);
+
+    $form->add([
+      'type' => 'hidden',
+      'name' => 'id',
+      'value' => $id,
+    ]);
+
+    $form->add([
+      'type' => 'submit',
+    ]);
+
+    return $form->render();
+  }
+
+  private function rockcommerce(): RockCommerce
+  {
+    return $this->wire->modules->get('RockCommerce');
   }
 }

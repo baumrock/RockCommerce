@@ -213,6 +213,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return true;
   }
 
+  public function invoicesPage(): Invoices
+  {
+    return $this->wire->pages->get([
+      'template' => Invoices::tpl,
+      'parent' => $this->rootPage(),
+    ]);
+  }
+
   /**
    * Load config settings from $config->rockcommerce
    * This makes it possible to have settings in the module's config, but you can
@@ -276,20 +284,25 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
   }
 
-  public function invoicesPage(): Invoices
-  {
-    return $this->wire->pages->get([
-      'template' => Invoices::tpl,
-      'parent' => $this->rootPage(),
-    ]);
-  }
-
   public function ordersPage(): Orders
   {
     return $this->wire->pages->get([
       'parent' => $this->rootPage(),
       'template' => Orders::tpl,
     ]);
+  }
+
+  public function processPage(): Page
+  {
+    return $this->wire->pages->get([
+      'parent' => 2,
+      'name' => 'rockcommerce',
+    ]);
+  }
+
+  public function processUrl(string $url): string
+  {
+    return $this->processPage()->url . $url;
   }
 
   /**

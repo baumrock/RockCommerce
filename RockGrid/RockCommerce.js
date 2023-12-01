@@ -72,6 +72,7 @@ $(document).on("rockgrid-init", (e, grid) => {
   // calc statistics
   table.on("dataFiltered", (filters, rows) => {
     let sum = 0;
+    rows = filterRows(rows);
 
     // calc total net revenue
     $.each(rows, (i, row) => {
@@ -86,12 +87,8 @@ $(document).on("rockgrid-init", (e, grid) => {
     // calc avg net revenue per order
     $("#avg-net").text(rows.length ? rg.money(sum / rows.length) : 0);
   });
-});
 
-// chart
-$(document).on("rockgrid-init", (e, grid) => {
-  if (grid.name !== "RockCommerce") return;
-  let table = grid.table;
+  // chart
   var chart = document.getElementById("chart");
   var myChart = echarts.init(chart);
 
@@ -157,6 +154,20 @@ $(document).on("rockgrid-init", (e, grid) => {
     return cumulativeData;
   };
 
+  let getRows = function (table) {
+    let rows;
+    if ($("#selected").is(":checked")) rows = table.getSelectedRows();
+    else rows = table.getRows();
+    return filterRows(rows);
+  };
+
+  let filterRows = function (rows) {
+    return rows.filter((row) => {
+      let data = row.getData();
+      return data.status === "paid" || data.status === "open";
+    });
+  };
+
   // draw chart function
   let drawChart = function (rows) {
     let sales = {};
@@ -192,11 +203,25 @@ $(document).on("rockgrid-init", (e, grid) => {
 
   // trigger the filtered event whenever the checkbox changes
   $("#cumulate").change(function () {
-    drawChart(table.getRows());
+    drawChart(getRows(table));
+  });
+
+  $("#selected").change(function () {
+    drawChart(getRows(table));
   });
 
   // listen to table filtered event
   table.on("dataFiltered", (filters, rows) => {
-    drawChart(rows);
+    drawChart(filterRows(rows));
+  });
+
+  table.on("rowSelectionChanged", (filters, rows) => {
+    if (!$("#selected").is(":checked")) return;
+    drawChart(filterRows(rows));
+  });
+
+  // resize chart on window resize
+  window.addEventListener("resize", function () {
+    myChart.resize();
   });
 });
