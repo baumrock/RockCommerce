@@ -258,8 +258,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rm->createPage(
       template: Orders::tpl,
       parent: $rootPage,
-      name: 'orders',
-      title: 'Orders',
+      name: "orders",
+      title: "Orders",
     );
     $rm->createPage(
       template: Webhooks::tpl,

@@ -6,8 +6,10 @@ use Mollie\Api\Resources\Payment;
 use ProcessWire\FieldtypeFile;
 use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
+use ProcessWire\InputfieldDatetime;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\RockCommerce;
 use ProcessWire\RockMigrations;
 use ProcessWire\RockMollie;
 use ProcessWire\WireData;
@@ -36,6 +38,7 @@ class Order extends Page
   const field_net = self::prefix . "net";
   const field_vat = self::prefix . "vat";
   const field_total = self::prefix . "total";
+  const field_paymentdate = self::prefix . "paymentdate";
 
   public function __construct()
   {
@@ -67,7 +70,7 @@ class Order extends Page
       'type' => 'markup',
       'label' => 'Order ID',
       'value' => "<div class='uk-text-truncate'>{$this->name}</div>",
-      'columnWidth' => 25,
+      'columnWidth' => 100,
       'notes' => "API: \$order->name\n" .
         'Order created at ' . date("d.m.Y H:i:s", $this->created),
     ]));
@@ -122,6 +125,12 @@ class Order extends Page
       'min' => 20,
       'max' => 40,
     ]);
+  }
+
+  public function onSaveReady(): void
+  {
+    $paid = $this->paymentdate(2);
+    if ($paid) $this->set(self::field_paymentstatus, self::status_paid);
   }
 
   /** frontend */
@@ -345,6 +354,17 @@ class Order extends Page
           'outputFormat' => FieldtypeFile::outputFormatArray,
           'collapsed' => Inputfield::collapsedBlank,
         ],
+        self::field_paymentdate => [
+          'type' => 'datetime',
+          'label' => 'Payment-Date',
+          'dateOutputFormat' => 'd.m.Y',
+          'inputType' => 'text',
+          'dateSelectFormat' => 'yMd',
+          'datepicker' => InputfieldDatetime::datepickerFocus,
+          'dateInputFormat' => 'j.n.y',
+          'timeInputFormat' => '',
+          'defaultToday' => 0,
+        ],
       ],
       'templates' => [
         self::tpl => [
@@ -359,10 +379,14 @@ class Order extends Page
               'collapsed' => Inputfield::collapsedNoLocked,
               'columnWidth' => 25,
             ],
+
             self::field_payment => [
               'columnWidth' => 25,
             ],
             self::field_paymentstatus => [
+              'columnWidth' => 25,
+            ],
+            self::field_paymentdate => [
               'columnWidth' => 25,
             ],
 
@@ -484,6 +508,9 @@ class Order extends Page
    */
   public function ___setPaid(): void
   {
+    if (!$this->paymentdate(2)) {
+      $this->setAndSave(self::field_paymentdate, time());
+    }
     $this->createInvoice();
     $this->sendInvoice();
   }
