@@ -2,6 +2,7 @@
 
 namespace RockCommerce;
 
+use ProcessWire\Inputfield;
 use ProcessWire\Page;
 use ProcessWire\RockMigrations;
 use RockMigrations\MagicPage;
@@ -21,10 +22,16 @@ class Invoices extends Page
       'fields' => [],
       'templates' => [
         self::tpl => [
+          'fields' => [
+            'title' => [
+              'collapsed' => Inputfield::collapsedHidden,
+            ],
+          ],
           'childTemplates' => [
             InvoiceGroup::tpl,
           ],
           'noLang' => 1, // single language
+          'noChildren' => false,
           'noParents' => 1,
           'sortfield' => '-id',
           'icon' => 'money',

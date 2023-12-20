@@ -3,6 +3,7 @@
 namespace RockCommerce;
 
 use ProcessWire\FieldtypeFile;
+use ProcessWire\Inputfield;
 use ProcessWire\Page;
 use ProcessWire\RockMigrations;
 use RockMigrations\MagicPage;
@@ -73,7 +74,12 @@ class InvoiceGroup extends Page
       'templates' => [
         self::tpl => [
           'fields' => [
-            'title',
+            'title' => [
+              'label' => $this->_('Title'),
+              'notes' => '',
+              'collapsed' => Inputfield::collapsedNo,
+              'columnWidth' => 100,
+            ],
             self::field_template,
             self::field_pattern,
             self::field_font,
@@ -82,8 +88,11 @@ class InvoiceGroup extends Page
                 . "\nAPI: \$invoice->logo()",
             ],
           ],
-          'noChildren' => false,
-          'noParents' => 1,
+          'noChildren' => true, // only via api
+          'noParents' => false,
+          'parentTemplates' => [
+            Invoices::tpl,
+          ],
           'childTemplates' => [
             Invoice::tpl,
           ],
