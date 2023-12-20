@@ -19,8 +19,8 @@ class ProcessRockCommerce extends Process
     return [
       'title' => 'RockCommerce Dashboard',
       'version' => '0.0.1',
-      'summary' => '',
-      'icon' => '',
+      'summary' => 'Dashboard for the RockCommerce Shop',
+      'icon' => 'bar-chart',
       'requires' => [
         'RockCommerce',
       ],
