@@ -29,7 +29,7 @@ $rf->scripts()
 // include the init.php file
 // this is the file where you can inject custom functionality
 // examples: $rc->lang, $rc->pageTitle, $rc->headTop, $rc->headBottom, ...
-$rf->view("_init.php", ['rc' => $rc]);
+$rf->view("_init.php");
 
 // prerender site content, so that we can set properties from within our files
 // eg in /site/templates/RockCommerce/main/checkout.latte: $rc->pageTitle = 'foo';

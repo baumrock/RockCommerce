@@ -1,0 +1,9 @@
+{
+    "file": "site\/modules\/RockCommerce\/frontend\/partials\/cart-items.latte",
+    "textdomain": "site--modules--rockcommerce--frontend--partials--cart-items-latte",
+    "translations": {
+        "a85eba4c6c699122b2bb1387ea4813ad": {
+            "text": "Warenkorb"
+        }
+    }
+}

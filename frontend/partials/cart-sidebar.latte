@@ -1,4 +1,4 @@
-<div class="uk-width-1-4@m">
+<div rc-swap="cart-sidebar" class="uk-width-1-4@m">
   <div class="uk-card uk-card-default uk-card-small" uk-sticky="offset: 30; bottom: true; media: @m;">
     <div class="uk-card-body">
       <h3 class="uk-margin-remove uk-visible@m">
@@ -23,7 +23,7 @@
       <div class="uk-grid-small uk-flex-middle" uk-grid>
         <div class="uk-width-expand uk-text-muted uk-first-column">{=__('Total')}</div>
         <div class="uk-text-lead uk-text-bolder">
-          {$rf->view('partials/cart-total')}
+          € {rand(0,100)}
         </div>
       </div>
       <a class="uk-button uk-button-primary uk-margin-small uk-width-1-1" href="./checkout">

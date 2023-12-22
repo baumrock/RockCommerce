@@ -356,15 +356,20 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    *
    * Usage example:
    * echo $rc->swap([
-   *  'partials/cart-item-count',
-   *  'partials/cart-total',
+   *  'partials/cart-sidebar',
    * ]);
    */
   public function swap(array $files): string
   {
     $out = "<div id='rc-swap' hidden>";
     $rf = rockfrontend();
+
+    // before we render all views we make sure to call _init.php
+    $rf->view('_init.php');
+
+    // then we render all requested views
     foreach ($files as $file) $out .= $rf->view($file);
+
     $out .= "</div>";
     return $out;
   }
