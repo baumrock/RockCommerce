@@ -1,0 +1,7 @@
+<footer class="rc-section-small uk-text-center" {alfred()}>
+  <ul class="uk-breadcrumb">
+    <li n:foreach="$rockcommerce->rootPage()->footerlinks() as $link">
+      <a href="{$link->url}">{$link->title}</a>
+    </li>
+  </ul>
+</footer>

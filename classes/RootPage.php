@@ -3,7 +3,8 @@
 namespace RockCommerce;
 
 use ProcessWire\FieldtypeFile;
-use ProcessWire\FieldtypeTextarea;
+use ProcessWire\FieldtypePage;
+use ProcessWire\Inputfield;
 use ProcessWire\InputfieldForm;
 use ProcessWire\Page;
 use ProcessWire\RockMigrations;
@@ -18,8 +19,7 @@ class RootPage extends Page
 
   const field_logo = self::prefix . "logo";
   const field_trailingslash = self::prefix . "trailingslash";
-  const field_terms = self::prefix . "terms";
-  const field_pagetitle = self::prefix . "pagetitle";
+  const field_footerlinks = self::prefix . "footerlinks";
 
   public function editForm(InputfieldForm $form): void
   {
@@ -30,6 +30,10 @@ class RootPage extends Page
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
+
+    // cleanup
+    $rm->deleteField(self::prefix . "pagetitle", true);
+
     $rm->migrate([
       'fields' => [
         self::field_logo => [
@@ -47,30 +51,33 @@ class RootPage extends Page
         ],
         self::field_trailingslash => [
           'type' => 'toggle',
-          'label' => 'Trailing Slash for Frontend Pages',
+          'label' => 'Trailing Slash for Frontend Pages?',
           'formatType' => 0, // integer 0/1
           'labelType' => 0, // yes/no
           'inputfieldClass' => 0, // yes/no
           'defaultOption' => 'no',
-          'notes' => 'This will only affect pages under /rockcommerce'
-            . "\nNote that the default checkout uses links without trailing slashes, so it will be slightly more efficient if you leave them disabled.",
+          'notes' => 'When enabled all requests under /rc without a slash will be redirected to the page with trailing slash.'
+            . "\nNote that the default files use links without trailing slashes, so it will be slightly more efficient if you leave them disabled.",
+          'icon' => 'share',
         ],
-        self::field_pagetitle => [
-          'type' => $this->wire->languages ? 'textLanguage' : 'language',
-          'label' => 'Page Title',
-          'icon' => 'align-left',
-          'textformatters' => [
-            'TextformatterEntities',
-          ],
+        self::field_footerlinks => [
+          'type' => 'page',
+          'label' => 'Footer-Links',
+          'derefAsPage' => FieldtypePage::derefAsPageArray,
+          'inputfield' => 'InputfieldPageListSelectMultiple',
+          'findPagesSelector' => 'id>0,template!=admin',
+          'labelFieldName' => 'title',
+          'icon' => 'sitemap',
+          'notes' => 'These pages will be shown in the footer (eg Privacy Policy, Imprint).',
         ],
       ],
       'templates' => [
         self::tpl => [
-          'fields' => [
-            self::field_pagetitle,
+          'fields-' => [
+            'title' => ['collapsed' => Inputfield::collapsedHidden],
             self::field_logo,
             self::field_trailingslash,
-            self::field_terms,
+            self::field_footerlinks,
           ],
           'noChildren' => 1, // no children allowed
           'noLang' => 0,
@@ -82,6 +89,10 @@ class RootPage extends Page
         ],
       ],
     ]);
-    $rm->createViewFile(self::tpl);
+    $root = rtrim($this->wire->config->paths->root, "/");
+    $this->wire->files->copy(
+      "$root/site/modules/RockCommerce/stubs/rockcommerce_rootpage.php",
+      "$root/site/templates"
+    );
   }
 }

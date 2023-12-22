@@ -12,6 +12,14 @@ use RockCommerce\Webhooks;
 use RockMoney\Money;
 
 /**
+ * Make RockCommerce available via rockcommerce() function
+ */
+function rockcommerce(): RockCommerce
+{
+  return wire()->modules->get('RockCommerce');
+}
+
+/**
  * @author Bernhard Baumrock, 24.07.2023
  * @license COMMERCIAL PLEASE DO NOT DISTRIBUTE
  * @link https://www.baumrock.com
@@ -312,9 +320,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function renderFrontend(): string
   {
-    return $this->rockfrontend()->viewFolders(self::viewFolders, [
-      'trailingSlash' => $this->rootPage()->trailingslash(),
-    ]);
+    return $this->rockfrontend()->viewFolders(
+      self::viewFolders,
+      ['trailingSlash' => $this->rootPage()->trailingslash()]
+    );
   }
 
   /**

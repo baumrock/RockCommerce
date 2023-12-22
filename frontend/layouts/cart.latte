@@ -1,0 +1,52 @@
+{$rf->view('partials/header')}
+
+
+<div class="uk-container">
+  <h1 class="uk-margin-small">{=__('Cart')}</h1>
+  <div class="uk-child-width-1-1 uk-grid-small uk-grid" uk-grid>
+    <div class="uk-width-expand@m">
+      <div class="uk-card uk-card-default uk-card-small">
+        <header class="uk-card-header uk-text-uppercase uk-text-muted uk-text-center uk-text-small uk-visible@m">
+          <div class="uk-grid-small uk-child-width-1-2 uk-grid" uk-grid="">
+            <div class="uk-first-column">product</div>
+            <div>
+              <div class="uk-grid-small uk-child-width-expand uk-grid" uk-grid>
+                <div class="uk-first-column">price</div>
+                <div>quantity</div>
+                <div>sum</div>
+                <div class="uk-width-auto"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div class="uk-card-body">
+          xx
+        </div>
+      </div>
+    </div>
+    <div class="uk-width-1-4@m">
+      <div class="uk-card uk-card-default uk-card-small" uk-sticky="offset: 30; bottom: true; media: @m;">
+        <div class="uk-card-body">
+          <div class="uk-grid-small" uk-grid>
+            <div class="uk-width-expand uk-text-muted uk-first-column">Subtotal</div>
+            <div>$3148</div>
+          </div>
+          <div class="uk-grid-small" uk-grid>
+            <div class="uk-width-expand uk-text-muted uk-first-column">Discount</div>
+            <div class="uk-text-danger">−$29</div>
+          </div>
+        </div>
+        <hr class="uk-margin-remove">
+        <div class="uk-card-body">
+          <div class="uk-grid-small uk-flex-middle" uk-grid>
+            <div class="uk-width-expand uk-text-muted uk-first-column">Total</div>
+            <div class="uk-text-lead uk-text-bolder">$3119</div>
+          </div>
+          <a class="uk-button uk-button-primary uk-margin-small uk-width-1-1" href="./checkout">checkout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{$rf->view('partials/footer')}
