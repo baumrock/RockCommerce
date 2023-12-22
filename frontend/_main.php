@@ -12,9 +12,7 @@ if (!$segment) $session->redirect("./cart");
 $rc->lang = "en";
 $rc->pageTitle = $segment ? ucfirst($segment) : "RockCommerce";
 
-/** @var RockFrontend $rf */
-$rf = $this->wire->modules->get('RockFrontend');
-
+$rf = rockfrontend();
 $rf->styles('rockcommerce')
   ->add('/wire/modules/AdminTheme/AdminThemeUikit/uikit/src/less/uikit.theme.less')
   ->add('/site/modules/RockCommerce/less/frontend.less')
