@@ -67,7 +67,7 @@ class ProcessRockCommerce extends Process
     $this->wire->config->styles->add($style);
 
     // add echarts library
-    $this->wire->config->scripts->add($rf->toUrl(__DIR__ . "/echarts.min.js"));
+    $this->wire->config->scripts->add($rf->toUrl(__DIR__ . "/lib/echarts.min.js"));
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');

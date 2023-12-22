@@ -20,8 +20,11 @@ $rf->styles('rockcommerce')
   ->addAll('/site/templates/RockCommerce/frontend/')
   ->minify(!$config->debug);
 
+rockmigrations()->minify(__DIR__ . "/main.js");
 $rf->scripts()
-  ->add('/site/templates/uikit/dist/js/uikit.min.js');
+  ->add('/site/templates/uikit/dist/js/uikit.min.js')
+  ->add('/site/modules/RockCommerce/lib/htmx.min.js')
+  ->add(__DIR__ . "/main.min.js", "defer");
 
 // include the init.php file
 // this is the file where you can inject custom functionality

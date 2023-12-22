@@ -6,7 +6,7 @@
         {=__('Cart')}
       </h3>
       <p class="uk-margin-small-top">
-        <span id="rc-cartitems-count">0</span>
+        {$rf->view('partials/cart-item-count')}
         {=__('Items')}
       </p>
       <div class="uk-grid-small" uk-grid>
@@ -22,7 +22,9 @@
     <div class="uk-card-body">
       <div class="uk-grid-small uk-flex-middle" uk-grid>
         <div class="uk-width-expand uk-text-muted uk-first-column">{=__('Total')}</div>
-        <div class="uk-text-lead uk-text-bolder">$3119</div>
+        <div class="uk-text-lead uk-text-bolder">
+          {$rf->view('partials/cart-total')}
+        </div>
       </div>
       <a class="uk-button uk-button-primary uk-margin-small uk-width-1-1" href="./checkout">
         {=__('Checkout')}

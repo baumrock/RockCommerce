@@ -71,6 +71,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     require_once __DIR__ . "/RockCommercePage.php";
     $rm->pageClassLoader($this);
 
+    // HTMX
+    $this->addHTMX();
+
     // hooks
     $this->wire->addHookAfter(self::webhookurl, $this, "handleWebhook");
   }
@@ -81,6 +84,28 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rm = $this->wire->modules->get('RockMigrations');
     if ($this->wire->page->template == 'admin') {
       $rm->addStyles(__DIR__ . "/less/backend.less");
+    }
+  }
+
+  /** regular methods */
+
+  /**
+   * Scan /htmx folder for endpoints and add them via hook
+   */
+  public function addHTMX(): void
+  {
+    foreach ($this->viewFolders(absolute: true, reverse: true) as $folder) {
+      $endpoints = $this->wire->files->find(
+        "$folder/htmx",
+        ['extensions' => ['php']]
+      );
+      foreach ($endpoints as $endpoint) {
+        $base = substr(basename($endpoint), 0, -4);
+        $this->wire->addHook("/$base", function (HookEvent $event) use ($endpoint) {
+          rockfrontend()->setViewFolders($this->viewFolders());
+          return $this->wire->files->render($endpoint);
+        });
+      }
     }
   }
 
@@ -327,6 +352,24 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Generate swap container for HTMX requests
+   *
+   * Usage example:
+   * echo $rc->swap([
+   *  'partials/cart-item-count',
+   *  'partials/cart-total',
+   * ]);
+   */
+  public function swap(array $files): string
+  {
+    $out = "<div id='rc-swap' hidden>";
+    $rf = rockfrontend();
+    foreach ($files as $file) $out .= $rf->view($file);
+    $out .= "</div>";
+    return $out;
+  }
+
+  /**
    * Render a frontend file on one of the frontend folders
    */
   public function viewFile(string $file): string|false
@@ -339,6 +382,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       if (is_file($path)) return $path;
     }
     return false;
+  }
+
+  /**
+   * Get sanitized viewfolders array
+   */
+  public function viewFolders(
+    $absolute = false,
+    $reverse = false,
+  ): array {
+    $folders = array_map(function ($item) use ($absolute) {
+      $dir = rtrim(Paths::normalizeSeparators($item), "/");
+      if ($absolute) return rtrim($this->wire->config->paths->root, "/") . $dir;
+      return $dir;
+    }, self::viewFolders);
+    if ($reverse) return array_reverse($folders);
+    return $folders;
   }
 
   public function rockfrontend(): RockFrontend

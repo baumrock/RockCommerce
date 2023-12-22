@@ -4,25 +4,13 @@
   <div class="uk-child-width-1-1 uk-grid-small uk-grid" uk-grid>
     <div class="uk-width-expand@m">
       <div class="uk-card uk-card-default uk-card-small">
-        <header class="uk-card-header uk-text-uppercase uk-text-muted uk-text-center uk-text-small uk-visible@m">
-          <div class="uk-grid-small uk-child-width-1-2 uk-grid" uk-grid="">
-            <div class="uk-first-column">{=__('Product')}</div>
-            <div>
-              <div class="uk-grid-small uk-child-width-expand uk-grid" uk-grid>
-                <div class="uk-first-column">{=__('Price')}</div>
-                <div>{=__('Quantity')}</div>
-                <div>{=__('Total')}</div>
-                <div class="uk-width-auto"></div>
-              </div>
-            </div>
-          </div>
-        </header>
+        {$rf->view('partials/cart-items-header')}
         <div class="uk-card-body">
-          {$rf->view('partials/cart_items')}
+          {$rf->view('partials/cart-items')}
         </div>
       </div>
     </div>
-    {$rf->view('partials/cart_sidebar')}
+    {$rf->view('partials/cart-sidebar')}
   </div>
 </div>
 
