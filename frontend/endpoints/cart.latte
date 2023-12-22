@@ -1,17 +1,17 @@
-{$rf->view('partials/header')}
+{$rc->view('partials/header')}
 
 <div class="uk-container" {alfred()}>
   <div class="uk-child-width-1-1 uk-grid-small uk-grid" uk-grid>
     <div class="uk-width-expand@m">
       <div class="uk-card uk-card-default uk-card-small">
-        {$rf->view('partials/cart-items-header')}
+        {$rc->view('partials/cart-items-header')}
         <div class="uk-card-body">
-          {$rf->view('partials/cart-items')}
+          {$rc->view('partials/cart-items')}
         </div>
       </div>
     </div>
-    {$rf->view('partials/cart-sidebar')}
+    {$rc->view('partials/cart-sidebar')}
   </div>
 </div>
 
-{$rf->view('partials/footer')}
+{$rc->view('partials/footer')}

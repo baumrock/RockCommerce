@@ -2,6 +2,8 @@
 
 namespace ProcessWire;
 
+use RockCommerce\Cart;
+use RockCommerce\Carts;
 use RockCommerce\InvoiceGroup;
 use RockCommerce\Invoices;
 use RockCommerce\Order;
@@ -32,6 +34,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     '/site/modules/RockCommerce/frontend',
   ];
 
+  const session_cart = 'rockcommerce_cart';
+
   public static function getModuleInfo()
   {
     return [
@@ -46,6 +50,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
         'RockMigrations>=3.27',
         'RockMoney>=1.0.1',
         'RockMollie>=1.0.0',
+        'RockGrid>=2.2.0',
       ],
       'installs' => [
         'ProcessRockCommerce',
@@ -101,9 +106,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       );
       foreach ($endpoints as $endpoint) {
         $base = substr(basename($endpoint), 0, -4);
-        $this->wire->addHook("/$base", function (HookEvent $event) use ($endpoint) {
-          rockfrontend()->setViewFolders($this->viewFolders());
-          return $this->wire->files->render($endpoint);
+        $this->wire->addHook("/$base", function (HookEvent $event) use ($base) {
+          // make htmx endpoints only available via ajax
+          // superusers are allowed to access them directly (for debugging)
+          $sudo = $this->wire->user->isSuperuser();
+          $ajax = $this->wire->config->ajax;
+          if (!$ajax && !$sudo) throw new WireException("No direct access");
+
+          // render endpoint
+          return $this->view("htmx/$base");
         });
       }
     }
@@ -130,6 +141,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     } else {
       throw new WireException("No order found");
     }
+  }
+
+  public function cartsPage(): Carts
+  {
+    return $this->wire->pages->get([
+      'parent' => $this->rootPage(),
+      'name' => 'carts',
+    ]);
   }
 
   /**
@@ -189,6 +208,26 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if ($log) $this->wire->log($str);
     if (!$this->debug) return;
     echo "$str\n\n";
+  }
+
+  /**
+   * Get Cart
+   *
+   * Usage:
+   * $rockcommerce->getCart(123);
+   * $rockcommerce->getCart("abc");
+   */
+  public function getCart(
+    int|string $id = null,
+    $create = false, // create if not exists?
+    $session = false, // save to session?
+  ): Cart|false {
+    if (!$id) $id = $this->wire->session->get(self::session_cart);
+    $cart = $this->wire->pages->get($id);
+    if ($cart instanceof NullPage && $create) $cart = $this->newCart();
+    if (!$cart instanceof Cart) return false;
+    if ($session) $this->setCart($cart);
+    return $cart;
   }
 
   public function getOrder(string $orderid = null): Order|false
@@ -315,6 +354,20 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: "RockCommerce",
       status: ["hidden"],
     );
+    $rm->createPage(
+      template: Carts::tpl,
+      parent: $rootPage,
+      title: 'Carts',
+      name: 'carts',
+      status: [],
+    );
+  }
+
+  public function newCart(): Cart
+  {
+    return $this->wire->pages->new([
+      'template' => Cart::tpl,
+    ]);
   }
 
   public function ordersPage(): Orders
@@ -347,8 +400,41 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     return $this->rockfrontend()->viewFolders(
       self::viewFolders,
-      ['trailingSlash' => $this->rootPage()->trailingslash()]
+      [
+        'trailingSlash' => $this->rootPage()->trailingslash(),
+      ]
     );
+  }
+
+  public function setCart(Cart $cart): void
+  {
+    $this->wire->session->set(self::session_cart, $cart->name);
+  }
+
+  public function ___view(
+    string $file,
+    array|Page $vars = [],
+    Page $page = null,
+  ): \Latte\Runtime\Html|string {
+    // make some defaults available in all frontend files:
+    $defaults = [
+      'rc' => $this,
+      'rf' => rockfrontend(),
+      'cart' => $this->getCart(),
+    ];
+
+    // if custom vars are specified merge them
+    $vars = array_merge($defaults, $vars);
+
+    // on the first request we need to tell rockfrontend
+    // which view folders to look into
+    if (!$this->viewFoldersSet) {
+      rockfrontend()->setViewFolders($this->viewFolders());
+      $this->viewFoldersSet = true;
+    }
+
+    // use rockfrontend to render the file
+    return rockfrontend()->view($file, $vars, $page);
   }
 
   /**
@@ -361,7 +447,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function swap(array $files): string
   {
-    $out = "<div id='rc-swap' hidden>";
+    $out = "\n<div id='rc-swap' hidden>";
     $rf = rockfrontend();
 
     // before we render all views we make sure to call _init.php

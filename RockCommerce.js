@@ -10,13 +10,22 @@ document.body.addEventListener("htmx:after-swap", function (evt) {
 
   // loop all childnodes and place them on target
   el.childNodes.forEach(function (child) {
+    let targets;
     let selector = child.getAttribute("rc-swap");
-    if (!selector) return;
+    if (!selector) {
+      // no selector specified
+      // if we also have no id we exit
+      if (!child.id) return;
+      // we have an id so we replace this element
+      targets = document.querySelectorAll("#" + child.id);
+    } else {
+      // we have a selector to replace multiple targets
+      targets = document.querySelectorAll("[rc-swap='" + selector + "']");
+    }
 
-    let targets = document.querySelectorAll("[rc-swap='" + selector + "']");
+    // replace all targets
     targets.forEach((oldEl) => {
       if (oldEl === child) return;
-      console.log(oldEl);
       oldEl.replaceWith(child.cloneNode(true));
     });
   });
