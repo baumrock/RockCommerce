@@ -2,6 +2,6 @@
   {=__('Cart')}
   (0 Artikel)
 </h3>
-{foreach $rockcommerce->getCart()->items() as $item}
+{foreach $rc->cart()->items() as $item}
   {$rc->view('partials/cart-item', ['item'=>$item])}
 {/foreach}

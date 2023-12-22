@@ -143,6 +143,21 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }
   }
 
+  /**
+   * Get current cart or create a new one
+   *
+   * This is for use on the frontend where you can simply do this:
+   * rockcommerce()->cart()->items() without throwing errors if no cart
+   * exists
+   */
+  public function cart(): Cart
+  {
+    return $this->getCart(
+      create: true,
+      session: true,
+    );
+  }
+
   public function cartsPage(): Carts
   {
     return $this->wire->pages->get([
@@ -420,7 +435,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $defaults = [
       'rc' => $this,
       'rf' => rockfrontend(),
-      'cart' => $this->getCart(),
     ];
 
     // if custom vars are specified merge them
