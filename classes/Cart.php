@@ -2,6 +2,7 @@
 
 namespace RockCommerce;
 
+use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
@@ -10,6 +11,7 @@ use ProcessWire\RockMigrations;
 use RockMigrations\MagicPage;
 
 use function ProcessWire\rockcommerce;
+use function ProcessWire\rockmigrations;
 
 class Cart extends Page
 {
@@ -19,26 +21,55 @@ class Cart extends Page
   const prefix = "rockcommerce_cart_";
 
   const field_items = self::prefix . "items";
+  const field_order = self::prefix . "order";
 
   /** magic */
 
   public function editForm(InputfieldWrapper $form): void
   {
     $form->process->headline("Cart #" . $this->name);
+    $rm = rockmigrations();
 
+    // modify items field
     $f = $form->get(self::field_items);
-    if ($f && $this->wire->user->isSuperuser()) {
-      $f->notes = "<a href='/rc/show-cart?id={$this->name}'>Show this cart on the frontend</a>";
-      $f->entityEncodeText = false;
+    if ($f) {
+      if ($this->items()->count()) {
+        if ($this->wire->user->isSuperuser()) {
+          $f->notes = "<a href='/rc/show-cart?id={$this->name}'>Show this cart on the frontend</a>";
+          $f->entityEncodeText = false;
+        }
+      } else {
+        $form->insertBefore($rm->inputfield([
+          'type' => 'markup',
+          'label' => $f->label,
+          'icon' => $f->icon,
+          'value' => "<div class='uk-alert uk-alert-primary uk-margin-remove uk-text-center'>This cart is empty.</div>",
+        ]), $f);
+        $form->remove($f);
+      }
+    }
+
+    // add info field
+    if ($f = $form->get(self::field_order)) {
+      $f->columnWidth = 50;
+      $form->insertBefore($rm->inputfield([
+        'type' => 'markup',
+        'label' => 'Info',
+        'icon' => 'info',
+        'value' => "Created: " . date("d.m.Y H:i:s", $this->created) . "<br>"
+          . "Modified: " . date("d.m.Y H:i:s", $this->modified()),
+        'columnWidth' => 50,
+      ]), $f);
     }
   }
 
   public function onCreate(): void
   {
+    // set random pagename
     $this->name = $this->wire->pages->names->uniqueRandomPageName([
       'page' => rockcommerce()->cartsPage(),
-      'max' => 10,
-      'min' => 5,
+      'min' => 10,
+      'max' => 20,
     ]);
   }
 
@@ -52,6 +83,15 @@ class Cart extends Page
   public function items(): PageArray
   {
     return $this->children();
+  }
+
+  /**
+   * Get modified timestamp of this cart
+   */
+  public function modified(): int
+  {
+    $pages = $this->items()->add($this);
+    return $pages->sort("modified")->last()->modified;
   }
 
   /** backend */
@@ -75,10 +115,21 @@ class Cart extends Page
           'grid' => 'Cartitems',
           'icon' => 'shopping-cart',
         ],
+        self::field_order => [
+          'type' => 'page',
+          'label' => 'Order',
+          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
+          'inputfield' => 'InputfieldPageAutocomplete',
+          'findPagesSelector' => 'id>0,template!=admin',
+          'labelFieldName' => 'title',
+          'collapsed' => Inputfield::collapsedNoLocked,
+          'icon' => 'shopping-bag',
+        ],
       ],
       'templates' => [
         self::tpl => [
           'fields' => [
+            self::field_order,
             'title' => [
               'collapsed' => Inputfield::collapsedHidden,
             ],
