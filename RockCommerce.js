@@ -15,7 +15,14 @@ document.body.addEventListener("htmx:after-swap", function (evt) {
     if (!selector) {
       // no selector specified
       // if we also have no id we exit
-      if (!child.id) return;
+      if (!child.id) {
+        console.error(
+          "Swap-Element must have either rc-swap attribute or an id!",
+          child
+        );
+        return;
+      }
+
       // we have an id so we replace this element
       targets = document.querySelectorAll("#" + child.id);
     } else {

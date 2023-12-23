@@ -114,7 +114,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
           if (!$ajax && !$sudo) throw new WireException("No direct access");
 
           // render endpoint
-          return $this->view("htmx/$base");
+          $view = $this->view("htmx/$base");
+
+          $swap = $this->wire->input->post('swap', 'string');
+          if ($swap) $view .= $this->swap(explode(",", $swap));
+
+          // return response
+          return $view;
         });
       }
     }
@@ -462,13 +468,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function swap(array $files): string
   {
     $out = "\n<div id='rc-swap' hidden>";
-    $rf = rockfrontend();
 
     // before we render all views we make sure to call _init.php
-    $rf->view('_init.php');
+    $this->view('_init.php');
 
     // then we render all requested views
-    foreach ($files as $file) $out .= $rf->view($file);
+    foreach ($files as $file) {
+      // note: for security only partials can be swapped!
+      $out .= $this->view("partials/$file");
+    }
 
     $out .= "</div>";
     return $out;

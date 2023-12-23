@@ -17,3 +17,30 @@ namespace ProcessWire;
 
 $rc->pageTitle = 'foo bar';
 ```
+
+## HTMX
+
+### Updating elements
+
+Often when one element changes (eg updating the amount of a cart item) other things on the page also need to change (eg the sidebar with the total amount to pay). RockCommerce makes that super easy. Simply add the elemenets that should get updated to the ajax request:
+
+```html
+// use swap:'foo,bar,baz' syntax
+<div
+  hx-post="/some/endpoint"
+  hx-swap="outerHTML"
+  hx-vars="swap:'cart-sidebar'"
+>
+```
+
+<div class=uk-alert>Note that for security considerations only partials can be used for swapping!</div>
+
+The swapped element needs to have either an id or a `rc-swap` attribute that defines the target elements:
+
+```html
+// replace a single element
+<div id="cart-sidebar">...</div>
+
+// replace multiple target elements
+<div rc-swap=".cart-items-count">...</div>
+```
