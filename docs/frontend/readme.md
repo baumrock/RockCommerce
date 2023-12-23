@@ -27,7 +27,7 @@ Often when one element changes (eg updating the amount of a cart item) other thi
 ```html
 // use swap:'foo,bar,baz' syntax
 <div
-  hx-post="/some/endpoint"
+  hx-post="/rc-update-item?id={$item->id}"
   hx-swap="outerHTML"
   hx-vars="swap:'cart-sidebar'"
 >
