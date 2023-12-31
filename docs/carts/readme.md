@@ -35,7 +35,7 @@ You have two options to customize the cart:
 
 ### Using hooks
 
-Place your hooks in /site/ready.php
+Place your hooks in `/site/init.php` (not ready.php!):
 
 ```php
 // modify the cartitem's title:
