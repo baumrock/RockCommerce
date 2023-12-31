@@ -12,6 +12,8 @@ use ProcessWire\RockMigrations;
 use ProcessWire\RockPdf;
 use RockMigrations\MagicPage;
 
+use function ProcessWire\rockmigrations;
+
 class Invoice extends Page
 {
   use MagicPage;
@@ -32,8 +34,7 @@ class Invoice extends Page
 
   public function editFormContent(InputfieldWrapper $form): void
   {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
+    $rm = rockmigrations();
     $order = $this->getOrder();
 
     // create PDF on page load

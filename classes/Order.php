@@ -101,16 +101,6 @@ class Order extends Page
       'notes' => 'Additional information for the order.'
         . "\nAPI: \$order->details() or \$order->details('item')",
     ]));
-    $form->add($rm->inputfield([
-      'type' => 'markup',
-      'name' => 'payment-details',
-      'label' => 'Initial Payment Details',
-      'value' => '<p>Payment details that have been received at the time of creating the order and payment.</p>'
-        . $rm->renderTable($this->meta('payment'), [
-          'tableclass' => 'uk-table-divider',
-        ]),
-      'collapsed' => Inputfield::collapsedYesAjax,
-    ]));
     if ($f = $form->get(self::field_paymentstatus)) {
       $url = $rc->url("order?id=" . $this->name);
       $editlink = $rc->processUrl("edit-status/?id=$this");
@@ -118,6 +108,37 @@ class Order extends Page
       $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
         <a href=$editlink>Edit Status</a>";
     }
+
+    // cost wrapper
+    $rm->wrapFields($form, [
+      self::field_net,
+      self::field_vat,
+      self::field_total,
+    ], [
+      'label' => 'Order Totals',
+      'icon' => 'shopping-basket',
+    ]);
+
+    // payment wrapper
+    $rm->wrapFields($form, [
+      self::field_payment,
+      self::field_paymentstatus,
+      self::field_paymentdate,
+      [
+        'type' => 'markup',
+        'name' => 'payment-details',
+        'label' => 'Initial Payment Details',
+        'value' => '<p>Payment details that have been received at the time of creating the order and payment.</p>'
+          . $rm->renderTable($this->meta('payment'), [
+            'tableclass' => 'uk-table-divider',
+          ]),
+        'collapsed' => Inputfield::collapsedYesAjax,
+      ]
+    ], [
+      'label' => 'Payment',
+      'icon' => 'money',
+      'collapsed' => $this->paymentId() ? Inputfield::collapsedNo : Inputfield::collapsedYes,
+    ]);
   }
 
   public function onCreate(): void
@@ -298,21 +319,21 @@ class Order extends Page
         self::field_net => [
           'type' => 'RockMoney',
           'label' => 'NET',
-          'icon' => 'money',
+          'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
         ],
         self::field_vat => [
           'type' => 'RockMoney',
           'label' => 'VAT',
-          'icon' => 'money',
+          'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
         ],
         self::field_total => [
           'type' => 'RockMoney',
           'label' => 'TOTAL',
-          'icon' => 'money',
+          'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
           'notes' => 'This is the total amount charged by the payment provider.',
@@ -320,7 +341,7 @@ class Order extends Page
         self::field_payment => [
           'type' => 'text',
           'label' => 'Payment',
-          'icon' => 'money',
+          'icon' => '',
           'textformatters' => [
             'TextformatterEntities',
           ],
@@ -391,16 +412,6 @@ class Order extends Page
               'columnWidth' => 50,
             ],
 
-            self::field_payment => [
-              'columnWidth' => 33,
-            ],
-            self::field_paymentstatus => [
-              'columnWidth' => 33,
-            ],
-            self::field_paymentdate => [
-              'columnWidth' => 33,
-            ],
-
             self::field_net => [
               'columnWidth' => 33,
             ],
@@ -408,6 +419,16 @@ class Order extends Page
               'columnWidth' => 33,
             ],
             self::field_total => [
+              'columnWidth' => 33,
+            ],
+
+            self::field_payment => [
+              'columnWidth' => 33,
+            ],
+            self::field_paymentstatus => [
+              'columnWidth' => 33,
+            ],
+            self::field_paymentdate => [
               'columnWidth' => 33,
             ],
 
@@ -455,6 +476,11 @@ class Order extends Page
     }
   }
 
+  /**
+   * Get formatted string of referenced payment id
+   *
+   * Returns empty string if no payment referenced.
+   */
   public function paymentId(): string
   {
     return $this->getFormatted(self::field_payment);
