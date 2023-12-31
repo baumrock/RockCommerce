@@ -13,7 +13,7 @@ class Cartitem extends Page
   const tpl = "rockcommerce_cartitem";
   const prefix = "rockcommerce_cartitem_";
 
-  const field_item = self::prefix . "item";
+  const field_page = self::prefix . "page";
   const field_amount = self::prefix . "amount";
 
   public function __construct($parent = false)
@@ -35,6 +35,28 @@ class Cartitem extends Page
     ]);
   }
 
+  public function onSaved(): void
+  {
+    if ($this->isTrash()) return;
+    $this->meta('rockcommerce-cart', $this->parent->id);
+  }
+
+  /** frontend */
+
+  public function cart(): Cart
+  {
+    if ($this->isTrash()) {
+      $cartID = $this->meta('rockcommerce-cart');
+      return $this->wire->pages->get($cartID);
+    }
+    return $this->parent;
+  }
+
+  public function page(): Page|false
+  {
+    return $this->getFormatted(self::field_page);
+  }
+
   /** backend */
 
   public function migrate()
@@ -43,7 +65,7 @@ class Cartitem extends Page
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->migrate([
       'fields' => [
-        self::field_item => [
+        self::field_page => [
           'type' => 'page',
           'label' => 'Item',
           'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
@@ -60,7 +82,7 @@ class Cartitem extends Page
       'templates' => [
         self::tpl => [
           'fields-' => [
-            self::field_item => ['columnWidth' => 50],
+            self::field_page => ['columnWidth' => 50],
             self::field_amount => ['columnWidth' => 50],
           ],
           'parentTemplates' => [

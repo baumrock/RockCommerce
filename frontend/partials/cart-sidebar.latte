@@ -1,4 +1,4 @@
-<div id="cart-sidebar">
+<div id="cart-sidebar" {alfred()}>
   <div
     class="uk-card uk-card-default uk-card-small"
     uk-sticky="offset: 20; bottom: true; media: @m;"
@@ -9,7 +9,7 @@
         {=__('Cart')}
       </h3>
       <p class="uk-margin-small-top">
-        {$rc->cart()->items()->count()}
+        {$rc->cart()->itemsCount()}
         {=__('Items')}
       </p>
       <div class="uk-grid-small" uk-grid>

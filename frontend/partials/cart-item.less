@@ -1,0 +1,43 @@
+.cart-item {
+  // grid
+  .grid {
+    column-gap: 20px;
+    row-gap: 10px;
+  }
+
+  // preview image
+  .preview img {
+    width: rfGrow(100px, 200px);
+  }
+
+  // price
+  .price {
+    a {
+      display: inline-block;
+      text-align: center;
+      width: 30px;
+      padding: 0;
+    }
+    input {
+      width: 80px;
+    }
+  }
+
+  // amount input
+  .amount {
+    > * {
+      .uk-button;
+      .uk-button-default;
+      .uk-button-small;
+    }
+  }
+
+  // section borders
+  &:not(:last-child) {
+    border-bottom: 1px solid @global-border;
+  }
+
+  .uk-text-lead {
+    font-size: rfGrow(16px, 25px);
+  }
+}

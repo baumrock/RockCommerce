@@ -54,19 +54,19 @@ class Cartitems extends Grid
     // and customized options for working with PW page data in grids
     $data = $this->findRaw($selector, [
       'id',
-      Cartitem::field_item . ".title" => 'item',
+      Cartitem::field_page . ".title" => 'item',
       Cartitem::field_amount => 'amount',
       'created' => 'added',
     ]);
 
     // populate item column from page field's title value
     foreach ($data as $row) {
-      if (!property_exists($row, "rockcommerce_cartitem_item")) continue;
-      foreach ($row->rockcommerce_cartitem_item as $id => $item) {
+      if (!property_exists($row, Cartitem::field_page)) continue;
+      foreach ($row->{Cartitem::field_page} as $id => $item) {
         $row->itemID = $id;
         $row->item = $item['title'];
       }
-      unset($row->rockcommerce_cartitem_item);
+      unset($row->{Cartitem::field_page});
     }
     bdb($data);
 

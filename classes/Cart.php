@@ -86,6 +86,21 @@ class Cart extends Page
   }
 
   /**
+   * Get total number of items in the cart
+   *
+   * This is different than $cart->items()->count() as it will also
+   * take every items's amount into account.
+   */
+  public function itemsCount(): int
+  {
+    $total = 0;
+    foreach ($this->items() as $item) {
+      $total += $item->amount(1);
+    }
+    return $total;
+  }
+
+  /**
    * Get modified timestamp of this cart
    */
   public function modified(): int
@@ -97,11 +112,11 @@ class Cart extends Page
   /** backend */
 
   public function addItem(
-    string|Page $item,
+    string|Page $page,
     int $amount = 1,
   ): Cartitem {
     $cartitem = new Cartitem($this);
-    $cartitem->set(Cartitem::field_item, $item);
+    $cartitem->set(Cartitem::field_page, $page);
     $cartitem->set(Cartitem::field_amount, $amount);
     $cartitem->save();
     return $cartitem;

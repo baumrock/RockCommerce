@@ -23,11 +23,11 @@ $rf->styles('rockcommerce')
   ->addAll("/site/templates/RockCommerce/frontend/")
   ->minify(!$config->debug);
 
-rockmigrations()->minify("$modulePath/RockCommerce.js");
 $rf->scripts()
   ->add('/site/templates/uikit/dist/js/uikit.min.js')
   ->add("$modulePath/lib/htmx.min.js")
-  ->add("$modulePath/RockCommerce.min.js", "defer");
+  ->add("$modulePath/RockCommerce.min.js", "defer")
+  ->addIf("$modulePath/Cart.min.js", $segment == "cart", "defer");
 
 // include the init.php file
 // this is the file where you can inject custom functionality
