@@ -114,6 +114,7 @@ class Invoice extends Page
 
     /** @var RockPdf $pdf */
     $pdf = $this->wire->modules->get('RockPdf');
+    if (!$pdf) return;
     $pdf->addStyle(__DIR__ . "/../invoice/_global.less");
     $pdf
       ->addFontFromField(

@@ -33,6 +33,7 @@ class Order extends Page
   const field_paymentstatus = self::prefix . "paymentstatus";
   const field_invoice = self::prefix . "invoice";
   const field_attachments = self::prefix . "attachments";
+  const field_cart = self::prefix . "cart";
 
   const field_net = self::prefix . "net";
   const field_vat = self::prefix . "vat";
@@ -88,11 +89,13 @@ class Order extends Page
         <a href='./?id=$this&createinvoice=1'>Create invoice manually</a>
         <a href='./?id=$this&sendinvoice=1'>Send invoice to client</a>
         ",
+      'collapsed' => $url ? Inputfield::collapsedNo : Inputfield::collapsedYes,
     ]));
     $form->add($rm->inputfield([
       'type' => 'markup',
       'name' => 'order-details',
       'label' => 'Order Details',
+      'icon' => 'table',
       'value' => $rm->renderTable($this->details()),
       'collapsed' => Inputfield::collapsedNo,
       'notes' => 'Additional information for the order.'
@@ -364,6 +367,16 @@ class Order extends Page
           'timeInputFormat' => '',
           'defaultToday' => 0,
         ],
+        self::field_cart => [
+          'type' => 'page',
+          'label' => 'Cart',
+          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
+          'inputfield' => 'InputfieldPageAutocomplete',
+          'findPagesSelector' => 'id>0,template!=admin',
+          'labelFieldName' => 'title',
+          'collapsed' => Inputfield::collapsedBlankLocked,
+          'icon' => 'shopping-cart',
+        ],
       ],
       'templates' => [
         self::tpl => [
@@ -397,6 +410,8 @@ class Order extends Page
             self::field_total => [
               'columnWidth' => 33,
             ],
+
+            self::field_cart,
 
             self::field_invoice,
             self::field_attachments,
