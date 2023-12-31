@@ -385,6 +385,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
   }
 
+  /**
+   * Create a new cart and save it to the database
+   */
   public function newCart(): Cart
   {
     return $this->wire->pages->new([

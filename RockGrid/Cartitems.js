@@ -20,9 +20,22 @@ $(document).on("RockGrid", function () {
               panel: true,
             });
           };
-        }
-        if (name == "title") {
+        } else if (name == "title") {
           rg.setColDef(col, "edit");
+        } else if (name == "itemID") {
+          col.visible = false;
+        } else if (name == "item") {
+          col.formatter = function (cell) {
+            let title = cell.getValue();
+            let id = cell.getRow().getData().itemID;
+            return (
+              '<a href="/rockgrid/view/' +
+              id +
+              '" target=_blank>' +
+              title +
+              "</a>"
+            );
+          };
         }
       });
       return definitions;

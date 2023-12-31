@@ -96,11 +96,15 @@ class Cart extends Page
 
   /** backend */
 
-  public function addItem(): Cartitem
-  {
-    $item = new Cartitem($this);
-    $item->save();
-    return $item;
+  public function addItem(
+    string|Page $item,
+    int $amount = 1,
+  ): Cartitem {
+    $cartitem = new Cartitem($this);
+    $cartitem->set(Cartitem::field_item, $item);
+    $cartitem->set(Cartitem::field_amount, $amount);
+    $cartitem->save();
+    return $cartitem;
   }
 
   public function migrate()
