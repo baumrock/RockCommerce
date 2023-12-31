@@ -115,7 +115,7 @@ class Order extends Page
       self::field_vat,
       self::field_total,
     ], [
-      'label' => 'Order Totals',
+      'label' => 'Totals',
       'icon' => 'shopping-basket',
     ]);
 
@@ -318,7 +318,7 @@ class Order extends Page
         ],
         self::field_net => [
           'type' => 'RockMoney',
-          'label' => 'NET',
+          'label' => 'Net',
           'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
@@ -332,11 +332,11 @@ class Order extends Page
         ],
         self::field_total => [
           'type' => 'RockMoney',
-          'label' => 'TOTAL',
+          'label' => 'Total',
           'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
-          'notes' => 'This is the total amount charged by the payment provider.',
+          'notes' => '',
         ],
         self::field_payment => [
           'type' => 'text',
