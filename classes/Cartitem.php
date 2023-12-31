@@ -3,8 +3,14 @@
 namespace RockCommerce;
 
 use ProcessWire\FieldtypePage;
+use ProcessWire\Inputfield;
+use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use RockMigrations\MagicPage;
+use RockMoney\Money;
+
+use function ProcessWire\rockfrontend;
+use function ProcessWire\rockmoney;
 
 class Cartitem extends Page
 {
@@ -24,6 +30,20 @@ class Cartitem extends Page
     } catch (\Throwable $th) {
     }
     parent::__construct();
+  }
+
+  /** magic */
+
+  public function editForm(InputfieldWrapper $form): void
+  {
+    if ($f = $form->get(self::field_page)) {
+      $page = $f->value;
+      if ($page && $page->id) {
+        $f->entityEncodeText = false;
+        $f->notes = "<a href={$page->editUrl()} target=_blank class=uk-margin-small-right>" . $this->_('edit') . "</a>"
+          . "<a href={$page->url()} target=_blank>" . $this->_('view') . "</a>";
+      }
+    }
   }
 
   public function onCreate(): void
@@ -51,9 +71,54 @@ class Cartitem extends Page
     return $this->parent;
   }
 
+  public function ___cartTitle(): string
+  {
+    return $this->page()->title;
+  }
+
+  public function ___cartDescription(): string
+  {
+    return "";
+  }
+
+  public function html($str)
+  {
+    return rockfrontend()->html($str);
+  }
+
+  public function itemNet(): Money
+  {
+    return rockmoney()->parse(0);
+  }
+
+  public function itemVat(): Money
+  {
+    return rockmoney()->parse(0);
+  }
+
+  public function itemGross(): Money
+  {
+    return rockmoney()->parse(0);
+  }
+
   public function page(): Page|false
   {
     return $this->getFormatted(self::field_page);
+  }
+
+  public function totalNet(): Money
+  {
+    return $this->itemNet()->times($this->amount(1));
+  }
+
+  public function totalVat(): Money
+  {
+    return $this->itemVat()->times($this->amount(1));
+  }
+
+  public function totalGross(): Money
+  {
+    return $this->itemGross()->times($this->amount(1));
   }
 
   /** backend */
@@ -71,6 +136,7 @@ class Cartitem extends Page
           'inputfield' => 'InputfieldPageAutocomplete',
           'findPagesSelector' => 'id>0,template!=admin',
           'labelFieldName' => 'title',
+          'collapsed' => Inputfield::collapsedNo,
         ],
         self::field_amount => [
           'type' => 'integer',
