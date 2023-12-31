@@ -9,7 +9,6 @@ use ProcessWire\Inputfield;
 use ProcessWire\InputfieldDatetime;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
-use ProcessWire\RockCommerce;
 use ProcessWire\RockMigrations;
 use ProcessWire\RockMollie;
 use ProcessWire\WireData;

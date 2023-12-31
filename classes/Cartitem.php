@@ -2,6 +2,7 @@
 
 namespace RockCommerce;
 
+use ProcessWire\FieldtypePage;
 use ProcessWire\Page;
 use RockMigrations\MagicPage;
 
@@ -11,6 +12,9 @@ class Cartitem extends Page
 
   const tpl = "rockcommerce_cartitem";
   const prefix = "rockcommerce_cartitem_";
+
+  const field_item = self::prefix . "item";
+  const field_amount = self::prefix . "amount";
 
   public function __construct($parent = false)
   {
@@ -38,10 +42,27 @@ class Cartitem extends Page
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->migrate([
-      'fields' => [],
+      'fields' => [
+        self::field_item => [
+          'type' => 'page',
+          'label' => 'Item',
+          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
+          'inputfield' => 'InputfieldPageAutocomplete',
+          'findPagesSelector' => 'id>0,template!=admin',
+          'labelFieldName' => 'title',
+        ],
+        self::field_amount => [
+          'type' => 'integer',
+          'label' => 'Amount',
+          'icon' => 'list-ol',
+        ],
+      ],
       'templates' => [
         self::tpl => [
-          'fields-' => [],
+          'fields-' => [
+            self::field_item => ['columnWidth' => 50],
+            self::field_amount => ['columnWidth' => 50],
+          ],
           'parentTemplates' => [
             Cart::tpl,
           ],

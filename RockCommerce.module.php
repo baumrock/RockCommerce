@@ -197,18 +197,19 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function ___createOrder(
     string $subject,
-    Money $net,
-    Money $vat,
-    Money $total,
+    Money|float $net,
+    Money|float $vat,
+    Money|float $total,
     string $email,
     array $pageProperties = [],
     array $meta = [],
   ): Order {
+    $money = rockmoney();
     $order = $this->wire->pages->newPage('template=' . Order::tpl);
     $order->set('title', $subject);
-    $order->set(Order::field_net, $net);
-    $order->set(Order::field_vat, $vat);
-    $order->set(Order::field_total, $total);
+    $order->set(Order::field_net, $money->parse($net));
+    $order->set(Order::field_vat, $money->parse($vat));
+    $order->set(Order::field_total, $money->parse($total));
     $order->set(RockMigrations::field_email, $email);
     foreach ($pageProperties as $k => $v) {
       $order->set(Order::prefix . $k, $v);
