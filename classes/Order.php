@@ -69,7 +69,7 @@ class Order extends Page
       'type' => 'markup',
       'label' => 'Order ID',
       'value' => "<div class='uk-text-truncate'>{$this->name}</div>",
-      'columnWidth' => 100,
+      'columnWidth' => 50,
       'notes' => "API: \$order->name\n" .
         'Order created at ' . date("d.m.Y H:i:s", $this->created),
     ]));
@@ -371,22 +371,21 @@ class Order extends Page
             'title' => [
               'required' => false,
               'collapsed' => Inputfield::collapsedHidden,
-              'columnWidth' => 100,
+              'columnWidth' => 50,
             ],
-
             RockMigrations::field_email => [
               'collapsed' => Inputfield::collapsedNoLocked,
-              'columnWidth' => 25,
+              'columnWidth' => 50,
             ],
 
             self::field_payment => [
-              'columnWidth' => 25,
+              'columnWidth' => 33,
             ],
             self::field_paymentstatus => [
-              'columnWidth' => 25,
+              'columnWidth' => 33,
             ],
             self::field_paymentdate => [
-              'columnWidth' => 25,
+              'columnWidth' => 33,
             ],
 
             self::field_net => [
