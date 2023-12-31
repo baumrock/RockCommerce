@@ -6,8 +6,16 @@ use RockCommerce\Cartitem;
 
 $rc = rockcommerce();
 
-$item = $pages->get($input->get('id', 'int'));
+$item = $pages->get([
+  'template' => Cartitem::tpl,
+  'name' => $input->get('item', 'string'),
+]);
 if (!$item instanceof Cartitem) throw new WireException("Invalid Item ID");
+
+// check if we know the correct cart
+if ($item->cart()->name !== $input->get('cart', 'string')) {
+  throw new WireException("Invalid Cart ID");
+}
 
 $amount = wire()->input->post('amount', 'int');
 if ($amount > 0) {

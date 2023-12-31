@@ -36,7 +36,7 @@
           </div>
           <div
             class="uk-flex amount"
-            hx-post="/rc-update-item?id={$item->id}"
+            hx-post="/rc-update-item?item={$item->name}&cart={$item->cart()->name}"
             hx-trigger="keyup delay:500ms"
             hx-target="closest .cart-item"
             hx-vars="swap:'cart-sidebar'"

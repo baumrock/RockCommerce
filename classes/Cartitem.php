@@ -29,9 +29,8 @@ class Cartitem extends Page
   public function onCreate(): void
   {
     $this->name = $this->wire->pages->names->uniqueRandomPageName([
-      'page' => $this->parent,
-      'min' => 5,
-      'max' => 5,
+      'min' => 10,
+      'max' => 15,
     ]);
   }
 

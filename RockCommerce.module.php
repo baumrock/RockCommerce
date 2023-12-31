@@ -118,7 +118,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
           if (!$ajax && !$sudo) throw new WireException("No direct access");
 
           // render endpoint
-          $view = $this->view("htmx/$base");
+          try {
+            $view = $this->view("htmx/$base");
+          } catch (\Throwable $th) {
+            $msg = $th->getMessage();
+            $view = "<div class='uk-alert uk-alert-danger'>$msg</div>";
+          }
 
           $swap = $this->wire->input->post('swap', 'string');
           if ($swap) $view .= $this->swap(explode(",", $swap));

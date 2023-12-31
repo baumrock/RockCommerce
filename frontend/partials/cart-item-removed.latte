@@ -9,7 +9,7 @@
     </div>
     <a
       class="uk-button uk-button-primary uk-button-small"
-      hx-post="/rc-restore-item?id={$item}&cart={$item->cart()}"
+      hx-post="/rc-restore-item?item={$item->name}&cart={$item->cart()->name}"
       hx-target="closest .cart-item"
       hx-vars="swap:'cart-sidebar'"
       hx-swap="outerHTML"
@@ -20,6 +20,7 @@
   </div>
 </div>
 <script>
+// remove .cart-item when the alert is closed
 document.querySelectorAll(".rc-alert").forEach((el) => {
   el.classList.remove('rc-alert');
   UIkit.alert(el);
