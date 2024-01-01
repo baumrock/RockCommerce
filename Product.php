@@ -133,6 +133,9 @@ trait Product
         'inputfieldClass' => 'InputfieldRcPricing',
         'rows' => 1,
         'icon' => 'money',
+        'textformatters' => [
+          'TextformatterEntities',
+        ],
       ],
     ];
     foreach ($fields as $v) $v['tags'] = "RockCommerce";
