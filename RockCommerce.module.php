@@ -28,13 +28,17 @@ function rockcommerce(): RockCommerce
  */
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
-  const webhookurl = "/rockcommerce/webhook";
+  const prefix = "rockcommerce_";
+
+  const session_cart = 'rockcommerce_cart';
   const viewFolders = [
     '/site/templates/RockCommerce/frontend',
     '/site/modules/RockCommerce/frontend',
   ];
+  const webhookurl = "/rockcommerce/webhook";
 
-  const session_cart = 'rockcommerce_cart';
+
+  public $productTemplates = [];
 
   public static function getModuleInfo()
   {
@@ -642,6 +646,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
 
     $inputfields->add($fs);
+
+    // select templates to use for products
+    $templates = new InputfieldCheckboxes();
+    $templates->name = 'productTemplates';
+    $templates->label = 'Templates to use as products';
+    $templates->icon = 'shopping-basket';
+    foreach ($this->wire->templates as $tpl) {
+      /** @var Template $tpl */
+      if ($tpl->flags) continue;
+      if (!$tpl->filenameExists()) continue;
+      if ($tpl->hasTag("RockCommerce")) continue;
+      $templates->addOption($tpl->name);
+    }
+    $templates->value = $this->productTemplates;
+    $templates->notes = "Selected templates will have a new tab on page edit where you can set all RockCommerce product settings (prices etc.).";
+    $inputfields->add($templates);
 
     // webhook url
     $inputfields->add([
