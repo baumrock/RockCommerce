@@ -9,6 +9,7 @@ use RockCommerce\Invoices;
 use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\RootPage;
+use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
 use RockMoney\Money;
@@ -394,6 +395,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: 'Carts',
       name: 'carts',
       status: [],
+    );
+    $rm->createPage(
+      template: Variations::tpl,
+      parent: $rootPage,
+      title: 'Variations',
+      name: 'variations',
     );
   }
 
