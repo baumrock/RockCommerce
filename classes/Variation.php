@@ -2,6 +2,8 @@
 
 namespace RockCommerce;
 
+use ProcessWire\HookEvent;
+use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use RockMigrations\MagicPage;
 
@@ -17,7 +19,25 @@ class Variation extends Page
   const field_options = self::prefix . "options";
   const field_id = self::prefix . "id";
 
+  public function init(): void
+  {
+    $this->wire->addHookAfter("Pages::saveReady", $this, "hookRepeaterSave");
+  }
+
   /** magic */
+
+  public function editForm(InputfieldWrapper $form): void
+  {
+    // add API hint to title field
+    if ($f = $form->get('title')) {
+      $f->notes = "API: \$rockcommerce->variations('{$this->name}')->title";
+    }
+
+    // tidy up the settings page
+    $form->remove('parent_id');
+    $form->remove('status');
+    $form->remove('template');
+  }
 
   public function onCreate(): void
   {
@@ -36,6 +56,16 @@ class Variation extends Page
   }
 
   /** backend */
+
+  public function hookRepeaterSave(HookEvent $event): void
+  {
+    $page = $event->arguments('page');
+    if ($page->template != "repeater_" . self::field_options) return;
+    $page->set(
+      self::field_id,
+      $this->wire->sanitizer->pageName($page->get(self::field_id))
+    );
+  }
 
   public function migrate()
   {
@@ -79,6 +109,8 @@ class Variation extends Page
             self::field_options,
           ],
           'noChildren' => 1,
+          'noChangeTemplate' => 0,
+          'noUnpublish' => 1,
           'parentTemplates' => [
             Variations::tpl,
           ],
