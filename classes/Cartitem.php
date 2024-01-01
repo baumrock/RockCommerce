@@ -139,6 +139,7 @@ class Cartitem extends Page
           'findPagesSelector' => 'id>0,template!=admin',
           'labelFieldName' => 'title',
           'collapsed' => Inputfield::collapsedNo,
+          'icon' => 'link',
         ],
         self::field_amount => [
           'type' => 'integer',
