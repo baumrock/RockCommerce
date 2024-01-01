@@ -7,8 +7,6 @@ use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use RockMigrations\MagicPage;
 
-use function ProcessWire\rockmigrations;
-
 class Variation extends Page
 {
   use MagicPage;

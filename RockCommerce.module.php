@@ -8,6 +8,7 @@ use RockCommerce\InvoiceGroup;
 use RockCommerce\Invoices;
 use RockCommerce\Order;
 use RockCommerce\Orders;
+use RockCommerce\ProductPage;
 use RockCommerce\RootPage;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
@@ -27,6 +28,7 @@ function rockcommerce(): RockCommerce
  * @license COMMERCIAL PLEASE DO NOT DISTRIBUTE
  * @link https://www.baumrock.com
  */
+require_once __DIR__ . "/Product.php";
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
   const prefix = "rockcommerce_";
@@ -38,8 +40,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   ];
   const webhookurl = "/rockcommerce/webhook";
 
-
-  public $productTemplates = [];
+  private $taxrates = false;
 
   public static function getModuleInfo()
   {
@@ -59,6 +60,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       ],
       'installs' => [
         'ProcessRockCommerce',
+        'InputfieldRcPricing',
       ],
     ];
   }
@@ -72,6 +74,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->watch($this);
+    $rm->watch(
+      what: __DIR__ . "/Product.php",
+      options: ['trigger' => $this],
+    );
 
     /** @var RockGrid $grid */
     $grid = $this->wire->modules->get('RockGrid');
@@ -83,6 +89,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // load page classes
     $rm->pageClassLoader($this);
+
+    // load one instance of a productpage so that we can trigger init()
+    require_once __DIR__ . "/ProductPage.php";
+    (new ProductPage())->_init();
 
     // HTMX
     $this->addHTMX();
@@ -276,6 +286,28 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $order;
   }
 
+  /**
+   * Get array of taxrates
+   * Example:
+   * [
+   *   '20.00' => '20.00%',
+   * ]
+   */
+  public function getTaxrates(): array
+  {
+    if ($this->taxrates) return $this->taxrates;
+
+    // parse taxrates from config
+    $arr = explode(",", (string)$this->rawtaxrates);
+    $arr = array_map(function ($el) {
+      return (float)trim($el);
+    }, $arr);
+    $taxrates = array_filter($arr);
+    $arr = [];
+    foreach ($taxrates as $v) $arr[(string)$v] = "$v%";
+    return $this->taxrates = $arr;
+  }
+
   public function handleWebhook(HookEvent $event)
   {
     $method = $this->wire->input->requestMethod();
@@ -353,8 +385,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function migrate()
   {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
+    $rm = rockmigrations();
+    $rm->installModule("InputfieldRcPricing");
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
       parent: 1,
@@ -402,6 +434,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: 'Variations',
       name: 'variations',
     );
+
+    // migrate all products
+    foreach ($this->wire->templates as $tpl) {
+      $p = $this->wire->pages->newPage("template=$tpl");
+      if (!$p->isProduct) continue;
+      $p->_migrate();
+    }
   }
 
   /**
@@ -653,21 +692,16 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     $inputfields->add($fs);
 
-    // select templates to use for products
-    $templates = new InputfieldCheckboxes();
-    $templates->name = 'productTemplates';
-    $templates->label = 'Templates to use as products';
-    $templates->icon = 'shopping-basket';
-    foreach ($this->wire->templates as $tpl) {
-      /** @var Template $tpl */
-      if ($tpl->flags) continue;
-      if (!$tpl->filenameExists()) continue;
-      if ($tpl->hasTag("RockCommerce")) continue;
-      $templates->addOption($tpl->name);
-    }
-    $templates->value = $this->productTemplates;
-    $templates->notes = "Selected templates will have a new tab on page edit where you can set all RockCommerce product settings (prices etc.).";
-    $inputfields->add($templates);
+    // taxrates
+    $inputfields->add([
+      'type' => 'text',
+      'name' => 'rawtaxrates',
+      'label' => 'Taxrates',
+      'notes' => 'Enter comma-seperated list of taxrates, eg "10.5, 20"',
+      'value' => $this->rawtaxrates,
+      'icon' => 'percent',
+      'required' => true,
+    ]);
 
     // webhook url
     $inputfields->add([
