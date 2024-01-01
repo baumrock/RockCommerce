@@ -17,10 +17,11 @@ use ProcessWire\WireMail;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
+use function ProcessWire\rockcommerce;
+
 class Order extends Page
 {
   use MagicPage;
-  use RockCommercePage;
 
   const tpl = "rockcommerce_order";
   const prefix = "rockcommerce_order_";
@@ -44,7 +45,7 @@ class Order extends Page
   {
     try {
       $this->template = $this->rockmigrations()->getTemplate(self::tpl, true);
-      $this->parent = $this->rockcommerce()->ordersPage();
+      $this->parent = rockcommerce()->ordersPage();
     } catch (\Throwable $th) {
     }
   }
@@ -65,7 +66,7 @@ class Order extends Page
     }
 
     $rm = $this->rockmigrations();
-    $rc = $this->rockcommerce();
+    $rc = rockcommerce();
     $form->prepend($rm->inputfield([
       'type' => 'markup',
       'label' => 'Order ID',
@@ -198,7 +199,7 @@ class Order extends Page
 
   public function getPageListLabel()
   {
-    $rc = $this->rockcommerce();
+    $rc = rockcommerce();
     $date = $rc->badge(date("d.m.Y H:i:s", $this->created));
     $status = $this->statusBadge();
     return $date
@@ -218,7 +219,7 @@ class Order extends Page
       $mollie = $this->wire->modules->get('RockMollie');
       return $mollie->api()->payments->get($this->paymentId());
     } catch (\Throwable $th) {
-      $this->rockcommerce()->log($th->getMessage());
+      rockcommerce()->log($th->getMessage());
     }
     return false;
   }
@@ -234,7 +235,7 @@ class Order extends Page
     if ($invoice) return $invoice;
 
     $parent = $this->wire->pages->get([
-      'parent' => $this->rockcommerce()->invoicesPage(),
+      'parent' => rockcommerce()->invoicesPage(),
       'name' => $parentName,
     ]);
     /** @var Invoice $invoice */
@@ -264,7 +265,7 @@ class Order extends Page
     // create mollie payment
     /** @var RockMollie $mollie */
     $mollie = $this->wire->modules->get('RockMollie');
-    $rc = $this->rockcommerce();
+    $rc = rockcommerce();
     try {
       $total = $this->total(1);
       if (!$total instanceof Money) throw new WireException("Invalid Price");
@@ -449,7 +450,7 @@ class Order extends Page
 
   public function ___notifyAdmin()
   {
-    $mailto = $this->rockcommerce()->adminmail;
+    $mailto = rockcommerce()->adminmail;
     if (!$mailto) return;
 
     try {
@@ -463,7 +464,7 @@ class Order extends Page
         ";
 
       $mail = new WireMail();
-      $rc = $this->rockcommerce();
+      $rc = rockcommerce();
       $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($mailto);
       $mail->subject("New Order at $host");
@@ -488,7 +489,7 @@ class Order extends Page
 
   public function redirectUrl(): string
   {
-    return $this->rockcommerce()->url("order?id={$this->name}", true);
+    return rockcommerce()->url("order?id={$this->name}", true);
   }
 
   /**
@@ -514,7 +515,7 @@ class Order extends Page
       $html = str_replace('{{body}}', $content, $html);
 
       $mail = new WireMail();
-      $rc = $this->rockcommerce();
+      $rc = rockcommerce();
       $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($this->email(1));
       $mail->to('office@baumrock.com');
@@ -585,7 +586,7 @@ class Order extends Page
         $cls = '';
         break;
     }
-    return $this->rockcommerce()->badge($str, $cls);
+    return rockcommerce()->badge($str, $cls);
   }
 
   public static function statuses(): array
