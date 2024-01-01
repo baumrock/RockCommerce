@@ -23,6 +23,11 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
     ];
   }
 
+  public function getPricingArray(): array
+  {
+    return [];
+  }
+
   /**
    * Render the Inputfield
    * @return string

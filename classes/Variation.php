@@ -26,15 +26,19 @@ class Variation extends Page
 
   public function editForm(InputfieldWrapper $form): void
   {
+    if ($name = $form->get('_pw_page_name')) {
+      $name->label = "Variation Name (ID)";
+      $name->appendMarkup = "<style>#Inputfield__pw_page_name_path {display:none;}</style>";
+      $name->columnWidth = 50;
+    }
+
     // add API hint to title field
     if ($f = $form->get('title')) {
       $f->notes = "API: \$rockcommerce->variations('{$this->name}')->title";
+      $f->columnWidth = 50;
+      $form->remove($f);
+      $form->insertBefore($f, $name);
     }
-
-    // tidy up the settings page
-    $form->remove('parent_id');
-    $form->remove('status');
-    $form->remove('template');
   }
 
   public function onCreate(): void
@@ -103,15 +107,18 @@ class Variation extends Page
       'templates' => [
         self::tpl => [
           'fields' => [
-            'title',
+            'title' => [
+              'label' => 'Variation Label',
+            ],
             self::field_options,
           ],
           'noChildren' => 1,
-          'noChangeTemplate' => 0,
           'noUnpublish' => 1,
           'parentTemplates' => [
             Variations::tpl,
           ],
+          'nameContentTab' => 1,
+          'noSettings' => 1,
           'icon' => 'cube',
         ],
       ],
