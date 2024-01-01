@@ -35,6 +35,38 @@ trait Product
     wire()->addHookAfter("ProcessPageEdit::buildForm", $this, "hookBuildForm");
   }
 
+  public function getVariationsArray(): array
+  {
+    return [
+      'demo' => [
+        'foo' => 'Foo Variation',
+        'bar' => 'Bar Variation',
+      ],
+      'auszug-hinten' => [
+        'ohne' => 'Ohne Auszug',
+        '41x91' => 'Heckauszug 41 x 91 cm',
+      ],
+      'auszug-seitlich' => [
+        'ohne' => 'Ohne Auszug',
+        '81x61' => 'Heckauszug 81 x 61 cm',
+      ],
+    ];
+  }
+
+  public function getDataArray(): array
+  {
+    return [
+      ['demo' => 'foo', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => 'ohne'],
+      ['demo' => 'foo', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => '81x61'],
+      ['demo' => 'foo', 'auszug-hinten' => '41x91', 'auszug-seitlich' => 'ohne'],
+      ['demo' => 'foo', 'auszug-hinten' => '41x91', 'auszug-seitlich' => '81x61'],
+      ['demo' => 'bar', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => 'ohne'],
+      ['demo' => 'bar', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => '81x61'],
+      ['demo' => 'bar', 'auszug-hinten' => '41x91', 'auszug-seitlich' => 'ohne'],
+      ['demo' => 'bar', 'auszug-hinten' => '41x91', 'auszug-seitlich' => '81x61'],
+    ];
+  }
+
   public function hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
@@ -142,7 +174,7 @@ trait Product
         'rows' => 5,
         'icon' => 'cubes',
         'columnWidth' => 50,
-        'notes' => 'Simple Options can NOT be filtered.',
+        'notes' => 'Can NOT be filtered.',
       ],
       self::field_options => [
         'type' => 'page',
@@ -153,27 +185,27 @@ trait Product
         'labelFieldName' => 'title',
         'icon' => 'cubes',
         'columnWidth' => 50,
-        'notes' => 'Global Options can be filtered.',
+        'notes' => 'Can be filtered.',
       ],
 
       self::field_simplevariations => [
         'type' => 'textarea',
-        'label' => 'Simple Variations (only for this product)',
+        'label' => 'Simple (only for this product)',
         'rows' => 5,
         'icon' => 'cubes',
         'columnWidth' => 50,
-        'notes' => 'Simple Variations can NOT be filtered.',
+        'notes' => 'Can NOT be filtered.',
       ],
       self::field_variations => [
         'type' => 'page',
-        'label' => 'Global Variations',
+        'label' => 'Global',
         'derefAsPage' => FieldtypePage::derefAsPageArray,
         'inputfield' => 'InputfieldAsmSelect',
         'findPagesSelector' => "template=" . Variation::tpl,
         'labelFieldName' => 'title',
         'icon' => 'cubes',
         'columnWidth' => 50,
-        'notes' => 'Global Variations can be filtered.',
+        'notes' => 'Can be filtered.',
       ],
 
       self::field_pricing => [

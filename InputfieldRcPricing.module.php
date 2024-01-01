@@ -23,21 +23,26 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
     ];
   }
 
-  public function getPricingArray(): array
-  {
-    return [];
-  }
-
   /**
    * Render the Inputfield
    * @return string
    */
   public function ___render()
   {
+    $page = $this->wire->pages->get($this->wire->input->get->id);
+    $variations = json_encode($page->getVariationsArray());
+    $data = json_encode($page->getDataArray());
+
     $out = parent::___render();
     $grid = "grid_{$this->name}";
-    return "<div id='$grid'></div>
-      <script>RcVariations.init('#$grid')</script>
+    return "
+      <div class='uk-margin-small uk-flex uk-flex-middle uk-flex-right'>
+        <span class='uk-margin-small-right'>Set price on all visible rows</span>
+        <input type='text' class='uk-input uk-form-small' style='width: 100px;'>
+        <button class='uk-button uk-button-primary uk-button-small'>OK</button>
+      </div>
+      <div id='$grid'></div>
+      <script>RcVariations.init('#$grid', $variations, $data)</script>
       <div hidden>$out</div>";
   }
 
