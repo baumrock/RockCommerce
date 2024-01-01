@@ -41,18 +41,18 @@ Place your hooks in `/site/init.php` (not ready.php!):
 // modify the cartitem's title:
 $wire->addHookAfter("Cartitem::cartTitle", function ($event) {
   $item = $event->object;
-  $page = $item->page(); // get the item's referenced page
-  $event->return = $page->title;
+  $product = $item->product(); // get the item's referenced product
+  $event->return = $product->title;
 });
 
 // modify the cartitem's description:
 $wire->addHookAfter("Cartitem::cartDescription", function ($event) {
   $item = $event->object;
-  $page = $item->page(); // get the item's referenced page
+  $product = $item->product(); // get the item's referenced product
 
   // if you want to render html markup you need to use
   // the html() helper to prevent latte from escaping your markup
   // note: do this only on save markup!
-  $event->return = $item->html($page->body);
+  $event->return = $item->html($product->body);
 });
 ```

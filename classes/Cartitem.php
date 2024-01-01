@@ -10,6 +10,7 @@ use RockMigrations\MagicPage;
 use RockMoney\Money;
 
 use function ProcessWire\rockfrontend;
+use function ProcessWire\rockmigrations;
 use function ProcessWire\rockmoney;
 
 class Cartitem extends Page
@@ -20,6 +21,7 @@ class Cartitem extends Page
   const prefix = "rockcommerce_cartitem_";
 
   const field_page = self::prefix . "page";
+  const field_product = self::prefix . "product";
   const field_amount = self::prefix . "amount";
 
   public function __construct($parent = false)
@@ -36,12 +38,12 @@ class Cartitem extends Page
 
   public function editForm(InputfieldWrapper $form): void
   {
-    if ($f = $form->get(self::field_page)) {
-      $page = $f->value;
-      if ($page && $page->id) {
+    if ($f = $form->get(self::field_product)) {
+      $product = $f->value;
+      if ($product && $product->id) {
         $f->entityEncodeText = false;
-        $f->notes = "<a href={$page->editUrl()} target=_blank class=uk-margin-small-right>" . $this->_('edit') . "</a>"
-          . "<a href={$page->url()} target=_blank>" . $this->_('view') . "</a>";
+        $f->notes = "<a href={$product->editUrl()} target=_blank class=uk-margin-small-right>" . $this->_('edit') . "</a>"
+          . "<a href={$product->url()} target=_blank>" . $this->_('view') . "</a>";
       }
     }
   }
@@ -101,9 +103,9 @@ class Cartitem extends Page
     return rockmoney()->parse(0);
   }
 
-  public function page(): Page|false
+  public function product(): Page|false
   {
-    return $this->getFormatted(self::field_page);
+    return $this->getFormatted(self::field_product);
   }
 
   public function totalNet(): Money
@@ -125,13 +127,13 @@ class Cartitem extends Page
 
   public function migrate()
   {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
+    $rm = rockmigrations();
+    $rm->deleteField(self::field_page, true);
     $rm->migrate([
       'fields' => [
-        self::field_page => [
+        self::field_product => [
           'type' => 'page',
-          'label' => 'Item',
+          'label' => 'Product',
           'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
           'inputfield' => 'InputfieldPageAutocomplete',
           'findPagesSelector' => 'id>0,template!=admin',
@@ -147,7 +149,7 @@ class Cartitem extends Page
       'templates' => [
         self::tpl => [
           'fields-' => [
-            self::field_page => ['columnWidth' => 50],
+            self::field_product => ['columnWidth' => 50],
             self::field_amount => ['columnWidth' => 50],
           ],
           'parentTemplates' => [
