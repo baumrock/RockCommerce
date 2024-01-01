@@ -697,7 +697,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'type' => 'text',
       'name' => 'rawtaxrates',
       'label' => 'Taxrates',
-      'notes' => 'Enter comma-seperated list of taxrates, eg "10.5, 20"',
+      'notes' => 'Enter comma-seperated list of taxrates, eg "10.5, 20".
+        The first item in the list will be used as default value on new products.',
       'value' => $this->rawtaxrates,
       'icon' => 'percent',
       'required' => true,

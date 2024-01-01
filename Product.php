@@ -71,8 +71,12 @@ trait Product
 
     $f = new InputfieldSelect();
     $f->name = $inputfield->name;
-    $f->value = $inputfield->hasPage->{$inputfield->hasField};
-    $f->setOptions(rockcommerce()->getTaxrates());
+    $options = rockcommerce()->getTaxrates();
+    $default = @array_keys($options)[0];
+    $f->value = $inputfield->hasPage->{$inputfield->hasField} ?: $default;
+    $f->setOptions($options);
+    $f->required = true;
+
     $event->return = $f->render();
     $event->replace = true;
   }
