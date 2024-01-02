@@ -119,8 +119,9 @@ trait Product
   public function customVariations(): array
   {
     $arr = [];
-    $lines = explode("\n", $this->getFormatted(self::field_customvariations));
+    $lines = explode("\n", (string)$this->getFormatted(self::field_customvariations));
     $catname = false;
+    $sanitizer = wire()->sanitizer;
     foreach ($lines as $line) {
       $line = trim($line);
 
@@ -131,7 +132,7 @@ trait Product
       if (str_starts_with($line, "# ")) {
         $str = trim($line, "# ");
         $parts = explode(":", $str, 2);
-        $catname = trim((string)@$parts[0]);
+        $catname = $sanitizer->pageName(@$parts[0]);
         if (!$catname) continue;
         $arr[$catname] = [];
         continue;
@@ -141,7 +142,7 @@ trait Product
       if (!$catname) continue;
       if (!array_key_exists($catname, $arr)) continue;
       $parts = explode(":", $line, 2);
-      $key = trim((string)@$parts[0]);
+      $key = $sanitizer->pageName(@$parts[0]);
       $val = trim((string)@$parts[1]);
       $arr[$catname][$key] = $val;
     }
@@ -202,7 +203,7 @@ trait Product
       $arr[$variation->name] = $variation->optionsArray();
     }
 
-    return $arr;
+    return $this->variationsArray = $arr;
   }
 
   public function hookBuildForm(HookEvent $event): void
@@ -261,6 +262,7 @@ trait Product
     $page = $event->arguments('page');
     if (!$page->isProduct) return;
 
+    // update all prices
     $page->set(self::field_net, $page->priceFrom(false)->net);
     $page->set(self::field_gross, $page->priceFrom(false)->gross);
     $page->set(self::field_tonet, $page->priceTo(false)->net);
@@ -350,7 +352,7 @@ trait Product
         'rows' => 5,
         'icon' => 'cubes',
         'columnWidth' => 50,
-        'notes' => 'Only for this product. Can NOT be filtered.',
+        'notes' => 'Only for this product. Can NOT be filtered. Can NOT be multilingual.',
         'showIf' => self::field_simplepricing . "=0",
         'collapsed' => Inputfield::collapsedNo,
       ],
@@ -363,7 +365,7 @@ trait Product
         'labelFieldName' => 'title',
         'icon' => 'cubes',
         'columnWidth' => 50,
-        'notes' => 'Can be filtered.',
+        'notes' => 'Can be filtered. Can be multilingual.',
         'showIf' => self::field_simplepricing . "=0",
         'collapsed' => Inputfield::collapsedNo,
       ],
