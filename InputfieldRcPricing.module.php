@@ -36,13 +36,12 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
     $out = parent::___render();
     $grid = "grid_{$this->name}";
     return "
-      <div class='uk-margin-small uk-flex uk-flex-middle uk-flex-right'>
+      <div id='set-prices' class='uk-margin-small uk-flex uk-flex-middle uk-flex-right'>
         <span class='uk-margin-small-right'>Set price on all visible rows</span>
         <input type='text' class='uk-input uk-form-small' style='width: 100px;'>
-        <button class='uk-button uk-button-primary uk-button-small'>OK</button>
       </div>
       <div id='$grid'></div>
-      <script>RcVariations.init('#$grid', $variations, $data)</script>
+      <script>RcPricing.init('#$grid', $variations, $data)</script>
       <div hidden>$out</div>";
   }
 

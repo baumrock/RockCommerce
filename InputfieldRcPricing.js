@@ -5,9 +5,43 @@ $(document).ready(() => {
   $("#_Inputfield_rc_product_rctab").click();
 });
 
-function _RcVariations() {}
+function _RcPricing() {
+  this.root;
+  this.textarea;
+  this.table;
+}
 
-_RcVariations.prototype.init = function (id, variations, data) {
+_RcPricing.prototype.getArray = function () {
+  let arr = {};
+  this.table.getData().forEach((row) => {
+    delete row["id"];
+    arr[RcPricing.getKey(row)] = row.net;
+  });
+  return arr;
+};
+
+/**
+ * Get prices array-key from row object
+ */
+_RcPricing.prototype.getKey = function (row) {
+  let key = "";
+  let sep = "";
+  for (let col in row) {
+    if (col == "net") continue;
+    key += sep + col + ":" + row[col];
+    sep = "|";
+  }
+  return key;
+};
+
+_RcPricing.prototype.getPrices = function () {
+  return JSON.parse(this.textarea.value);
+};
+
+_RcPricing.prototype.init = function (id, variations, data) {
+  this.root = document.querySelector(id).closest(".Inputfield");
+  this.textarea = this.root.querySelector("textarea.FieldtypeTextarea");
+
   // setup columns
   let columns = [];
   for (let prop in variations) {
@@ -29,14 +63,45 @@ _RcVariations.prototype.init = function (id, variations, data) {
     },
   });
 
-  console.log(data);
-
-  //create Tabulator on DOM element with id "example-table"
-  var table = new Tabulator(id, {
-    data: data, //assign data to table
+  // create Tabulator
+  this.table = new Tabulator(id, {
+    data: this.setPrices(data),
     layout: "fitColumns", //fit columns to width of table (optional)
     columns: columns,
   });
+
+  /** ##### events ##### */
+
+  // save data when cell has been edited
+  this.table.on("cellEdited", function (cell) {
+    RcPricing.saveJson();
+  });
+
+  // update prices on button click
+  let setPrices = (e) => {
+    e.preventDefault();
+    let price = $("#set-prices input").val();
+    let table = this.table;
+    table.getData("active").forEach((row) => {
+      row.net = price;
+      table.updateData([row]);
+    });
+    RcPricing.saveJson();
+  };
+  $(document).on("keyup", "#set-prices input", setPrices);
 };
 
-var RcVariations = new _RcVariations();
+_RcPricing.prototype.saveJson = function () {
+  this.textarea.value = JSON.stringify(this.getArray());
+};
+
+_RcPricing.prototype.setPrices = function (data) {
+  let prices = this.getPrices();
+  data.forEach((row) => {
+    row.id = RcPricing.getKey(row);
+    row.net = prices[row.id];
+  });
+  return data;
+};
+
+var RcPricing = new _RcPricing();

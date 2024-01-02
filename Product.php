@@ -216,7 +216,7 @@ trait Product
         'type' => 'textarea',
         'label' => 'Pricing',
         'inputfieldClass' => 'InputfieldRcPricing',
-        'rows' => 1,
+        'rows' => 5,
         'icon' => 'money',
         'textformatters' => [
           'TextformatterEntities',
