@@ -1,9 +1,9 @@
 "use strict";
 
 // temporary hack to focus shop tab for development
-$(document).ready(() => {
-  $("#_Inputfield_rc_product_rctab").click();
-});
+// $(document).ready(() => {
+//   $("#_Inputfield_rc_product_rctab").click();
+// });
 
 function _RcPricing() {
   this.root;
@@ -35,7 +35,7 @@ _RcPricing.prototype.getKey = function (row) {
 };
 
 _RcPricing.prototype.getPrices = function () {
-  return JSON.parse(this.textarea.value);
+  return JSON.parse(this.textarea.value || "[]");
 };
 
 _RcPricing.prototype.init = function (id, variations, data) {

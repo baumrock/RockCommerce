@@ -51,14 +51,4 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
     rockmigrations()->addStyles(__DIR__ . "/../RockGrid/tabulator/tabulator.min.css");
     parent::renderReady($parent, $renderValueMode);
   }
-
-  // /**
-  //  * Process the Inputfield's input
-  //  * @return $this
-  //  */
-  // public function ___processInput($input)
-  // {
-  //   $this->message('process input!');
-  //   return false;
-  // }
 }

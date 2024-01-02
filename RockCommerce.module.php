@@ -71,6 +71,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->loadConfig();
     $this->wire('rockcommerce', $this);
 
+    // attach classloader
+    $this->wire->classLoader->addNamespace("RockCommerce", __DIR__);
+
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->watch($this);
