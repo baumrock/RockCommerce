@@ -90,7 +90,9 @@ trait Product
     ], [
       'label' => 'Options',
       'icon' => 'cubes',
-      // 'collapsed' => Inputfield::collapsedYes,
+      'collapsed' => $page->simpleoptions(1) . $page->options(1)
+        ? Inputfield::collapsedNo
+        : Inputfield::collapsedYes,
     ]);
 
     // variations
@@ -101,7 +103,9 @@ trait Product
     ], [
       'label' => 'Variations',
       'icon' => 'cubes',
-      // 'collapsed' => Inputfield::collapsedYes,
+      'collapsed' => $page->simplevariations(1) . $page->variations(1)
+        ? Inputfield::collapsedNo
+        : Inputfield::collapsedYes,
     ]);
   }
 
