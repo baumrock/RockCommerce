@@ -1,9 +1,9 @@
 "use strict";
 
 // temporary hack to focus shop tab for development
-$(document).ready(() => {
-  $("#_Inputfield_rc_product_rctab").click();
-});
+// $(document).ready(() => {
+//   $("#_Inputfield_rc_product_rctab").click();
+// });
 
 function _RcPricing() {
   this.root;
@@ -97,10 +97,23 @@ _RcPricing.prototype.saveJson = function () {
 
 _RcPricing.prototype.setPrices = function (data) {
   let prices = this.getPrices();
+  let notFound = Object.assign({}, prices);
   data.forEach((row) => {
     row.id = RcPricing.getKey(row);
-    row.net = prices[row.id];
+    let price = prices[row.id];
+    if (price !== undefined) delete notFound[row.id];
+    row.net = price;
   });
+
+  // populate not found warning
+  for (let prop in notFound) {
+    $("#notFound").attr("hidden", false);
+    $("#notFoundWarning").attr("hidden", false);
+    $("#notFound > div").append(
+      "<div>" + prop.replace("|", " | ") + " = " + notFound[prop] + "</div>"
+    );
+  }
+
   return data;
 };
 

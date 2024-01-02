@@ -19,6 +19,7 @@ trait Product
 
   private $priceTo;
   private $priceFrom;
+  private $variationsArray;
 
   const _prefix = "rc_product_";
 
@@ -29,8 +30,8 @@ trait Product
   const field_taxrate = self::_prefix . "taxrate";
   const field_gross = self::_prefix . "gross";
   const field_pricing = self::_prefix . "pricing";
-  const field_simplevariations = self::_prefix . "simplevariations";
-  const field_simpleoptions = self::_prefix . "simpleoptions";
+  const field_customvariations = self::_prefix . "customvariations";
+  const field_customoptions = self::_prefix . "customoptions";
   const field_simplepricing = self::_prefix . "simplepricing";
   const field_tonet = self::_prefix . "tonet";
   const field_togross = self::_prefix . "togross";
@@ -115,22 +116,93 @@ trait Product
 
   /** Backend */
 
-  public function getVariationsArray(): array
+  public function customVariations(): array
   {
     $arr = [];
+    $lines = explode("\n", $this->getFormatted(self::field_customvariations));
+    $catname = false;
+    foreach ($lines as $line) {
+      $line = trim($line);
+
+      // skip empty lines
+      if (!$line) continue;
+
+      // new category?
+      if (str_starts_with($line, "# ")) {
+        $str = trim($line, "# ");
+        $parts = explode(":", $str, 2);
+        $catname = trim((string)@$parts[0]);
+        if (!$catname) continue;
+        $arr[$catname] = [];
+        continue;
+      }
+
+      // populate values
+      if (!$catname) continue;
+      if (!array_key_exists($catname, $arr)) continue;
+      $parts = explode(":", $line, 2);
+      $key = trim((string)@$parts[0]);
+      $val = trim((string)@$parts[1]);
+      $arr[$catname][$key] = $val;
+    }
+
+    // bd($str);
+    return $arr;
+  }
+
+  /**
+   * Get data array
+   * This array is used in tabulator to populate rows.
+   * It holds all possible combinations of variation values.
+   * Thank you ChatGPT :)
+   */
+  public function getDataArray(): array
+  {
+    $rows = [[]];
+    $variations = $this->getVariationsArray();
+
+    foreach ($variations as $name => $options) {
+      $temp = [];
+      foreach ($rows as $row) {
+        foreach ($options as $k => $value) {
+          $temp[] = array_merge($row, [$name => $k]);
+        }
+      }
+      $rows = $temp;
+    }
+
+    return $rows;
+  }
+
+  /**
+   * Get variations array. This array is used in tabulator to create columns.
+   *
+   * Example return:
+   * array
+   *  'auszug-hinten' => array
+   *    'ohne' => 'Ohne Auszug'
+   *    '41x91' => 'Heckauszug 41 x 91 cm'
+   *  'auszug-seitlich' => array
+   *    'ohne' => 'Ohne Auszug'
+   *    '81x61' => 'Auszug 81 x 61 cm'
+   */
+  public function getVariationsArray(): array
+  {
+    if ($this->variationsArray) return $this->variationsArray;
+    $arr = [];
+
+    // custom variations
+    foreach ($this->customVariations() as $name => $options) {
+      $arr[$name] = $options;
+    }
+
+    // global variations
     foreach ($this->variations() as $variation) {
       if (!$variation instanceof Variation) continue;
       $arr[$variation->name] = $variation->optionsArray();
     }
-    return $arr;
-  }
 
-  public function getDataArray(): array
-  {
-    return [
-      ['demo' => 'foo', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => 'ohne'],
-      ['demo' => 'foo', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => '81x61'],
-    ];
+    return $arr;
   }
 
   public function hookBuildForm(HookEvent $event): void
@@ -148,6 +220,7 @@ trait Product
         #preview td {padding:2px}
         #preview td:first-child {padding-right:20px}
       </style>" .
+      "<div id='notFoundWarning' class='uk-margin-remove-top uk-text-bold uk-alert uk-alert-warning' hidden>WARNING: See Pricing Field</div>" .
       "<table id='preview' class='uk-table uk-table-small uk-table-striped uk-margin-remove'>" .
       "<tr><td>Net</td><td class='uk-width-expand'>{$page->price()->renderNet()}</td></tr>" .
       "<tr><td>Gross</td><td class='uk-width-expand'>{$page->price()->renderGross()}</td></tr>" .
@@ -162,7 +235,7 @@ trait Product
 
       self::field_net,
 
-      self::field_simplevariations,
+      self::field_customvariations,
       self::field_variations,
       self::field_pricing,
     ], [
@@ -172,12 +245,12 @@ trait Product
 
     // options
     rockmigrations()->wrapFields($form, [
-      self::field_simpleoptions,
+      self::field_customoptions,
       self::field_options,
     ], [
       'label' => 'Options',
       'icon' => 'cubes',
-      'collapsed' => $page->simpleoptions(1) . $page->options(1)
+      'collapsed' => $page->customoptions(1) . $page->options(1)
         ? Inputfield::collapsedNo
         : Inputfield::collapsedYes,
     ]);
@@ -214,6 +287,10 @@ trait Product
   public function _migrate(): void
   {
     $rm = rockmigrations();
+
+    $rm->deleteField(self::_prefix . "simplevariations");
+    $rm->deleteField(self::_prefix . "simpleoptions");
+
     $fields = [
       self::field_rctab => [
         'type' => 'FieldsetTabOpen',
@@ -270,7 +347,7 @@ trait Product
         'collapsed' => Inputfield::collapsedHidden,
       ],
 
-      self::field_simplevariations => [
+      self::field_customvariations => [
         'type' => 'textarea',
         'label' => 'Custom Variations',
         'rows' => 5,
@@ -307,9 +384,9 @@ trait Product
         'collapsed' => Inputfield::collapsedNo,
       ],
 
-      self::field_simpleoptions => [
+      self::field_customoptions => [
         'type' => 'textarea',
-        'label' => 'Simple (only for this product)',
+        'label' => 'Custom (only for this product)',
         'rows' => 5,
         'icon' => 'cubes',
         'columnWidth' => 50,
