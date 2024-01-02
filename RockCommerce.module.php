@@ -389,11 +389,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function migrate()
   {
     $rm = rockmigrations();
-
-    $rm->deleteTemplate("variations");
-    $rm->deleteTemplate("variation");
-
     $rm->installModule("InputfieldRcPricing");
+
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
       parent: 1,
@@ -441,6 +438,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: 'Variations',
       name: 'variations',
     );
+
+    // set tags for all fields
+    foreach ($this->wire->fields as $field) {
+      if (!str_starts_with($field->name, "rockcommerce_")) continue;
+      $rm->setFieldData($field, ['tags' => 'RockCommerce']);
+    }
 
     // migrate all products
     foreach ($this->wire->templates as $tpl) {

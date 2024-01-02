@@ -288,9 +288,6 @@ trait Product
   {
     $rm = rockmigrations();
 
-    $rm->deleteField(self::_prefix . "simplevariations");
-    $rm->deleteField(self::_prefix . "simpleoptions");
-
     $fields = [
       self::field_rctab => [
         'type' => 'FieldsetTabOpen',
@@ -404,7 +401,7 @@ trait Product
         'notes' => 'Can be filtered.',
       ],
     ];
-    foreach ($fields as $v) $v['tags'] = "RockCommerce";
+    foreach ($fields as &$v) $v['tags'] = "RockCommerce";
     $rm->createFields($fields);
     $fieldnames = array_keys($fields);
     $rm->addFieldsToTemplate($fieldnames, $this);
