@@ -3,23 +3,46 @@
 namespace RockCommerce;
 
 use ProcessWire\HookEvent;
+use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\RockMigrations;
 use RockMigrations\MagicPage;
+
+use function ProcessWire\wire;
 
 class Variation extends Page
 {
   use MagicPage;
 
-  const tpl = "variation";
-  const prefix = "variation_";
+  const tpl = "rockcommerce_variation";
+  const prefix = "rockcommerce_variation_";
 
   const field_options = self::prefix . "options";
   const field_id = self::prefix . "id";
 
+  private $optionsArray;
+
   public function init(): void
   {
-    $this->wire->addHookAfter("Pages::saveReady", $this, "hookRepeaterSave");
+    wire()->addHookAfter("Pages::saveReady", $this, "hookRepeaterSave");
+    wire()->addHookAfter("Inputfield::render", $this, "lockIdField");
+  }
+
+  public function lockIdField(HookEvent $event): void
+  {
+    $inputfield = $event->object;
+    if (!$field = $inputfield->hasField) return;
+    if ($field->name != self::field_id) return;
+    if (!$page = $inputfield->hasPage) return;
+    if (!$inputfield->value) return;
+
+    // lock field only if it is not newer than 2 minutes
+    if ($page->created > time() - RockMigrations::oneMinute * 2) return;
+
+    // field must not be editable
+    $event->return = $inputfield->value .
+      "<input type=hidden name={$inputfield->name} value={$inputfield->value} />";
   }
 
   /** magic */
@@ -30,6 +53,10 @@ class Variation extends Page
       $name->label = "Variation Name (ID)";
       $name->appendMarkup = "<style>#Inputfield__pw_page_name_path {display:none;}</style>";
       $name->columnWidth = 50;
+      if ($num = $this->hasReferences) {
+        $name->collapsed = Inputfield::collapsedNoLocked;
+        $name->notes = "Variation is used by $num pages - ID can't be changed.";
+      }
     }
 
     // add API hint to title field
@@ -54,7 +81,23 @@ class Variation extends Page
    */
   public function label(): string
   {
-    return $this->title ?: $this->getFormatted(self::field_id);
+    return $this->title ?: $this->variationID();
+  }
+
+  public function variationID(): string
+  {
+    return $this->getFormatted(self::field_id);
+  }
+
+  public function optionsArray(): array
+  {
+    if ($this->optionsArray) return $this->optionsArray;
+    $arr = [];
+    foreach ($this->options(1) as $option) {
+      $name = $option->getFormatted(self::field_id);
+      $arr[$name] = $option->title;
+    }
+    return $this->optionsArray = $arr;
   }
 
   /** backend */
@@ -88,11 +131,14 @@ class Variation extends Page
           'label' => 'Options',
           'type' => 'FieldtypeRepeater',
           'fields' => [
-            self::field_id,
+            self::field_id => [
+              'columnWidth' => 30,
+            ],
             'title' => [
               'label' => 'Label',
               'notes' => 'Human readable label',
               'required' => false,
+              'columnWidth' => 70,
             ],
           ],
           'repeaterTitle' => '{' . self::field_id . '}',

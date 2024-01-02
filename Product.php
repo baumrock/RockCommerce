@@ -7,6 +7,7 @@ use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldMarkup;
 use ProcessWire\InputfieldSelect;
+use ProcessWire\PageArray;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
@@ -33,6 +34,7 @@ trait Product
   const field_simplepricing = self::_prefix . "simplepricing";
   const field_tonet = self::_prefix . "tonet";
   const field_togross = self::_prefix . "togross";
+  const field_available = self::_prefix . "available";
 
   public function _init(): void
   {
@@ -106,24 +108,21 @@ trait Product
     return $this->getFormatted(self::field_taxrate) ?: 0;
   }
 
+  public function variations(): PageArray
+  {
+    return $this->getFormatted(self::field_variations . "[]");
+  }
+
   /** Backend */
 
   public function getVariationsArray(): array
   {
-    return [
-      'demo' => [
-        'foo' => 'Foo Variation',
-        'bar' => 'Bar Variation',
-      ],
-      'auszug-hinten' => [
-        'ohne' => 'Ohne Auszug',
-        '41x91' => 'Heckauszug 41 x 91 cm',
-      ],
-      'auszug-seitlich' => [
-        'ohne' => 'Ohne Auszug',
-        '81x61' => 'Heckauszug 81 x 61 cm',
-      ],
-    ];
+    $arr = [];
+    foreach ($this->variations() as $variation) {
+      if (!$variation instanceof Variation) continue;
+      $arr[$variation->name] = $variation->optionsArray();
+    }
+    return $arr;
   }
 
   public function getDataArray(): array
@@ -131,12 +130,6 @@ trait Product
     return [
       ['demo' => 'foo', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => 'ohne'],
       ['demo' => 'foo', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => '81x61'],
-      ['demo' => 'foo', 'auszug-hinten' => '41x91', 'auszug-seitlich' => 'ohne'],
-      ['demo' => 'foo', 'auszug-hinten' => '41x91', 'auszug-seitlich' => '81x61'],
-      ['demo' => 'bar', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => 'ohne'],
-      ['demo' => 'bar', 'auszug-hinten' => 'ohne', 'auszug-seitlich' => '81x61'],
-      ['demo' => 'bar', 'auszug-hinten' => '41x91', 'auszug-seitlich' => 'ohne'],
-      ['demo' => 'bar', 'auszug-hinten' => '41x91', 'auszug-seitlich' => '81x61'],
     ];
   }
 
@@ -227,6 +220,16 @@ trait Product
         'label' => 'Shop',
         'collapsed' => Inputfield::collapsedYesAjax,
       ],
+
+      self::field_available => [
+        'type' => 'toggle',
+        'label' => 'Product is available for purchase',
+        'formatType' => 0, // integer 0/1
+        'labelType' => 0, // yes/no
+        'inputfieldClass' => 0, // toggle buttons
+        'defaultOption' => 'yes',
+      ],
+
       self::field_simplepricing => [
         'type' => 'toggle',
         'label' => 'Simple Pricing',

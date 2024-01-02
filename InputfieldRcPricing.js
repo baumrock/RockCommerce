@@ -1,9 +1,9 @@
 "use strict";
 
 // temporary hack to focus shop tab for development
-// $(document).ready(() => {
-//   $("#_Inputfield_rc_product_rctab").click();
-// });
+$(document).ready(() => {
+  $("#_Inputfield_rc_product_rctab").click();
+});
 
 function _RcPricing() {
   this.root;

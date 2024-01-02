@@ -9,8 +9,8 @@ class Variations extends Page
 {
   use MagicPage;
 
-  const tpl = "variations";
-  const prefix = "variations_";
+  const tpl = "rockcommerce_variations";
+  const prefix = "rockcommerce_variations_";
 
   /** backend */
 

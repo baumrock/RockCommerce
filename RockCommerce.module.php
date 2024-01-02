@@ -389,6 +389,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function migrate()
   {
     $rm = rockmigrations();
+
+    $rm->deleteTemplate("variations");
+    $rm->deleteTemplate("variation");
+
     $rm->installModule("InputfieldRcPricing");
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
