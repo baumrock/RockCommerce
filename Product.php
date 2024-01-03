@@ -36,6 +36,7 @@ trait Product
   const field_tonet = self::_prefix . "tonet";
   const field_togross = self::_prefix . "togross";
   const field_available = self::_prefix . "available";
+  const field_searchable = self::_prefix . "searchable";
 
   public function _init(): void
   {
@@ -45,11 +46,6 @@ trait Product
   }
 
   /** Frontend API */
-
-  public function simplepricing(): bool
-  {
-    return !!$this->getFormatted(self::field_simplepricing);
-  }
 
   public function price(): Price|PriceMulti
   {
@@ -102,6 +98,11 @@ trait Product
       $this->priceTo(),
       $this->taxrate()
     );
+  }
+
+  public function simplepricing(): bool
+  {
+    return !!$this->getFormatted(self::field_simplepricing);
   }
 
   public function taxrate(): float
@@ -206,6 +207,29 @@ trait Product
     return $this->variationsArray = $arr;
   }
 
+  /**
+   * Convert variations array to string used in textarea
+   * Helpful for importing custom variations via API.
+   *
+   * Example array to feed:
+   * array
+   *   'versions: Versionen' => array
+   *     't903s' => 'Travel 903 S'
+   *     't903l' => 'Travel 903 L'
+   */
+  public function getVariationsString(array $variations): string
+  {
+    $variations = $this->sanitizeVariations($variations);
+    $str = "";
+    foreach ($variations as $name => $options) {
+      $str .= "# $name\n";
+      foreach ($options as $k => $v) {
+        $str .= "$k: $v\n";
+      }
+    }
+    return $str;
+  }
+
   public function hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
@@ -230,8 +254,8 @@ trait Product
 
     // pricing
     rockmigrations()->wrapFields($form, [
-      self::field_taxrate => ['columnWidth' => 20],
-      self::field_simplepricing => ['columnWidth' => 30],
+      self::field_simplepricing => ['columnWidth' => 25],
+      self::field_taxrate => ['columnWidth' => 25],
       "preview" => ['columnWidth' => 50],
 
       self::field_net,
@@ -286,6 +310,62 @@ trait Product
     $event->replace = true;
   }
 
+  /**
+   * Sanitize variations array for further use
+   */
+  public function sanitizeVariations(array $variations): array
+  {
+    $new = [];
+    foreach ($variations as $key => $options) {
+      $parts = explode(":", $key, 2);
+      $var = $this->wire->sanitizer->pageNameTranslate($parts[0]);
+      if (count($parts) > 1) $var = "$var: " . trim($parts[1]);
+
+      $opts = [];
+      foreach ($options as $k => $v) {
+        $k = $this->wire->sanitizer->pageNameTranslate($k);
+        $opts[$k] = $v;
+      }
+      $new[$var] = $opts;
+    }
+    return $new;
+  }
+
+  /**
+   * Set complex prices for this product and save it
+   * Example array to feed:
+   * [
+   *   'size:s' => 600,
+   *   'size:m' => 800,
+   *   'size:l' => 1200,
+   * ]
+   */
+  public function setPrices(array $prices, float $taxrate = null): void
+  {
+    $this->of(false);
+    $this->set(self::field_simplepricing, 0);
+    if ($taxrate !== null) $this->set(self::field_taxrate, $taxrate);
+    $this->set(self::field_pricing, json_encode($prices));
+    $this->save();
+  }
+
+  /**
+   * Set simple price for this product and save it
+   */
+  public function setSimplePrice(float $net, float $taxrate = null): void
+  {
+    $this->of(false);
+    $this->set(self::field_simplepricing, 1);
+    if ($taxrate !== null) $this->set(self::field_taxrate, $taxrate);
+    $this->set(self::field_net, $net);
+    $this->save();
+  }
+
+  public function setAvailable(bool $status): void
+  {
+    $this->setAndSave(self::field_available, $status);
+  }
+
   public function _migrate(): void
   {
     $rm = rockmigrations();
@@ -299,11 +379,21 @@ trait Product
 
       self::field_available => [
         'type' => 'toggle',
-        'label' => 'Product is available for purchase',
+        'label' => 'Product is available to buy',
         'formatType' => 0, // integer 0/1
         'labelType' => 0, // yes/no
         'inputfieldClass' => 0, // toggle buttons
         'defaultOption' => 'yes',
+        'columnWidth' => 50,
+      ],
+      self::field_searchable => [
+        'type' => 'toggle',
+        'label' => 'List product in search results',
+        'formatType' => 0, // integer 0/1
+        'labelType' => 0, // yes/no
+        'inputfieldClass' => 0, // toggle buttons
+        'defaultOption' => 'yes',
+        'columnWidth' => 50,
       ],
 
       self::field_simplepricing => [
