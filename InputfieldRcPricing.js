@@ -95,7 +95,7 @@ var RcPricing;
 
     // update RockCalculator element when editing
     table.on("cellEditing", function (cell) {
-      if (typeof RockCalculator == undefined) return;
+      if (typeof RockCalculator == "undefined") return;
       if (!RockCalculator.metaClick) return;
       RockCalculator.show($(id), cell);
     });
