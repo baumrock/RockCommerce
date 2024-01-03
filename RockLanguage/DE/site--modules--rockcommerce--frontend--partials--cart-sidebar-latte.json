@@ -1,0 +1,24 @@
+{
+    "file": "site\/modules\/RockCommerce\/frontend\/partials\/cart-sidebar.latte",
+    "textdomain": "site--modules--rockcommerce--frontend--partials--cart-sidebar-latte",
+    "translations": {
+        "a85eba4c6c699122b2bb1387ea4813ad": {
+            "text": "Warenkorb"
+        },
+        "9dea4016dbcc290b773ab2fae678aaa8": {
+            "text": "Artikel"
+        },
+        "2194aaec8cc7086ab0e93f74547e5f53": {
+            "text": "Zwischensumme"
+        },
+        "104d9898c04874d0fbac36e125fa1369": {
+            "text": "Rabatt"
+        },
+        "96b0141273eabab320119c467cdcaf17": {
+            "text": "Gesamt"
+        },
+        "6ff063fbc860a79759a7369ac32cee22": {
+            "text": "Zur Kasse"
+        }
+    }
+}

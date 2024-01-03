@@ -9,10 +9,11 @@ use ProcessWire\Page;
 use ProcessWire\RockMigrations;
 use RockMigrations\MagicPage;
 
+use function ProcessWire\rockcommerce;
+
 class Webhook extends Page
 {
   use MagicPage;
-  use RockCommercePage;
 
   const tpl = "rockcommerce_webhook";
   const prefix = "rockcommerce_webhook_";
@@ -49,7 +50,7 @@ class Webhook extends Page
 
   public function getPageListLabel()
   {
-    return $this->rockcommerce()->badge($this->title);
+    return rockcommerce()->badge($this->title);
   }
 
   public function migrate()

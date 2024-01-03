@@ -1,0 +1,18 @@
+{
+    "file": "site\/modules\/RockCommerce\/frontend\/partials\/cart-items-header.latte",
+    "textdomain": "site--modules--rockcommerce--frontend--partials--cart-items-header-latte",
+    "translations": {
+        "deb10517653c255364175796ace3553f": {
+            "text": "Produkt"
+        },
+        "3601146c4e948c32b6424d2c0a7f0118": {
+            "text": "Preis"
+        },
+        "694e8d1f2ee056f98ee488bdc4982d73": {
+            "text": "Menge"
+        },
+        "96b0141273eabab320119c467cdcaf17": {
+            "text": "Gesamt"
+        }
+    }
+}

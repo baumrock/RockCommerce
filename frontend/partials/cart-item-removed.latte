@@ -1,0 +1,31 @@
+<div
+  class="uk-section-xsmall cart-item"
+  {alfred()}
+>
+  <div class="rc-alert uk-alert uk-alert-muted uk-margin-remove uk-text-center">
+    <a href class="uk-alert-close" uk-close></a>
+    <div class="uk-margin-small">
+      Cart item has been removed.
+    </div>
+    <a
+      class="uk-button uk-button-primary uk-button-small"
+      hx-post="/rc-restore-item?item={$item->name}&cart={$item->cart()->name}"
+      hx-target="closest .cart-item"
+      hx-vars="swap:'cart-sidebar'"
+      hx-swap="outerHTML"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13L5 9l4-4M5 9h11a4 4 0 0 1 0 8h-1"/></svg>
+      Restore Item
+    </a>
+  </div>
+</div>
+<script>
+// remove .cart-item when the alert is closed
+document.querySelectorAll(".rc-alert").forEach((el) => {
+  el.classList.remove('rc-alert');
+  UIkit.alert(el);
+  UIkit.util.on(el, "hide", (e) => {
+    e.target.closest('.cart-item').remove();
+  });
+});
+</script>

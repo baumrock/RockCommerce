@@ -46,8 +46,9 @@
   </div>
   <div class="w70 float-right text-right">
     <div class="f10 mt1">Payment Status: <strong class="text-primary">{$order->paymentstatus()}</strong></div>
-    <div class="f10 mt1">Invoice Date: <strong class="text-primary">{$order->date()}</strong></div>
-    <div class="f10 mt1">Date of Delivery: <strong>{$order->date()}</strong></div>
+    <div class="f10 mt1" n:if="$order->paymentdate(2)">Payment Date: <strong class="text-primary">{$order->paymentdate(1)}</strong></div>
+    <div class="f10 mt1">Invoice Date: <strong>{$order->date()}</strong></div>
+    <div class="f10 mt1">Date of Delivery: <strong>{$order->paymentdate(1) ?: $order->date()}</strong></div>
     <div class="f10 mt1">Customer Type: <strong>{$order->details('type')}</strong></div>
     <div class="f10 mt1">E-Mail: <strong>{$order->email()}</strong></div>
     <div class="f10 mt1" n:if="$order->details('vatid')">VAT ID: <strong>{$order->details('vatid')}</strong></div>

@@ -6,6 +6,7 @@ use Mollie\Api\Resources\Payment;
 use ProcessWire\FieldtypeFile;
 use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
+use ProcessWire\InputfieldDatetime;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use ProcessWire\RockMigrations;
@@ -16,10 +17,11 @@ use ProcessWire\WireMail;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
+use function ProcessWire\rockcommerce;
+
 class Order extends Page
 {
   use MagicPage;
-  use RockCommercePage;
 
   const tpl = "rockcommerce_order";
   const prefix = "rockcommerce_order_";
@@ -32,16 +34,18 @@ class Order extends Page
   const field_paymentstatus = self::prefix . "paymentstatus";
   const field_invoice = self::prefix . "invoice";
   const field_attachments = self::prefix . "attachments";
+  const field_cart = self::prefix . "cart";
 
   const field_net = self::prefix . "net";
   const field_vat = self::prefix . "vat";
   const field_total = self::prefix . "total";
+  const field_paymentdate = self::prefix . "paymentdate";
 
   public function __construct()
   {
     try {
       $this->template = $this->rockmigrations()->getTemplate(self::tpl, true);
-      $this->parent = $this->rockcommerce()->ordersPage();
+      $this->parent = rockcommerce()->ordersPage();
     } catch (\Throwable $th) {
     }
   }
@@ -62,12 +66,12 @@ class Order extends Page
     }
 
     $rm = $this->rockmigrations();
-    $rc = $this->rockcommerce();
+    $rc = rockcommerce();
     $form->prepend($rm->inputfield([
       'type' => 'markup',
       'label' => 'Order ID',
       'value' => "<div class='uk-text-truncate'>{$this->name}</div>",
-      'columnWidth' => 25,
+      'columnWidth' => 50,
       'notes' => "API: \$order->name\n" .
         'Order created at ' . date("d.m.Y H:i:s", $this->created),
     ]));
@@ -86,25 +90,17 @@ class Order extends Page
         <a href='./?id=$this&createinvoice=1'>Create invoice manually</a>
         <a href='./?id=$this&sendinvoice=1'>Send invoice to client</a>
         ",
+      'collapsed' => $url ? Inputfield::collapsedNo : Inputfield::collapsedYes,
     ]));
     $form->add($rm->inputfield([
       'type' => 'markup',
       'name' => 'order-details',
       'label' => 'Order Details',
+      'icon' => 'table',
       'value' => $rm->renderTable($this->details()),
       'collapsed' => Inputfield::collapsedNo,
       'notes' => 'Additional information for the order.'
         . "\nAPI: \$order->details() or \$order->details('item')",
-    ]));
-    $form->add($rm->inputfield([
-      'type' => 'markup',
-      'name' => 'payment-details',
-      'label' => 'Initial Payment Details',
-      'value' => '<p>Payment details that have been received at the time of creating the order and payment.</p>'
-        . $rm->renderTable($this->meta('payment'), [
-          'tableclass' => 'uk-table-divider',
-        ]),
-      'collapsed' => Inputfield::collapsedYesAjax,
     ]));
     if ($f = $form->get(self::field_paymentstatus)) {
       $url = $rc->url("order?id=" . $this->name);
@@ -113,6 +109,37 @@ class Order extends Page
       $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
         <a href=$editlink>Edit Status</a>";
     }
+
+    // cost wrapper
+    $rm->wrapFields($form, [
+      self::field_net,
+      self::field_vat,
+      self::field_total,
+    ], [
+      'label' => 'Totals',
+      'icon' => 'shopping-basket',
+    ]);
+
+    // payment wrapper
+    $rm->wrapFields($form, [
+      self::field_payment,
+      self::field_paymentstatus,
+      self::field_paymentdate,
+      [
+        'type' => 'markup',
+        'name' => 'payment-details',
+        'label' => 'Initial Payment Details',
+        'value' => '<p>Payment details that have been received at the time of creating the order and payment.</p>'
+          . $rm->renderTable($this->meta('payment'), [
+            'tableclass' => 'uk-table-divider',
+          ]),
+        'collapsed' => Inputfield::collapsedYesAjax,
+      ]
+    ], [
+      'label' => 'Payment',
+      'icon' => 'money',
+      'collapsed' => $this->paymentId() ? Inputfield::collapsedNo : Inputfield::collapsedYes,
+    ]);
   }
 
   public function onCreate(): void
@@ -122,6 +149,12 @@ class Order extends Page
       'min' => 20,
       'max' => 40,
     ]);
+  }
+
+  public function onSaveReady(): void
+  {
+    $paid = $this->paymentdate(2);
+    if ($paid) $this->set(self::field_paymentstatus, self::status_paid);
   }
 
   /** frontend */
@@ -166,7 +199,7 @@ class Order extends Page
 
   public function getPageListLabel()
   {
-    $rc = $this->rockcommerce();
+    $rc = rockcommerce();
     $date = $rc->badge(date("d.m.Y H:i:s", $this->created));
     $status = $this->statusBadge();
     return $date
@@ -186,7 +219,7 @@ class Order extends Page
       $mollie = $this->wire->modules->get('RockMollie');
       return $mollie->api()->payments->get($this->paymentId());
     } catch (\Throwable $th) {
-      $this->rockcommerce()->log($th->getMessage());
+      rockcommerce()->log($th->getMessage());
     }
     return false;
   }
@@ -202,7 +235,7 @@ class Order extends Page
     if ($invoice) return $invoice;
 
     $parent = $this->wire->pages->get([
-      'parent' => $this->rockcommerce()->invoicesPage(),
+      'parent' => rockcommerce()->invoicesPage(),
       'name' => $parentName,
     ]);
     /** @var Invoice $invoice */
@@ -232,7 +265,7 @@ class Order extends Page
     // create mollie payment
     /** @var RockMollie $mollie */
     $mollie = $this->wire->modules->get('RockMollie');
-    $rc = $this->rockcommerce();
+    $rc = rockcommerce();
     try {
       $total = $this->total(1);
       if (!$total instanceof Money) throw new WireException("Invalid Price");
@@ -286,30 +319,30 @@ class Order extends Page
         ],
         self::field_net => [
           'type' => 'RockMoney',
-          'label' => 'NET',
-          'icon' => 'money',
+          'label' => 'Net',
+          'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
         ],
         self::field_vat => [
           'type' => 'RockMoney',
           'label' => 'VAT',
-          'icon' => 'money',
+          'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
         ],
         self::field_total => [
           'type' => 'RockMoney',
-          'label' => 'TOTAL',
-          'icon' => 'money',
+          'label' => 'Total',
+          'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
-          'notes' => 'This is the total amount charged by the payment provider.',
+          'notes' => '',
         ],
         self::field_payment => [
           'type' => 'text',
           'label' => 'Payment',
-          'icon' => 'money',
+          'icon' => '',
           'textformatters' => [
             'TextformatterEntities',
           ],
@@ -345,6 +378,27 @@ class Order extends Page
           'outputFormat' => FieldtypeFile::outputFormatArray,
           'collapsed' => Inputfield::collapsedBlank,
         ],
+        self::field_paymentdate => [
+          'type' => 'datetime',
+          'label' => 'Payment-Date',
+          'dateOutputFormat' => 'd.m.Y',
+          'inputType' => 'text',
+          'dateSelectFormat' => 'yMd',
+          'datepicker' => InputfieldDatetime::datepickerFocus,
+          'dateInputFormat' => 'j.n.y',
+          'timeInputFormat' => '',
+          'defaultToday' => 0,
+        ],
+        self::field_cart => [
+          'type' => 'page',
+          'label' => 'Cart',
+          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
+          'inputfield' => 'InputfieldPageAutocomplete',
+          'findPagesSelector' => 'id>0,template!=admin',
+          'labelFieldName' => 'title',
+          'collapsed' => Inputfield::collapsedBlankLocked,
+          'icon' => 'shopping-cart',
+        ],
       ],
       'templates' => [
         self::tpl => [
@@ -352,18 +406,11 @@ class Order extends Page
             'title' => [
               'required' => false,
               'collapsed' => Inputfield::collapsedHidden,
-              'columnWidth' => 100,
+              'columnWidth' => 50,
             ],
-
             RockMigrations::field_email => [
               'collapsed' => Inputfield::collapsedNoLocked,
-              'columnWidth' => 25,
-            ],
-            self::field_payment => [
-              'columnWidth' => 25,
-            ],
-            self::field_paymentstatus => [
-              'columnWidth' => 25,
+              'columnWidth' => 50,
             ],
 
             self::field_net => [
@@ -375,6 +422,18 @@ class Order extends Page
             self::field_total => [
               'columnWidth' => 33,
             ],
+
+            self::field_payment => [
+              'columnWidth' => 33,
+            ],
+            self::field_paymentstatus => [
+              'columnWidth' => 33,
+            ],
+            self::field_paymentdate => [
+              'columnWidth' => 33,
+            ],
+
+            self::field_cart,
 
             self::field_invoice,
             self::field_attachments,
@@ -391,7 +450,7 @@ class Order extends Page
 
   public function ___notifyAdmin()
   {
-    $mailto = $this->rockcommerce()->adminmail;
+    $mailto = rockcommerce()->adminmail;
     if (!$mailto) return;
 
     try {
@@ -405,7 +464,7 @@ class Order extends Page
         ";
 
       $mail = new WireMail();
-      $rc = $this->rockcommerce();
+      $rc = rockcommerce();
       $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($mailto);
       $mail->subject("New Order at $host");
@@ -418,6 +477,11 @@ class Order extends Page
     }
   }
 
+  /**
+   * Get formatted string of referenced payment id
+   *
+   * Returns empty string if no payment referenced.
+   */
   public function paymentId(): string
   {
     return $this->getFormatted(self::field_payment);
@@ -425,7 +489,7 @@ class Order extends Page
 
   public function redirectUrl(): string
   {
-    return $this->rockcommerce()->url("order?id={$this->name}", true);
+    return rockcommerce()->url("order?id={$this->name}", true);
   }
 
   /**
@@ -451,7 +515,7 @@ class Order extends Page
       $html = str_replace('{{body}}', $content, $html);
 
       $mail = new WireMail();
-      $rc = $this->rockcommerce();
+      $rc = rockcommerce();
       $mail->from($rc->mailfrom(), $rc->mailfromName());
       $mail->to($this->email(1));
       $mail->to('office@baumrock.com');
@@ -484,6 +548,9 @@ class Order extends Page
    */
   public function ___setPaid(): void
   {
+    if (!$this->paymentdate(2)) {
+      $this->setAndSave(self::field_paymentdate, time());
+    }
     $this->createInvoice();
     $this->sendInvoice();
   }
@@ -519,7 +586,7 @@ class Order extends Page
         $cls = '';
         break;
     }
-    return $this->rockcommerce()->badge($str, $cls);
+    return rockcommerce()->badge($str, $cls);
   }
 
   public static function statuses(): array

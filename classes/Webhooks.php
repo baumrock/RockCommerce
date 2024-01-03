@@ -2,6 +2,7 @@
 
 namespace RockCommerce;
 
+use ProcessWire\Inputfield;
 use ProcessWire\Page;
 use RockMigrations\MagicPage;
 
@@ -40,7 +41,9 @@ class Webhooks extends Page
       'templates' => [
         self::tpl => [
           'fields' => [
-            'title',
+            'title' => [
+              'collapsed' => Inputfield::collapsedHidden,
+            ],
             self::field_max,
           ],
           'childTemplates' => [

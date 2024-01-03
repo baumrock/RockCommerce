@@ -19,8 +19,8 @@ class ProcessRockCommerce extends Process
     return [
       'title' => 'RockCommerce Dashboard',
       'version' => '0.0.1',
-      'summary' => '',
-      'icon' => '',
+      'summary' => 'Dashboard for the RockCommerce Shop',
+      'icon' => 'bar-chart',
       'requires' => [
         'RockCommerce',
       ],
@@ -67,7 +67,7 @@ class ProcessRockCommerce extends Process
     $this->wire->config->styles->add($style);
 
     // add echarts library
-    $this->wire->config->scripts->add($rf->toUrl(__DIR__ . "/echarts.min.js"));
+    $this->wire->config->scripts->add($rf->toUrl(__DIR__ . "/lib/echarts.min.js"));
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');

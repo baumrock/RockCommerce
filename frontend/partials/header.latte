@@ -1,0 +1,16 @@
+<header
+  class="rc-section-large uk-text-center"
+  {alfred($rockcommerce->rootPage())}
+>
+  {if $logo = $page->logo()}
+    <a href="{$home->url}">
+      <img
+        id="rc-logo"
+        src="{$logo->maxSize(300,300)->webp->url}"
+        alt="{$logo->description ?: 'RockCommerce'}"
+      />
+    </a>
+  {else}
+    Double click to upload logo
+  {/if}
+</header>

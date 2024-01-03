@@ -12,10 +12,12 @@ use ProcessWire\RockMigrations;
 use ProcessWire\RockPdf;
 use RockMigrations\MagicPage;
 
+use function ProcessWire\rockcommerce;
+use function ProcessWire\rockmigrations;
+
 class Invoice extends Page
 {
   use MagicPage;
-  use RockCommercePage;
 
   const tpl = "rockcommerce_invoice";
   const prefix = "rockcommerce_invoice_";
@@ -32,8 +34,7 @@ class Invoice extends Page
 
   public function editFormContent(InputfieldWrapper $form): void
   {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
+    $rm = rockmigrations();
     $order = $this->getOrder();
 
     // create PDF on page load
@@ -114,6 +115,7 @@ class Invoice extends Page
 
     /** @var RockPdf $pdf */
     $pdf = $this->wire->modules->get('RockPdf');
+    if (!$pdf) return;
     $pdf->addStyle(__DIR__ . "/../invoice/_global.less");
     $pdf
       ->addFontFromField(
@@ -123,7 +125,7 @@ class Invoice extends Page
         default: true,
       )
       ->load($tpl, [
-        'rockcommerce' => $this->rockcommerce(),
+        'rockcommerce' => rockcommerce(),
         'order' => $this->getOrder(),
         'invoice' => $this,
       ])
@@ -146,7 +148,7 @@ class Invoice extends Page
    */
   public function logo()
   {
-    return $this->parent->logo(1) ?: $this->rockcommerce()->rootPage()->logo(1);
+    return $this->parent->logo(1) ?: rockcommerce()->rootPage()->logo(1);
   }
 
   /** backend */
@@ -207,7 +209,7 @@ class Invoice extends Page
    */
   public function getPageListLabel()
   {
-    $rc = $this->rockcommerce();
+    $rc = rockcommerce();
     $order = $this->getOrder();
     $label = $rc->badge($this->number(1) ?: 'Invoice');
     if (!"$order") return $label;

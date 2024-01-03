@@ -1,0 +1,7 @@
+<h3 class="uk-text-center uk-margin-small uk-hidden@m">
+  {=__('Cart')}
+  (0 Artikel)
+</h3>
+{foreach $rc->cart()->items() as $item}
+  {$rc->view('partials/cart-item', ['item'=>$item])}
+{/foreach}

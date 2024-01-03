@@ -1,0 +1,63 @@
+{var $page = $item->page()}
+{var $amount = $item->amount(1)}
+
+<div
+  class="uk-section-xsmall cart-item"
+  {alfred()}
+>
+  <div
+    class="uk-flex grid"
+  >
+    <div class="preview">
+      <img
+        src="https://picsum.photos/200/200?id={$item}"
+        alt="Product {$page->title}"
+      />
+    </div>
+    <div class="text uk-width-expand">
+      <div class="uk-grid-collapse" uk-grid style="row-gap: 10px;">
+
+        <div class="uk-width-expand">
+          <div class="uk-text-lead">{$item->cartTitle()}</div>
+          <div n:ifcontent>{$item->cartDescription()}</div>
+        </div>
+
+        <div
+          class="price uk-width-1-1
+            uk-width-auto@s uk-text-right@s
+            uk-width-1-1@m uk-text-left@m
+            uk-width-auto@l uk-text-right@l
+          "
+        >
+          <div class="uk-text-lead">
+            {$item->itemNet()}
+          </div>
+          <div
+            class="uk-flex amount"
+            hx-post="/rc-update-item?item={$item->name}&cart={$item->cart()->name}"
+            hx-trigger="keyup delay:500ms"
+            hx-target="closest .cart-item"
+            hx-vars="swap:'cart-sidebar'"
+            hx-include="find input"
+            hx-swap="outerHTML"
+          >
+            <a class="trash" onClick="Cart.minus(this)" {$amount>1?'hidden'}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16m-10 4v6m4-6v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>
+            </a>
+            <a class="minus" onClick="Cart.minus(this)" {$amount<2?'hidden'}>
+              -
+            </a>
+            <input
+              name="amount"
+              value="{$amount}"
+            />
+            <a onClick="Cart.plus(this)">+</a>
+          </div>
+          <div class="uk-text-muted uk-text-small uk-margin-small-top">
+            {=__('Total')}: {$item->totalNet()}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
