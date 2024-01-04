@@ -28,7 +28,6 @@ function rockcommerce(): RockCommerce
  * @license COMMERCIAL PLEASE DO NOT DISTRIBUTE
  * @link https://www.baumrock.com
  */
-require_once __DIR__ . "/Product.php";
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
   const prefix = "rockcommerce_";
@@ -68,7 +67,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ];
   }
 
-  // /site/modules/RockCRM.module.php
   public function init()
   {
     // attach classloader
