@@ -40,6 +40,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   ];
   const webhookurl = "/rockcommerce/webhook";
 
+  /** @var WireArray */
+  public $productTemplates = false;
+
   private $taxrates = false;
 
   public static function getModuleInfo()
@@ -68,11 +71,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   // /site/modules/RockCRM.module.php
   public function init()
   {
-    $this->loadConfig();
-    $this->wire('rockcommerce', $this);
-
     // attach classloader
     $this->wire->classLoader->addNamespace("RockCommerce", __DIR__);
+
+    // initialize module and api
+    $this->loadConfig();
+    $this->wire('rockcommerce', $this);
+    $this->loadProductTemplates();
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
@@ -93,15 +98,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // load page classes
     $rm->pageClassLoader($this);
 
-    // load one instance of a productpage so that we can trigger init()
-    require_once __DIR__ . "/ProductPage.php";
-    (new ProductPage())->_init();
-
     // HTMX
     $this->addHTMX();
 
     // hooks
     $this->wire->addHookAfter(self::webhookurl, $this, "handleWebhook");
+
+    // now that the module is ready we init the productpage
+    // to attach hooks from the product trait
+    (new ProductPage())->_init();
   }
 
   public function ready()
@@ -290,6 +295,19 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Get all product templates
+   */
+  private function getProductTemplates(): WireArray
+  {
+    $templates = new WireArray();
+    foreach ($this->wire->templates as $tpl) {
+      if (!$tpl->fields->has("name=" . ProductPage::field_available)) continue;
+      $templates->add($tpl);
+    }
+    return $templates;
+  }
+
+  /**
    * Get array of taxrates
    * Example:
    * [
@@ -373,6 +391,26 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $overrides = $this->wire->config->rockcommerce;
     if (!is_array($overrides)) return;
     foreach ($overrides as $k => $v) $this->set($k, $v);
+  }
+
+  /**
+   * Populate $rockcommerce->productTemplates on module init()
+   */
+  private function loadProductTemplates(): void
+  {
+    $cache = "rc-product-templates";
+
+    // reset cache on modules refresh
+    $this->wire->addHookAfter("Modules::refresh", function () use ($cache) {
+      $this->wire->cache->delete($cache);
+    });
+
+    // populate templates from cache
+    $templates = $this->wire->cache->get($cache, function () {
+      return (string)$this->getProductTemplates();
+    });
+    $templates = (new WireArray())->setArray(explode("|", $templates));
+    $this->productTemplates = $templates;
   }
 
   public function mailfrom(): string
