@@ -37,12 +37,13 @@ trait Product
   const field_togross = self::_prefix . "togross";
   const field_available = self::_prefix . "available";
   const field_searchable = self::_prefix . "searchable";
+  const field_accessories = self::_prefix . "accessories";
 
   public function _init(): void
   {
     wire()->addHookBefore("InputfieldFloat::render", $this, "hookTaxrate");
-    wire()->addHookAfter("Pages::saveReady", $this, "hookSaveReady");
-    wire()->addHookAfter("ProcessPageEdit::buildForm", $this, "hookBuildForm");
+    wire()->addHookAfter("Pages::saveReady", $this, "_hookSaveReady");
+    wire()->addHookAfter("ProcessPageEdit::buildForm", $this, "_hookBuildForm");
   }
 
   /** Frontend API */
@@ -230,7 +231,7 @@ trait Product
     return $str;
   }
 
-  public function hookBuildForm(HookEvent $event): void
+  public function _hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
     $page = $event->object->getPage();
@@ -258,7 +259,9 @@ trait Product
       self::field_taxrate => ['columnWidth' => 25],
       "preview" => ['columnWidth' => 50],
 
-      self::field_net,
+      self::field_net => [
+        'showIf' => self::field_simplepricing . "=1",
+      ],
 
       self::field_customvariations,
       self::field_variations,
@@ -281,7 +284,7 @@ trait Product
     ]);
   }
 
-  public function hookSaveReady(HookEvent $event): void
+  public function _hookSaveReady(HookEvent $event): void
   {
     $page = $event->arguments('page');
     if (!$page->isProduct) return;
@@ -416,7 +419,7 @@ trait Product
         'label' => 'Net Price',
         'columnWidth' => 100,
         'required' => false,
-        'showIf' => self::field_simplepricing . "=1",
+        'showIf' => '',
       ],
       self::field_gross => [
         'type' => 'RockMoney',
@@ -491,6 +494,29 @@ trait Product
         'icon' => 'cubes',
         'columnWidth' => 50,
         'notes' => 'Can be filtered.',
+      ],
+
+      self::field_accessories => [
+        'label' => 'Accessories',
+        'type' => 'FieldtypeRepeater',
+        'fields' => [
+          'title' => [
+            'columnWidth' => 70,
+            'icon' => 'comment-o',
+          ],
+          self::field_net => [
+            'columnWidth' => 30,
+            'icon' => 'money',
+            'required' => true,
+          ],
+        ],
+        'repeaterTitle' => '#n: {title} -- {' . self::field_net . '}',
+        'familyFriendly' => 1,
+        'repeaterDepth' => 0,
+        'repeaterAddLabel' => 'Add New Item',
+        'columnWidth' => 100,
+        'icon' => 'cubes',
+        'collapsed' => Inputfield::collapsedBlank,
       ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";

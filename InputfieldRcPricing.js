@@ -2,6 +2,11 @@
 
 var RcPricing;
 
+// temporary hack to focus shop tab for development
+// $(document).ready(() => {
+//   $("#_Inputfield_rc_product_rctab").click();
+// });
+
 (() => {
   function Pricing() {
     this.root;
