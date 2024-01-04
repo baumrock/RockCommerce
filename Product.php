@@ -8,6 +8,10 @@ use ProcessWire\Inputfield;
 use ProcessWire\InputfieldMarkup;
 use ProcessWire\InputfieldSelect;
 use ProcessWire\PageArray;
+use ProcessWire\RepeaterPage;
+use ProcessWire\RepeaterPageArray;
+use ProcessWire\WireException;
+use RockMoney\Money;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
@@ -116,6 +120,12 @@ trait Product
     return $this->getFormatted(self::field_variations . "[]");
   }
 
+  public function versionPrice(): Price
+  {
+    bd($this->pricing(2));
+    return $this->priceFrom();
+  }
+
   /** Backend */
 
   public function customVariations(): array
@@ -175,6 +185,15 @@ trait Product
     }
 
     return $rows;
+  }
+
+  /**
+   * Get calculated gross value from net value using current taxrate
+   */
+  public function getGross(Money $net): Money
+  {
+    $vat = $net->times($this->taxrate() / 100);
+    return $net->plus($vat);
   }
 
   /**
@@ -254,7 +273,7 @@ trait Product
     $form->add($preview);
 
     // pricing
-    rockmigrations()->wrapFields($form, [
+    $fields = [
       self::field_simplepricing => ['columnWidth' => 25],
       self::field_taxrate => ['columnWidth' => 25],
       "preview" => ['columnWidth' => 50],
@@ -266,7 +285,23 @@ trait Product
       self::field_customvariations,
       self::field_variations,
       self::field_pricing,
-    ], [
+    ];
+    if (rockcommerce()->noComplexPricing) {
+      $new = [
+        self::field_simplepricing => [
+          'collapsed' => Inputfield::collapsedHidden,
+        ],
+        self::field_net => [
+          'columnWidth' => 33,
+          'showIf' => "",
+        ],
+        self::field_taxrate => ['columnWidth' => 33],
+        "preview" => ['columnWidth' => 33],
+      ];
+      // first merge for field order, second and third for data
+      $fields = array_merge($new, $fields, $new);
+    }
+    rockmigrations()->wrapFields($form, $fields, [
       'label' => 'Pricing',
       'icon' => 'money',
     ]);
@@ -287,6 +322,10 @@ trait Product
   public function _hookSaveReady(HookEvent $event): void
   {
     $page = $event->arguments('page');
+    if ($page instanceof RepeaterPage) {
+      $this->_hookSaveReadyRepeater($event);
+      return;
+    }
     if (!$page->isProduct) return;
 
     // update all prices
@@ -294,6 +333,17 @@ trait Product
     $page->set(self::field_gross, $page->priceFrom(false)->gross);
     $page->set(self::field_tonet, $page->priceTo(false)->net);
     $page->set(self::field_togross, $page->priceTo(false)->gross);
+  }
+
+  public function _hookSaveReadyRepeater(HookEvent $event): void
+  {
+    /** @var RepeaterPage $page */
+    $page = $event->arguments('page');
+    $field = $page->getForField();
+    if ($field->name !== self::field_accessories) return;
+    $product = $page->getForPage();
+    $net = $page->getFormatted(self::field_net);
+    $page->set(self::field_gross, $product->getGross($net));
   }
 
   public function hookTaxrate(HookEvent $event): void
@@ -508,6 +558,9 @@ trait Product
             'columnWidth' => 30,
             'icon' => 'money',
             'required' => true,
+          ],
+          self::field_gross => [
+            'collapsed' => Inputfield::collapsedHidden,
           ],
         ],
         'repeaterTitle' => '#n: {title} -- {' . self::field_net . '}',

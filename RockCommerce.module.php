@@ -39,6 +39,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   ];
   const webhookurl = "/rockcommerce/webhook";
 
+  public $noComplexPricing = false;
+
   /** @var WireArray */
   public $productTemplates = false;
 
@@ -748,6 +750,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'value' => $this->rawtaxrates,
       'icon' => 'percent',
       'required' => true,
+    ]);
+
+    // complex pricing?
+    $inputfields->add([
+      'type' => 'checkbox',
+      'name' => 'noComplexPricing',
+      'label' => 'Disable complex pricing',
+      'checked' => $this->noComplexPricing ? 'checked' : '',
     ]);
 
     // webhook url
