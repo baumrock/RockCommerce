@@ -399,11 +399,13 @@ trait Product
 
       self::field_simplepricing => [
         'type' => 'toggle',
-        'label' => 'Simple Pricing',
+        'label' => 'Pricing',
         'formatType' => 1, // boolean true/false
-        'labelType' => 0, // yes/no
+        'labelType' => 100, // custom
         'inputfieldClass' => 0, // toggle buttons
         'defaultOption' => 'yes',
+        'yesLabel' => 'Simple',
+        'noLabel' => 'Advanced',
       ],
       self::field_taxrate => [
         'type' => 'float',
