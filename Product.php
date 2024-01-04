@@ -371,8 +371,6 @@ trait Product
 
   public function _migrate(): void
   {
-    $rm = rockmigrations();
-
     $fields = [
       self::field_rctab => [
         'type' => 'FieldsetTabOpen',
@@ -520,6 +518,8 @@ trait Product
       ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";
+
+    $rm = rockmigrations();
     $rm->createFields($fields);
     $fieldnames = array_keys($fields);
     $rm->addFieldsToTemplate($fieldnames, $this);
