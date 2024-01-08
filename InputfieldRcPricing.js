@@ -108,7 +108,7 @@ var RcPricing;
     // update textarea whenever data changes
     table.on("dataChanged", RcPricing.saveJson.bind(this));
 
-    // update prices on button click
+    // set prices on all visible rows
     $(document).on(
       "keyup",
       "#set-prices input",
@@ -120,7 +120,7 @@ var RcPricing;
     this.textarea.value = JSON.stringify(this.getArray());
   };
 
-  Pricing.prototype.setPrices = (e) => {
+  Pricing.prototype.setPrices = function (e) {
     e.preventDefault();
     let price = $("#set-prices input").val();
     let table = this.table;
