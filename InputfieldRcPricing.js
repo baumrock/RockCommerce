@@ -40,7 +40,9 @@ var RcPricing;
     let arr = {};
     this.table.getData().forEach((row) => {
       delete row["id"];
-      arr[RcPricing.getKey(row)] = row.net;
+      // the empty string makes sure we get a json with
+      // all pricing rows even if they are not yet filled
+      arr[RcPricing.getKey(row)] = row.net * 1 || "";
     });
     return arr;
   };
@@ -98,7 +100,7 @@ var RcPricing;
 
     /** ##### events ##### */
 
-    // update RockCalculator element when editing
+    // show rockcalculator on cmd+click
     table.on("cellEditing", function (cell) {
       if (typeof RockCalculator == "undefined") return;
       if (!RockCalculator.metaClick) return;

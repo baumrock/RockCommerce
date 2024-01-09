@@ -2,7 +2,9 @@
 
 namespace RockCommerce;
 
+use ProcessWire\FieldtypeFile;
 use ProcessWire\FieldtypePage;
+use ProcessWire\FieldtypeTextarea;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldMarkup;
@@ -12,9 +14,11 @@ use ProcessWire\RepeaterPage;
 use ProcessWire\RepeaterPageArray;
 use ProcessWire\WireException;
 use RockMoney\Money;
+use stdClass;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
+use function ProcessWire\rockmoney;
 use function ProcessWire\wire;
 
 trait Product
@@ -27,30 +31,56 @@ trait Product
 
   const _prefix = "rc_product_";
 
-  const field_variations = self::_prefix . "variations";
-  const field_options = self::_prefix . "options";
-  const field_rctab = self::_prefix . "rctab";
-  const field_net = self::_prefix . "net";
-  const field_taxrate = self::_prefix . "taxrate";
-  const field_gross = self::_prefix . "gross";
-  const field_pricing = self::_prefix . "pricing";
+  const acc_custom = 1;
+  const acc_product = 0;
+
+  const field_variations       = self::_prefix . "variations";
+  const field_options          = self::_prefix . "options";
+  const field_rctab            = self::_prefix . "rctab";
+  const field_net              = self::_prefix . "net";
+  const field_taxrate          = self::_prefix . "taxrate";
+  const field_gross            = self::_prefix . "gross";
+  const field_pricing          = self::_prefix . "pricing";
   const field_customvariations = self::_prefix . "customvariations";
-  const field_customoptions = self::_prefix . "customoptions";
-  const field_simplepricing = self::_prefix . "simplepricing";
-  const field_tonet = self::_prefix . "tonet";
-  const field_togross = self::_prefix . "togross";
-  const field_available = self::_prefix . "available";
-  const field_searchable = self::_prefix . "searchable";
-  const field_accessories = self::_prefix . "accessories";
+  const field_customoptions    = self::_prefix . "customoptions";
+  const field_simplepricing    = self::_prefix . "simplepricing";
+  const field_tonet            = self::_prefix . "tonet";
+  const field_togross          = self::_prefix . "togross";
+  const field_available        = self::_prefix . "available";
+  const field_searchable       = self::_prefix . "searchable";
+  const field_accessories      = self::_prefix . "accessories";
+  const field_accimages        = self::_prefix . "accimages";
+  const field_accbody          = self::_prefix . "accbody";
+  const field_acctype          = self::_prefix . "acctype";
+  const field_accproduct       = self::_prefix . "accproduct";
 
   public function _init(): void
   {
-    wire()->addHookBefore("InputfieldFloat::render", $this, "hookTaxrate");
-    wire()->addHookAfter("Pages::saveReady", $this, "_hookSaveReady");
+    wire()->addHookBefore("InputfieldFloat::render",   $this, "_hookTaxrate");
+    wire()->addHookAfter("Pages::saveReady",           $this, "_hookSaveReady");
     wire()->addHookAfter("ProcessPageEdit::buildForm", $this, "_hookBuildForm");
+
+    // hooks for accessories
+    wire()->addHookProperty("Page::isAccessory", $this, "_hookIsAccessory");
+    wire()->addHookProperty("Page::label",       $this, "_hookAccLabel");
+    wire()->addHookAfter("Field::getInputfield", $this, "_hookLimitProductAutocomplete");
   }
 
   /** Frontend API */
+
+  // public function accessories(): PageArray
+  // {
+  //   $acc = $this->getFormatted(self::field_accessories . "[]");
+  //   if (!$acc instanceof RepeaterPageArray) throw new WireException("Invalid accessory items");
+  //   $arr = new PageArray();
+  //   foreach ($acc as $item) {
+  //     $a = new Accessory();
+  //     $values = get_object_vars($item); // return array of object values
+  //     foreach ($values as $key => $value) $a->$key = $value;
+  //     $arr->add($a);
+  //   }
+  //   return $arr;
+  // }
 
   public function price(): Price|PriceMulti
   {
@@ -122,7 +152,6 @@ trait Product
 
   public function versionPrice(): Price
   {
-    bd($this->pricing(2));
     return $this->priceFrom();
   }
 
@@ -190,10 +219,63 @@ trait Product
   /**
    * Get calculated gross value from net value using current taxrate
    */
-  public function getGross(Money $net): Money
+  public function getGross(Money|string $net): Money
   {
+    if (is_string($net)) $net = rockmoney()->parse($net);
     $vat = $net->times($this->taxrate() / 100);
     return $net->plus($vat);
+  }
+
+  public function getNet(Money|string $gross): Money
+  {
+    if (is_string($gross)) $gross = rockmoney()->parse($gross);
+    return $gross->by(1 + ($this->taxrate() / 100));
+  }
+
+  /**
+   * Get price editor row for this product
+   * This data is returned by AJAX requests coming from Price Editor Tabulator.
+   */
+  public function getPriceEditorRow(): stdClass
+  {
+    return $this::priceEditorRow($this->getRowObject());
+  }
+
+  /**
+   * Get pricing array having variation as keys and price as values
+   *
+   * Example:
+   * [
+   *   'size:s|color:red' => 10,
+   *   'size:m|color:red' => 15,
+   *   'size:l|color:red' => 20,
+   * ]
+   */
+  public function getPricingArray(): array
+  {
+    $arr = [];
+    $json = $this->pricing(2);
+    foreach (json_decode($json) as $key => $price) {
+      $arr[$key] = $price;
+    }
+    return $arr;
+  }
+
+  /**
+   * Get row object for the Price Editor Tabulator
+   */
+  public function getRowObject(): stdClass
+  {
+    $price = $this->priceFrom();
+    return (object)[
+      'id' => $this->id,
+      'taxrate' => $this->taxrate(2),
+      'available' => $this->available(2),
+      'net' => $price->net->getString(),
+      'gross' => $price->gross->getString(),
+      'pricing' => $this->pricing(2),
+      '_children' => false,
+    ];
   }
 
   /**
@@ -250,6 +332,21 @@ trait Product
     return $str;
   }
 
+  /**
+   * Add $page->label to accessory repeater items
+   */
+  public function _hookAccLabel(HookEvent $event): void
+  {
+    $page = $event->object;
+    if (!$page->isAccessory) return;
+    if ($page->acctype() == self::acc_custom) {
+      $event->return = $page->title;
+    } else {
+      $product = $page->accproduct();
+      if ($product) $event->return = $product->title;
+    }
+  }
+
   public function _hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
@@ -258,7 +355,7 @@ trait Product
 
     // pricing preview
     $preview = new InputfieldMarkup();
-    $preview->name = "preview";
+    $preview->name = "rockcommerce-preview";
     $preview->label = "Rendered Price";
     $preview->icon = "eye";
     $preview->value = "<style>
@@ -276,7 +373,7 @@ trait Product
     $fields = [
       self::field_simplepricing => ['columnWidth' => 25],
       self::field_taxrate => ['columnWidth' => 25],
-      "preview" => ['columnWidth' => 50],
+      "rockcommerce-preview" => ['columnWidth' => 50],
 
       self::field_net => [
         'showIf' => self::field_simplepricing . "=1",
@@ -296,7 +393,7 @@ trait Product
           'showIf' => "",
         ],
         self::field_taxrate => ['columnWidth' => 33],
-        "preview" => ['columnWidth' => 33],
+        "rockcommerce-preview" => ['columnWidth' => 33],
       ];
       // first merge for field order, second and third for data
       $fields = array_merge($new, $fields, $new);
@@ -319,6 +416,26 @@ trait Product
     ]);
   }
 
+  /**
+   * Add $page->isAccessory to accessory repeater items
+   */
+  public function _hookIsAccessory(HookEvent $event): void
+  {
+    $page = $event->object;
+    $event->return = $page->hasField(self::field_acctype);
+  }
+
+  /**
+   * Hook the accessory product select field to only return actual products
+   */
+  public function _hookLimitProductAutocomplete(HookEvent $event): void
+  {
+    $field = $event->object;
+    $inputfield = $event->return;
+    if ($field->name !== self::field_accproduct) return;
+    $inputfield->findPagesSelector .= ",template=" . rockcommerce()->productTemplates;
+  }
+
   public function _hookSaveReady(HookEvent $event): void
   {
     $page = $event->arguments('page');
@@ -335,18 +452,26 @@ trait Product
     $page->set(self::field_togross, $page->priceTo(false)->gross);
   }
 
+  /**
+   * Save actions for accessories repeater
+   */
   public function _hookSaveReadyRepeater(HookEvent $event): void
   {
     /** @var RepeaterPage $page */
     $page = $event->arguments('page');
     $field = $page->getForField();
     if ($field->name !== self::field_accessories) return;
+
+    // calc net + gross for this item
     $product = $page->getForPage();
     $net = $page->getFormatted(self::field_net);
     $page->set(self::field_gross, $product->getGross($net));
   }
 
-  public function hookTaxrate(HookEvent $event): void
+  /**
+   * Turn taxrate field into a select field
+   */
+  public function _hookTaxrate(HookEvent $event): void
   {
     $inputfield = $event->object;
     if ($inputfield->name != self::field_taxrate) return;
@@ -364,63 +489,71 @@ trait Product
   }
 
   /**
-   * Sanitize variations array for further use
+   * Return an array of prices ready to be json_encoded
    */
-  public function sanitizeVariations(array $variations): array
+  public function jsonPrices($prices): array
   {
-    $new = [];
-    foreach ($variations as $key => $options) {
-      $parts = explode(":", $key, 2);
-      $var = $this->wire->sanitizer->pageNameTranslate($parts[0]);
-      if (count($parts) > 1) $var = "$var: " . trim($parts[1]);
-
-      $opts = [];
-      foreach ($options as $k => $v) {
-        $k = $this->wire->sanitizer->pageNameTranslate($k);
-        $opts[$k] = $v;
-      }
-      $new[$var] = $opts;
-    }
-    return $new;
-  }
-
-  /**
-   * Set complex prices for this product and save it
-   * Example array to feed:
-   * [
-   *   'size:s' => 600,
-   *   'size:m' => 800,
-   *   'size:l' => 1200,
-   * ]
-   */
-  public function setPrices(array $prices, float $taxrate = null): void
-  {
-    $this->of(false);
-    $this->set(self::field_simplepricing, 0);
-    if ($taxrate !== null) $this->set(self::field_taxrate, $taxrate);
-    $this->set(self::field_pricing, json_encode($prices));
-    $this->save();
-  }
-
-  /**
-   * Set simple price for this product and save it
-   */
-  public function setSimplePrice(float $net, float $taxrate = null): void
-  {
-    $this->of(false);
-    $this->set(self::field_simplepricing, 1);
-    if ($taxrate !== null) $this->set(self::field_taxrate, $taxrate);
-    $this->set(self::field_net, $net);
-    $this->save();
-  }
-
-  public function setAvailable(bool $status): void
-  {
-    $this->setAndSave(self::field_available, $status);
+    $money = rockmoney();
+    foreach ($prices as &$price) $price = $money->parse($price)->getString();
+    return $prices;
   }
 
   public function _migrate(): void
   {
+    $rm = rockmigrations();
+    $rFields = [
+      self::field_acctype => [
+        'type' => 'toggle',
+        'label' => 'Type',
+        'formatType' => 0, // integer 0/1
+        'labelType' => 100, // custom
+        'inputfieldClass' => 0, // toggle buttons
+        'defaultOption' => 'yes',
+        'yesLabel' => 'Custom',
+        'noLabel' => 'Product',
+        'columnWidth' => 30,
+      ],
+      self::field_accproduct => [
+        'type' => 'page',
+        'label' => 'Product',
+        'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
+        'inputfield' => 'InputfieldPageAutocomplete',
+        // this selector will be refined via hook!
+        'findPagesSelector' => 'id>0,template!=admin',
+        'labelFieldName' => 'title',
+        'columnWidth' => 70,
+        'showIf' => self::field_acctype . "=" . self::acc_product,
+      ],
+      self::field_accbody => [
+        'type' => 'textarea',
+        'inputfieldClass' => 'InputfieldTinyMCE',
+        'contentType' => FieldtypeTextarea::contentTypeHTML,
+        'label' => 'Description',
+        'rows' => 5,
+        'icon' => 'align-left',
+        'inlineMode' => true,
+        // 'rpb-nolabel' => true, // hide label in backend
+        'settingsFile' => '/site/modules/RockMigrations/TinyMCE/simple.json',
+        'collapsed' => Inputfield::collapsedBlank,
+        'showIf' => '',
+      ],
+      self::field_accimages => [
+        'type' => 'image',
+        'label' => 'Images',
+        'maxFiles' => 0,
+        'descriptionRows' => 1,
+        'extensions' => 'jpg jpeg gif png',
+        'maxSize' => 3, // max 3 megapixels
+        'icon' => 'picture-o',
+        'outputFormat' => FieldtypeFile::outputFormatSingle,
+        'gridMode' => 'grid', // left, list
+        'collapsed' => Inputfield::collapsedBlank,
+        'showIf' => self::field_acctype . "=" . self::acc_custom,
+      ],
+    ];
+    foreach ($rFields as &$v) $v['tags'] = "RockCommerce";
+    $rm->createFields($rFields);
+
     $fields = [
       self::field_rctab => [
         'type' => 'FieldsetTabOpen',
@@ -546,24 +679,32 @@ trait Product
         'notes' => 'Can be filtered.',
       ],
 
+      // accessories
       self::field_accessories => [
         'label' => 'Accessories',
         'type' => 'FieldtypeRepeater',
         'fields' => [
+          self::field_acctype,
+          self::field_accproduct,
           'title' => [
             'columnWidth' => 70,
             'icon' => 'comment-o',
+            'required' => false,
+            'showIf' => self::field_acctype . "=" . self::acc_custom,
           ],
           self::field_net => [
             'columnWidth' => 30,
             'icon' => 'money',
-            'required' => true,
+            'required' => false,
+            'showIf' => self::field_acctype . "=" . self::acc_custom,
           ],
           self::field_gross => [
             'collapsed' => Inputfield::collapsedHidden,
           ],
+          self::field_accbody,
+          self::field_accimages,
         ],
-        'repeaterTitle' => '#n: {title} -- {' . self::field_net . '}',
+        'repeaterTitle' => '{label}',
         'familyFriendly' => 1,
         'repeaterDepth' => 0,
         'repeaterAddLabel' => 'Add New Item',
@@ -573,11 +714,126 @@ trait Product
       ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";
-
-    $rm = rockmigrations();
     $rm->createFields($fields);
     $fieldnames = array_keys($fields);
     $rm->addFieldsToTemplate($fieldnames, $this);
     $rm->setFieldOrder($fieldnames, $this);
+  }
+
+  /**
+   * Convert a row object into a row for the Price Editor Tabulator
+   */
+  public static function priceEditorRow(stdClass $row): stdClass
+  {
+    $row->available = (int)$row->available;
+    $children = false;
+    if ($row->pricing) {
+      $children = [];
+      $data = json_decode($row->pricing);
+      foreach ($data as $k => $v) {
+        $net = rockmoney()->parse($v);
+        $gross = $net->times(1 + ($row->taxrate / 100));
+        $children[] = (object)[
+          'pageid' => $row->id,
+          'variation' => $k,
+          'title' => str_replace("|", " | ", $k),
+          'net' => $net->getString(),
+          'gross' => $gross->getString(),
+          'taxrate' => "",
+        ];
+      }
+      if (count($children)) {
+        $row->net = "";
+        $row->gross = "";
+      }
+    }
+    $row->_children = $children;
+    return $row;
+  }
+
+  /**
+   * Sanitize variations array for further use
+   */
+  public function sanitizeVariations(array $variations): array
+  {
+    $new = [];
+    foreach ($variations as $key => $options) {
+      $parts = explode(":", $key, 2);
+      $var = $this->wire->sanitizer->pageNameTranslate($parts[0]);
+      if (count($parts) > 1) $var = "$var: " . trim($parts[1]);
+
+      $opts = [];
+      foreach ($options as $k => $v) {
+        $k = $this->wire->sanitizer->pageNameTranslate($k);
+        $opts[$k] = $v;
+      }
+      $new[$var] = $opts;
+    }
+    return $new;
+  }
+
+  public function setAvailable(bool $status): void
+  {
+    $this->setAndSave(self::field_available, $status);
+  }
+
+  public function setComplexPrice(float|Money $net, string $key): array
+  {
+    $pricing = $this->getPricingArray();
+    $pricing[$key] = rockmoney()->parse($net)->getString();
+    $newPrices = $this->setPrices($pricing);
+    $net = rockmoney()->parse($newPrices[$key]);
+    $gross = $this->getGross($net);
+    return [
+      'net' => $net->getString(),
+      'gross' => $gross->getString(),
+    ];
+  }
+
+  /**
+   * Set all prices of complex pricing field for this product and save it
+   *
+   * This will wipe all all non-existing prices!
+   *
+   * Example array to feed:
+   * [
+   *   'size:s' => 600,
+   *   'size:m' => 800,
+   *   'size:l' => 1200,
+   * ]
+   */
+  public function setPrices(array $prices, float $taxrate = null): array
+  {
+    $this->of(false);
+    $this->set(self::field_simplepricing, 0);
+    if ($taxrate !== null) $this->set(self::field_taxrate, $taxrate);
+    $newPrices = $this->jsonPrices($prices);
+    $this->set(self::field_pricing, json_encode($newPrices));
+    $this->save();
+    return $newPrices;
+  }
+
+  /**
+   * Set simple price for this product and save it
+   */
+  public function setSimplePrice(float|Money $net, float $taxrate = null): array
+  {
+    $net = rockmoney()->parse($net);
+    $this->of(false);
+    $this->set(self::field_simplepricing, 1);
+    if ($taxrate !== null) $this->set(self::field_taxrate, $taxrate);
+    $this->set(self::field_net, $net);
+    $this->save();
+    return [
+      'net' => $net->getString(),
+      'gross' => $this->getGross($net)->getString(),
+    ];
+  }
+
+  public function setTaxrate($taxrate): void
+  {
+    $this->of(false);
+    $this->set(self::field_taxrate, $taxrate);
+    $this->save();
   }
 }

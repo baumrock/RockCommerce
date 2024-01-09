@@ -98,8 +98,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // load page classes
     $rm->pageClassLoader($this);
 
-    // HTMX
-    $this->addHTMX();
+    // HTMX+AJAX
+    $this->addHTMX(); // frontend endpoints
+    $this->addAJAX(); // backend endpoints
 
     // hooks
     $this->wire->addHookAfter(self::webhookurl, $this, "handleWebhook");
@@ -119,6 +120,33 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /** regular methods */
+
+  /**
+   * Add ajax endpoints for the RockCommerce backend (eg Price Editor)
+   * Endpoints are located in /site/modules/RockCommerce/ajax.
+   * Results will sent be returned as json encoded string.
+   */
+  public function addAJAX(): void
+  {
+    // attach hooks only for ajax requests or superusers
+    $sudo = $this->wire->user->isSuperuser();
+    $ajax = $this->wire->config->ajax;
+    if (!($ajax or $sudo)) return;
+
+    $files = $this->wire->files->find(__DIR__ . "/ajax", ['extensions' => 'php']);
+    foreach ($files as $file) {
+      $name = substr(basename($file), 0, -4);
+      $this->wire->addHook("/rockcommerce/$name", function (HookEvent $event) use ($file, $name) {
+        try {
+          return json_encode($this->wire->files->render($file));
+        } catch (\Throwable $th) {
+          return json_encode([
+            'error' => $th->getMessage(),
+          ]);
+        }
+      });
+    }
+  }
 
   /**
    * Scan /htmx folder for endpoints and add them via hook
@@ -292,6 +320,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
     if (!$order->id) return false;
     return $order;
+  }
+
+  /**
+   * Get a RockCommerce Product
+   * Returns false if the found page is not a product.
+   */
+  public function getProduct($selector): Page|false
+  {
+    $page = $this->wire->pages->get($selector);
+    if (!$page->isProduct) return false;
+    return $page;
   }
 
   /**
