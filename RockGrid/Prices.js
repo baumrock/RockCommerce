@@ -125,6 +125,69 @@ $(document).on("rockgrid-init", (e, grid) => {
     else if (key == "up") cell.navigateUp();
   };
 
+  PriceEditor.prototype.loading = function () {
+    Editor.isUpdating = true;
+    $("#loading").fadeIn();
+  };
+
+  PriceEditor.prototype.loadingDone = function (edit) {
+    if (typeof edit === "undefined") edit = true;
+    this.isUpdating = false;
+    $("#loading").fadeOut();
+    if (edit) this.editCell.edit();
+  };
+
+  PriceEditor.prototype.saveAvailable = function (data) {
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/rockcommerce/update-available",
+      data: {
+        id: data.id,
+        available: data.available,
+      },
+      success: (response) => {
+        table.updateData([response]);
+        this.loadingDone(false);
+      },
+    });
+  };
+
+  PriceEditor.prototype.savePrice = function (data, field) {
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/rockcommerce/update-price",
+      data: {
+        id: data.id || data.pageid,
+        net: data.net,
+        gross: data.gross,
+        variation: data.variation,
+        field,
+      },
+      success: (data) => {
+        table.updateData([data]);
+        this.loadingDone();
+      },
+    });
+  };
+
+  PriceEditor.prototype.saveTaxrate = function (data) {
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/rockcommerce/update-taxrate",
+      data: {
+        id: data.id,
+        taxrate: data.taxrate,
+      },
+      success: (response) => {
+        table.updateData([response]);
+        this.loadingDone();
+      },
+    });
+  };
+
   var Editor = new PriceEditor();
 
   /**
@@ -137,63 +200,10 @@ $(document).on("rockgrid-init", (e, grid) => {
     // no change, no edit
     if (Editor.editValue * 1 == cell.getValue() * 1) return;
 
-    Editor.isUpdating = true;
-    $("#loading").fadeIn();
-
-    if (field == "taxrate") {
-      $.ajax({
-        type: "POST",
-        dataType: "json",
-        url: "/rockcommerce/update-taxrate",
-        data: {
-          id: data.id,
-          taxrate: data.taxrate,
-        },
-        success: (data) => {
-          table.updateData([data]);
-          Editor.isUpdating = false;
-          $("#loading").fadeOut();
-          Editor.editCell.edit();
-        },
-      });
-    } else if (field == "available") {
-      $.ajax({
-        type: "POST",
-        dataType: "json",
-        url: "/rockcommerce/update-available",
-        data: {
-          id: data.id,
-          available: data.available,
-        },
-        success: (data) => {
-          table.updateData([data]);
-          Editor.isUpdating = false;
-          $("#loading").fadeOut();
-        },
-      });
-    } else {
-      Editor.editId = data.id;
-      Editor.editVariation = data.variation;
-
-      $.ajax({
-        type: "POST",
-        dataType: "json",
-        url: "/rockcommerce/update-price",
-        data: {
-          id: data.id || data.pageid,
-          net: data.net,
-          gross: data.gross,
-          variation: data.variation,
-          field,
-        },
-        success: (data) => {
-          table.updateData([data]);
-          Editor.isUpdating = false;
-          $("#loading").fadeOut();
-          Editor.editCell.edit();
-        },
-      });
-    }
+    Editor.loading();
+    if (field == "available") Editor.saveAvailable(data);
+    else if (field == "taxrate") Editor.saveTaxrate(data);
+    else Editor.savePrice(data, field);
   });
 
   /**
