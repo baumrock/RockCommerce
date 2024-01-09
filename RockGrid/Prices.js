@@ -47,6 +47,7 @@ $(document).on("RockGrid", function () {
           };
           col.hozAlign = "center";
         } else if (name == "net" || name == "gross") {
+          col.formatter = "money";
           col.width = 100;
           col.hozAlign = "right";
           col.editor = "number";
