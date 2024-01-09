@@ -98,16 +98,15 @@ $(document).on("rockgrid-init", (e, grid) => {
     else key = "down";
   });
 
-  function PriceEditor() {
+  function _Editor() {
     this.isUpdating = false;
     this.editCell = false;
-    this.editValue = false;
   }
 
   /**
    * Find next editable taxrate (skip variations)
    */
-  PriceEditor.prototype.editNextTaxrate = function (cell) {
+  _Editor.prototype.editNextTaxrate = function (cell) {
     let data = cell.getData();
     if (!data.variation) return;
     if (key == "down") cell.navigateDown();
@@ -117,7 +116,7 @@ $(document).on("rockgrid-init", (e, grid) => {
   /**
    * Find next editable price
    */
-  PriceEditor.prototype.editNextPrice = function (cell) {
+  _Editor.prototype.editNextPrice = function (cell) {
     let data = cell.getData();
     if (data.variation) return;
     if (!cell.getData()._children) return;
@@ -125,19 +124,40 @@ $(document).on("rockgrid-init", (e, grid) => {
     else if (key == "up") cell.navigateUp();
   };
 
-  PriceEditor.prototype.loading = function () {
+  _Editor.prototype.loading = function () {
     Editor.isUpdating = true;
     $("#loading").fadeIn();
   };
 
-  PriceEditor.prototype.loadingDone = function (edit) {
+  _Editor.prototype.loadingDone = function (edit) {
     if (typeof edit === "undefined") edit = true;
     this.isUpdating = false;
     $("#loading").fadeOut();
-    if (edit) this.editCell.edit();
+
+    // early exit if we don't edit the next cell
+    if (!edit) return;
+
+    // try to find row
+    let editCell = this.editCell;
+    let row = table.getRow(editCell.id);
+    if (!row) return;
+
+    // simple price
+    if (!editCell.variation) {
+      row.getCell(editCell.field).edit();
+      return;
+    }
+
+    // edited cell was a variation
+    // find cell by iterating over children
+    row.getTreeChildren().forEach((row) => {
+      let variation = row.getData().variation;
+      if (editCell.variation != variation) return;
+      row.getCell(editCell.field).edit();
+    });
   };
 
-  PriceEditor.prototype.saveAvailable = function (data) {
+  _Editor.prototype.saveAvailable = function (data) {
     $.ajax({
       type: "POST",
       dataType: "json",
@@ -153,7 +173,7 @@ $(document).on("rockgrid-init", (e, grid) => {
     });
   };
 
-  PriceEditor.prototype.savePrice = function (data, field) {
+  _Editor.prototype.savePrice = function (data, field) {
     $.ajax({
       type: "POST",
       dataType: "json",
@@ -172,7 +192,7 @@ $(document).on("rockgrid-init", (e, grid) => {
     });
   };
 
-  PriceEditor.prototype.saveTaxrate = function (data) {
+  _Editor.prototype.saveTaxrate = function (data) {
     $.ajax({
       type: "POST",
       dataType: "json",
@@ -188,7 +208,18 @@ $(document).on("rockgrid-init", (e, grid) => {
     });
   };
 
-  var Editor = new PriceEditor();
+  _Editor.prototype.setEditCell = function (cell) {
+    let field = cell.getField();
+    let data = cell.getRow().getData();
+    this.editCell = {
+      id: data.id || data.pageid,
+      field,
+      variation: data.variation,
+      value: cell.getValue(),
+    };
+  };
+
+  var Editor = new _Editor();
 
   /**
    * Send new data via AJAX
@@ -198,7 +229,7 @@ $(document).on("rockgrid-init", (e, grid) => {
     let field = cell.getColumn().getField();
 
     // no change, no edit
-    if (Editor.editValue * 1 == cell.getValue() * 1) return;
+    if (Editor.editCell.value * 1 == cell.getValue() * 1) return;
 
     Editor.loading();
     if (field == "available") Editor.saveAvailable(data);
@@ -215,8 +246,7 @@ $(document).on("rockgrid-init", (e, grid) => {
       let field = cell.getField();
 
       // save edited cell to storage for later use
-      Editor.editCell = cell;
-      Editor.editValue = cell.getValue();
+      Editor.setEditCell(cell);
 
       // skip non-editable rows
       if (field == "available") return;

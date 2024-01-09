@@ -1,0 +1,46 @@
+<form
+  action="/rc/add-to-cart"
+  class="add-to-cart"
+  {alfred($product)}
+  data-pricing="{$product->pricing(2)}"
+>
+  <div class="uk-margin">
+    <strong>{$product->versionPrice()}</strong>
+  </div>
+
+  <div n:foreach="$product->getVariationsArray() as $name=>$variations">
+    <hr>
+    <h4>{$name}</h4>
+    <select name="{$name}" class="uk-select">
+      <option
+        n:foreach="$variations as $k=>$v"
+        value="{$k}"
+      >
+        {$v}
+      </option>
+    </select>
+  </div>
+
+  <hr>
+
+  {var $accessories = $product->accessories()}
+  <div n:if="$accessories->count()">
+    <h4>Accessories</h4>
+    <div n:foreach="$accessories as $acc">
+      <label>
+        <input type="checkbox" name="acc_{$acc}" class="uk-checkbox">
+        {$acc->title}
+        <small>{$acc->net()}</small>
+      </label>
+    </div>
+  </div>
+
+  <input
+    type="submit"
+    class="uk-margin uk-button uk-button-primary"
+    value="Add to cart"
+  />
+</form>
+<script>
+console.log({$product->pricing(2)});
+</script>
