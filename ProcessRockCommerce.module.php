@@ -17,7 +17,7 @@ class ProcessRockCommerce extends Process
   public static function getModuleInfo()
   {
     return [
-      'title' => 'RockCommerce Dashboard',
+      'title' => 'RockCommerce',
       'version' => '0.0.1',
       'summary' => 'Dashboard for the RockCommerce Shop',
       'icon' => 'bar-chart',
@@ -174,17 +174,19 @@ class ProcessRockCommerce extends Process
    */
   public function executePrices()
   {
-    $this->headline('Prices');
-    $this->browserTitle('Prices');
+    $this->headline('Price Editor');
+    $this->browserTitle('Price Editor');
     /** @var InputfieldForm $form */
     $form = $this->wire->modules->get('InputfieldForm');
 
     $form->add([
       'type' => 'RockGrid',
       'name' => 'price-editor',
-      'label' => 'Price Editor',
+      'label' => false,
       'icon' => 'pencil-square-o',
       'grid' => 'Prices',
+      'themeBorder' => 'none',
+      'skipLabel' => Inputfield::skipLabelBlank,
       // 'description' => "<div class='uk-alert uk-alert-warning'>WARNING: Changes will instantly be saved!</div>",
       // 'entityEncodeText' => false,
     ]);
