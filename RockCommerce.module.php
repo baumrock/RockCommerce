@@ -326,9 +326,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    * Get a RockCommerce Product
    * Returns false if the found page is not a product.
    */
-  public function getProduct($selector): Page|false
+  public function getProduct(Page|string|int $page): Page|false
   {
-    $page = $this->wire->pages->get($selector);
+    if (!$page instanceof Page) $page = $this->wire->pages->get((string)$page);
     if (!$page->isProduct) return false;
     return $page;
   }
@@ -740,11 +740,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'value' => "You can override any setting in your config.php file:<br>
         <pre class=uk-margin-small-top><code>\$config->rockcommerce['setting'] = 'newvalue';</code></pre>",
       'icon' => 'life-ring',
+      'notes' => 'Use Shilft+Click on any field label to copy fieldname to clipboard.',
     ]);
 
     $fs = new InputfieldFieldset();
     $fs->label = 'Mail Settings';
     $fs->icon = 'cogs';
+    $inputfields->add($fs);
 
     // admin email address
     $fs->add([
@@ -777,10 +779,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'columnWidth' => 33,
     ]);
 
+    // Pricing
+    $fs = new InputfieldFieldset();
+    $fs->label = 'Pricing Settings';
+    $fs->icon = 'money';
     $inputfields->add($fs);
 
     // taxrates
-    $inputfields->add([
+    $fs->add([
       'type' => 'text',
       'name' => 'rawtaxrates',
       'label' => 'Taxrates',
@@ -792,7 +798,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
 
     // complex pricing?
-    $inputfields->add([
+    $fs->add([
       'type' => 'checkbox',
       'name' => 'noComplexPricing',
       'label' => 'Disable complex pricing',

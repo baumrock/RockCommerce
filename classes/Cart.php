@@ -113,12 +113,16 @@ class Cart extends Page
 
   public function addItem(
     string|Page $product,
-    int $amount = 1,
+    int $amount = null,
   ): Cartitem {
+    if (!$amount) $amount = 1;
+    $product = rockcommerce()->getProduct($product);
     $cartitem = new Cartitem($this);
     $cartitem->set(Cartitem::field_product, $product);
     $cartitem->set(Cartitem::field_amount, $amount);
     $cartitem->save();
+    $this->wire->session->rcAddedAmount = $amount;
+    $this->wire->session->rcAddedProduct = $product->id;
     return $cartitem;
   }
 

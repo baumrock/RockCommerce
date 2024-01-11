@@ -4,12 +4,16 @@
   {alfred($product)}
   data-pricing="{$product->pricing(2)}"
 >
+  <input type='hidden' name='product' value='{$product}'>
+
   <div class="uk-margin">
     <strong>{$product->versionPrice()}</strong>
   </div>
 
-  <div n:foreach="$product->getVariationsArray() as $name=>$variations">
-    <hr>
+  <div
+    n:foreach="$product->getVariationsArray() as $name=>$variations"
+    class="uk-margin-small"
+  >
     <h4>{$name}</h4>
     <select name="{$name}" class="uk-select">
       <option
@@ -35,12 +39,17 @@
     </div>
   </div>
 
+  <div class="uk-margin">
+    <small>Anzahl</small>
+    <input type="number" name="amount" class="uk-input" value=1>
+  </div>
+
   <input
     type="submit"
-    class="uk-margin uk-button uk-button-primary"
+    class="uk-margin uk-button uk-button-primary uk-width-1-1"
     value="Add to cart"
   />
 </form>
 <script>
-console.log({$product->pricing(2)});
+console.log(JSON.parse({$product->pricing(2)}));
 </script>
