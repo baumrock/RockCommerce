@@ -33,7 +33,22 @@ class ProcessRockCommerce extends Process
       'page' => [
         'name' => 'rockcommerce',
         'parent' => 2,
-        'title' => 'RockCommerce'
+        'title' => 'Shop'
+      ],
+
+      // optional extra navigation that appears in admin
+      // if you change this, you'll need to a Modules > Refresh to see changes
+      'nav' => [
+        [
+          'url' => '',
+          'label' => 'Dashboard',
+          'icon' => 'bar-chart',
+        ],
+        [
+          'url' => '/prices',
+          'label' => 'Price Editor',
+          'icon' => 'table',
+        ],
       ],
     ];
   }

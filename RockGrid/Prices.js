@@ -26,7 +26,7 @@ $(document).on("RockGrid", function () {
               icon: "edit",
               href: rg.editUrl(id),
               tooltip: "Edit this page",
-              panel: true,
+              panel: false,
             });
           };
         } else if (name == "available") {

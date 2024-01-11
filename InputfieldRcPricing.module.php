@@ -31,7 +31,7 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
   {
     $page = $this->wire->pages->get($this->wire->input->get->id);
     $variations = json_encode($page->getVariationsArray());
-    $data = json_encode($page->getDataArray());
+    $data = json_encode($page->getPricingDataArray());
 
     $out = parent::___render();
     $grid = "grid_{$this->name}";

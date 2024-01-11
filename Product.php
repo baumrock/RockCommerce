@@ -11,8 +11,6 @@ use ProcessWire\InputfieldMarkup;
 use ProcessWire\InputfieldSelect;
 use ProcessWire\PageArray;
 use ProcessWire\RepeaterPage;
-use ProcessWire\RepeaterPageArray;
-use ProcessWire\WireException;
 use RockMoney\Money;
 use stdClass;
 
@@ -193,30 +191,6 @@ trait Product
   }
 
   /**
-   * Get data array
-   * This array is used in tabulator to populate rows.
-   * It holds all possible combinations of variation values.
-   * Thank you ChatGPT :)
-   */
-  public function getDataArray(): array
-  {
-    $rows = [[]];
-    $variations = $this->getVariationsArray();
-
-    foreach ($variations as $name => $options) {
-      $temp = [];
-      foreach ($rows as $row) {
-        foreach ($options as $k => $value) {
-          $temp[] = array_merge($row, [$name => $k]);
-        }
-      }
-      $rows = $temp;
-    }
-
-    return $rows;
-  }
-
-  /**
    * Get calculated gross value from net value using current taxrate
    */
   public function getGross(Money|string $net): Money
@@ -253,12 +227,42 @@ trait Product
    */
   public function getPricingArray(): array
   {
-    $arr = [];
     $json = $this->pricing(2);
-    foreach (json_decode($json) as $key => $price) {
-      $arr[$key] = $price;
+    return (array)json_decode($json);
+  }
+
+  /**
+   * Get data array
+   * This array is used in tabulator to populate rows.
+   * It holds all possible combinations of variation values.
+   * Thank you ChatGPT :)
+   */
+  public function getPricingDataArray($flat = false): array
+  {
+    $rows = [[]];
+    $variations = $this->getVariationsArray();
+
+    foreach ($variations as $name => $options) {
+      $temp = [];
+      foreach ($rows as $row) {
+        foreach ($options as $k => $value) {
+          $temp[] = array_merge($row, [$name => $k]);
+        }
+      }
+      $rows = $temp;
     }
-    return $arr;
+
+    if ($flat) {
+      $data = [];
+      foreach ($rows as $row => $options) {
+        $row = [];
+        foreach ($options as $k => $v) $row[] = "$k:$v";
+        $data[implode("|", $row)] = "";
+      }
+      return $data;
+    }
+
+    return $rows;
   }
 
   /**
@@ -444,12 +448,37 @@ trait Product
       return;
     }
     if (!$page->isProduct) return;
+    /** @var ProductPage $page */
 
     // update all prices
     $page->set(self::field_net, $page->priceFrom(false)->net);
     $page->set(self::field_gross, $page->priceFrom(false)->gross);
     $page->set(self::field_tonet, $page->priceTo(false)->net);
     $page->set(self::field_togross, $page->priceTo(false)->gross);
+
+    if ($page->simplepricing()) {
+      // reset variations so that price editor does not show old data
+      $page->set(self::field_customvariations, '');
+      $page->set(self::field_variations, '');
+      $page->set(self::field_pricing, '');
+    } else {
+      // save pricing json
+      $page->set(self::field_pricing, $page->pricingSleepValue());
+    }
+  }
+
+  /**
+   * Get pricing json with currently set variations
+   */
+  public function pricingSleepValue(): string
+  {
+    $current = $this->getPricingArray();
+    $data = $this->getPricingDataArray(true);
+    foreach ($data as $k => &$price) {
+      if (!array_key_exists($k, $current)) continue;
+      $price = $current[$k];
+    }
+    return json_encode($data);
   }
 
   /**
@@ -727,12 +756,13 @@ trait Product
   {
     $row->available = (int)$row->available;
     $children = false;
-    if ($row->pricing) {
+    if ($row->pricing and $row->pricing != "[]") {
       $children = [];
       $data = json_decode($row->pricing);
       foreach ($data as $k => $v) {
         $net = rockmoney()->parse($v);
-        $gross = $net->times(1 + ($row->taxrate / 100));
+        $taxrate = $row->taxrate ?: 0;
+        $gross = $net->times(1 + ($taxrate / 100));
         $children[] = (object)[
           'pageid' => $row->id,
           'variation' => $k,

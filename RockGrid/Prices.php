@@ -35,7 +35,10 @@ class Prices extends Grid
   {
     // add or modify buttons at the top left of the grid
     $buttons = parent::getButtonsLeft();
-    $buttons->prependMarkup = "Changes will instantly be saved. <div id='loading' class='uk-inline' style='display:none;margin-top:-5px;margin-left:5px;'><div uk-spinner='ratio:0.6'></div></div>";
+    $buttons->prependMarkup = "<span class='uk-text-muted'>
+      Changes will instantly be saved.
+      <div id='loading' class='uk-inline' style='display:none;margin-top:-5px;margin-left:5px;'><div uk-spinner='ratio:0.6'></div>
+      </div>";
     return $buttons;
   }
 
