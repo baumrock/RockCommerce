@@ -93,6 +93,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // create assets
     $rm->minify(__DIR__ . "/RockCommerce.js");
+    $rm->minify(__DIR__ . "/RockCommerceSite.js");
     $rm->minify(__DIR__ . "/Cart.js");
 
     // load page classes
@@ -293,6 +294,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   /**
    * Get Cart
+   *
+   * Returns false if cart is not found.
+   *
+   * If you want to create a cart on the fly (eg frontend) use cart() instead.
    *
    * Usage:
    * $rockcommerce->getCart(123);
