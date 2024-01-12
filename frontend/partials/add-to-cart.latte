@@ -1,7 +1,6 @@
 <form
   action="/rc/add-to-cart"
-  class="add-to-cart"
-  data-pricing="{$product->frontendPricing()}"
+  rc-pricing="{$product->frontendPricing()}"
   {alfred()}
 >
   <input type='hidden' name='product' value='{$product}'>

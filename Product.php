@@ -23,6 +23,7 @@ trait Product
 {
   public $isProduct = true;
 
+  private $frontendPricing = false;
   private $priceTo;
   private $priceFrom;
   private $variationsArray;
@@ -66,22 +67,10 @@ trait Product
 
   /** Frontend API */
 
-  // public function accessories(): PageArray
-  // {
-  //   $acc = $this->getFormatted(self::field_accessories . "[]");
-  //   if (!$acc instanceof RepeaterPageArray) throw new WireException("Invalid accessory items");
-  //   $arr = new PageArray();
-  //   foreach ($acc as $item) {
-  //     $a = new Accessory();
-  //     $values = get_object_vars($item); // return array of object values
-  //     foreach ($values as $key => $value) $a->$key = $value;
-  //     $arr->add($a);
-  //   }
-  //   return $arr;
-  // }
-
   public function frontendPricing(): string
   {
+    if ($this->frontendPricing) return $this->frontendPricing;
+
     $pricing = [
       'variations' => [],
       'accessories' => [],
@@ -95,10 +84,24 @@ trait Product
       $pricing['variations'][$variation] = (object)[
         'net' => $net->getString(),
         'gross' => $gross->getString(),
+        '_net' => $net->format(),
+        '_gross' => $gross->format(),
       ];
     }
 
-    return json_encode($pricing);
+    // accessories
+    foreach ($this->accessories() as $acc) {
+      $net = $acc->net();
+      $gross = $acc->gross();
+      $pricing['accessories'][$acc->id] = (object)[
+        'net' => $net->getString(),
+        'gross' => $gross->getString(),
+        '_net' => $net->format(),
+        '_gross' => $gross->format(),
+      ];
+    }
+
+    return $this->frontendPricing = json_encode($pricing);
   }
 
   public function price(): Price|PriceMulti

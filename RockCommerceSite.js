@@ -13,23 +13,99 @@ var RockCommerceSite;
     this.cartCount = 0;
   }
 
-  RCSite.prototype.init = function () {
-    this.cartCount = localStorage.getItem("rc-cart-count");
-    this.setMagicElements();
+  RCSite.prototype.getPricing = function (el) {
+    el = el.closest("[rc-pricing]");
+    return JSON.parse(el.getAttribute("rc-pricing"));
   };
 
-  RCSite.prototype.setMagicElements = function () {
+  /**
+   * Get variation key like "size:s|color:red"
+   */
+  RCSite.prototype.getSelectedVariationsKey = function (el) {
+    var variations = el.querySelectorAll("[rc-variation]");
+    var variationKey = "";
+    variations.forEach(function (variation) {
+      var name = variation.getAttribute("name");
+      var value = variation.value;
+      variationKey += name + ":" + value + "|";
+    });
+    return variationKey.slice(0, -1); // remove the last "|"
+  };
+
+  /**
+   * Get selected accessories
+   * Returns an array of ids of accessories, eg ["123", "456"]
+   */
+  RCSite.prototype.getSelectedAccessories = function (el) {
+    var accessories = el.querySelectorAll("[rc-accessory]:checked");
+    return Array.from(accessories).map(function (accessory) {
+      return accessory.getAttribute("rc-accessory");
+    });
+  };
+
+  RCSite.prototype.init = function () {
+    this.cartCount = localStorage.getItem("rc-cart-count");
+    this.updateMagicElements();
+  };
+
+  /**
+   * Money formatter for the frontend
+   */
+  RCSite.prototype.money = function (number) {
+    return new Intl.NumberFormat("de-DE", {
+      style: "currency",
+      currency: "EUR",
+    }).format(number);
+  };
+
+  RCSite.prototype.updateMagicElements = function () {
     var magicelements = {
-      "cart-count": this.cartCount,
+      "rc-cart-count": this.cartCount,
     };
     for (var prop in magicelements) {
-      var elements = document.querySelectorAll("[data-" + prop + "]");
+      var elements = document.querySelectorAll("[" + prop + "]");
       for (var i = 0; i < elements.length; i++) {
         elements[i].textContent = magicelements[prop];
         elements[i].removeAttribute("hidden");
       }
     }
   };
+
+  /**
+   * Update price of add-to-cart whenever a variation was changed
+   */
+  RCSite.prototype.updatePrice = function (el) {
+    let root = el.closest("[rc-pricing]");
+    let pricing = this.getPricing(root);
+    let price = root.querySelector("[rc-price]");
+
+    // get variations price
+    let varKey = this.getSelectedVariationsKey(root);
+    let varPrice = pricing.variations[varKey];
+    let total = varPrice.net * 1;
+
+    // add accessory prices
+    let accessories = this.getSelectedAccessories(root);
+    accessories.forEach(function (id) {
+      let accPrice = pricing.accessories[id];
+      console.log(accPrice);
+      total += accPrice.net * 1;
+    });
+
+    price.textContent = this.money(total);
+  };
+
+  /** ########## Event Listeners ########## */
+
+  /**
+   * Update price whenever a variation or accessory was changed
+   */
+  document.addEventListener("change", function (e) {
+    let el = e.target;
+    if (el.closest("[rc-variation]") || el.closest("[rc-accessory]")) {
+      RockCommerceSite.updatePrice(el);
+    }
+  });
 
   RockCommerceSite = new RCSite();
   RockCommerceSite.init();
