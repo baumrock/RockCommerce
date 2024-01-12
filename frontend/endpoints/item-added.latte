@@ -17,6 +17,9 @@
         {$product->title}
       </strong>
     </div>
+    <script>
+    localStorage.setItem("rc-cart-count", {$rc->cart()->itemsCount()});
+    </script>
 
     <div class="uk-flex uk-flex-wrap uk-flex-center" style="gap:10px;">
       <a href="{$product->url}" class="uk-button uk-button-default">

@@ -80,6 +80,27 @@ trait Product
   //   return $arr;
   // }
 
+  public function frontendPricing(): string
+  {
+    $pricing = [
+      'variations' => [],
+      'accessories' => [],
+    ];
+
+    // variations
+    $variations = $this->pricingSleepValue(true);
+    foreach ($variations as $variation => $net) {
+      $net = rockmoney()->parse($net);
+      $gross = $this->getGross($net);
+      $pricing['variations'][$variation] = (object)[
+        'net' => $net->getString(),
+        'gross' => $gross->getString(),
+      ];
+    }
+
+    return json_encode($pricing);
+  }
+
   public function price(): Price|PriceMulti
   {
     if ($this->simplepricing()) return $this->priceFrom();
@@ -470,7 +491,7 @@ trait Product
   /**
    * Get pricing json with currently set variations
    */
-  public function pricingSleepValue(): string
+  public function pricingSleepValue($returnArray = false): string|array
   {
     $current = $this->getPricingArray();
     $data = $this->getPricingDataArray(true);
@@ -478,6 +499,7 @@ trait Product
       if (!array_key_exists($k, $current)) continue;
       $price = $current[$k];
     }
+    if ($returnArray) return $data;
     return json_encode($data);
   }
 

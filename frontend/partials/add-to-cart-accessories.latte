@@ -1,0 +1,13 @@
+{var $accessories = $product->accessories()}
+{exitIf !$accessories->count()}
+
+<h4>{=__('Accessories')}</h4>
+{foreach $accessories as $acc}
+<div>
+  <label>
+    <input type="checkbox" name="acc_{$acc}" class="uk-checkbox">
+    {$acc->title}
+    <small>{$acc->net()}</small>
+  </label>
+</div>
+{/foreach}

@@ -6,20 +6,31 @@
  * That are pages not like /rc/cart, but for example yoursite.com/product1
  */
 
-/**
- * Magic Elements
- * This will automatically populate dom elements having a special
- * class with the related value stored in the localstorage.
- */
-document.addEventListener("DOMContentLoaded", function () {
-  var magicelements = ["rc-cart-count"];
-  for (var i = 0; i < magicelements.length; i++) {
-    var cls = magicelements[i];
-    var val = localStorage.getItem(cls);
-    var elements = document.getElementsByClassName(cls);
-    for (var i = 0; i < elements.length; i++) {
-      elements[i].textContent = val;
-      elements[i].removeAttribute("hidden");
-    }
+var RockCommerceSite;
+
+(() => {
+  function RCSite() {
+    this.cartCount = 0;
   }
-});
+
+  RCSite.prototype.init = function () {
+    this.cartCount = localStorage.getItem("rc-cart-count");
+    this.setMagicElements();
+  };
+
+  RCSite.prototype.setMagicElements = function () {
+    var magicelements = {
+      "cart-count": this.cartCount,
+    };
+    for (var prop in magicelements) {
+      var elements = document.querySelectorAll("[data-" + prop + "]");
+      for (var i = 0; i < elements.length; i++) {
+        elements[i].textContent = magicelements[prop];
+        elements[i].removeAttribute("hidden");
+      }
+    }
+  };
+
+  RockCommerceSite = new RCSite();
+  RockCommerceSite.init();
+})();

@@ -2,11 +2,8 @@
     "file": "site\/modules\/RockCommerce\/frontend\/endpoints\/item-added.latte",
     "textdomain": "site--modules--rockcommerce--frontend--endpoints--item-added-latte",
     "translations": {
-        "8a1e8cb4c9922b7286af26cb74fbaef5": {
-            "text": "Das Produkt %1$s wurde zum Warenkorb hinzugef\u00fcgt."
-        },
-        "5ebf671e115effa0c31d2752b16e7dc1": {
-            "text": "zum Warenkorb hinzugef\u00fcgt."
+        "2c04f1ad7694378897b98624780327ff": {
+            "text": "Zum Warenkorb hinzugef\u00fcgt"
         }
     }
 }

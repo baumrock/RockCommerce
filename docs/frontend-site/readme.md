@@ -25,12 +25,12 @@ $rf->scripts()
 
 <img src=cart-count.png class=blur>
 
-One of the features provided by this JavaScript file is the `rc-cart-count` class. This class can be used to display the number of items in the user's cart. Here's how you can use it:
+The `data-cart-count` data attribute is a feature provided by the updated RockCommerceSite.js file. It allows you to display the number of items in the user's cart. Here's how you can implement it:
 
-1. Add the `rc-cart-count` class to any HTML element where you want to display the cart count. For example:
+1. Add the `data-cart-count` attribute to any HTML element where you want to display the cart count. For example:
 ```html
-<span class="rc-cart-count" hidden>0</span>
+<span data-cart-count hidden></span>
 ```
-2. The `rc-cart-count` class will automatically populate the element with the current cart count stored in the local storage. This happens when the DOM content is loaded.
+2. The `data-cart-count` attribute will automatically update the element with the current cart count from the local storage when the DOM content is loaded.
 
-Note: In the example the element is initially hidden. Once the cart count is populated, the `hidden` attribute is removed, and the element becomes visible. To avoid layout shifts either use an absolutely positioned badge or remove the hidden attribute so only the number will update.
+Note: In the example, the element is initially hidden. Once the cart count is updated, the `hidden` attribute is removed, making the element visible. To prevent layout shifts, consider using an absolutely positioned badge or remove the hidden attribute so only the number will update.

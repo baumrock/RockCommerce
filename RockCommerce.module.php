@@ -39,6 +39,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   ];
   const webhookurl = "/rockcommerce/webhook";
 
+  const frontendpricing_net = 1;
+  const frontendpricing_gross = 0;
+  const frontendpricing_runtime = 2;
+
   public $noComplexPricing = false;
 
   /** @var WireArray */
@@ -802,11 +806,28 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'required' => true,
     ]);
 
+    // frontend pricing
+    $fs->add([
+      'type' => 'toggle',
+      'name' => 'frontendPricing',
+      'label' => 'Frontend Pricing Display',
+      'formatType' => 0, // integer
+      'labelType' => 100, // custom
+      'useOther' => 1,
+      'icon' => 'money',
+      'yesLabel' => 'net',
+      'noLabel' => 'gross',
+      'otherLabel' => 'define at runtime',
+      'defaultOption' => 'net',
+      'value' => $this->frontendPricing,
+      'notes' => 'Choose how to display pricing on the frontend.',
+    ]);
+
     // complex pricing?
     $fs->add([
       'type' => 'checkbox',
       'name' => 'noComplexPricing',
-      'label' => 'Disable complex pricing',
+      'label' => 'Allow only simple pricing for all products',
       'checked' => $this->noComplexPricing ? 'checked' : '',
     ]);
 

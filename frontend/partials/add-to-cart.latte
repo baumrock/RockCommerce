@@ -1,49 +1,14 @@
 <form
   action="/rc/add-to-cart"
   class="add-to-cart"
-  {alfred($product)}
-  data-pricing="{$product->pricing(2)}"
+  data-pricing="{$product->frontendPricing()}"
+  {alfred()}
 >
   <input type='hidden' name='product' value='{$product}'>
-
-  <div class="uk-margin">
-    <strong>{$product->versionPrice()}</strong>
-  </div>
-
-  <div
-    n:foreach="$product->getVariationsArray() as $name=>$variations"
-    class="uk-margin-small"
-  >
-    <h4>{$name}</h4>
-    <select name="{$name}" class="uk-select">
-      <option
-        n:foreach="$variations as $k=>$v"
-        value="{$k}"
-      >
-        {$v}
-      </option>
-    </select>
-  </div>
-
-  <hr>
-
-  {var $accessories = $product->accessories()}
-  <div n:if="$accessories->count()">
-    <h4>Accessories</h4>
-    <div n:foreach="$accessories as $acc">
-      <label>
-        <input type="checkbox" name="acc_{$acc}" class="uk-checkbox">
-        {$acc->title}
-        <small>{$acc->net()}</small>
-      </label>
-    </div>
-  </div>
-
-  <div class="uk-margin">
-    <small>Anzahl</small>
-    <input type="number" name="amount" class="uk-input" value=1>
-  </div>
-
+  {$rc->view('partials/add-to-cart-price', ['product' => $product])}
+  {$rc->view('partials/add-to-cart-variations', ['product' => $product])}
+  {$rc->view('partials/add-to-cart-accessories', ['product' => $product])}
+  {$rc->view('partials/add-to-cart-amount', ['product' => $product])}
   <input
     type="submit"
     class="uk-margin uk-button uk-button-primary uk-width-1-1"
@@ -51,5 +16,5 @@
   />
 </form>
 <script>
-console.log(JSON.parse({$product->pricing(2)}));
+console.log(JSON.parse({$product->frontendPricing()}));
 </script>
