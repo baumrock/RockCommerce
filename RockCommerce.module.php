@@ -100,9 +100,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rm->minify(__DIR__ . "/RockCommerceSite.js");
     $rm->minify(__DIR__ . "/Cart.js");
 
-    // load page classes
-    $rm->pageClassLoader($this);
-
     // HTMX+AJAX
     $this->addHTMX(); // frontend endpoints
     $this->addAJAX(); // backend endpoints
