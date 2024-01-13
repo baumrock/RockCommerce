@@ -12,6 +12,7 @@ var RcPricing;
     this.root;
     this.textarea;
     this.table;
+    this._taxrate = false;
   }
 
   Pricing.prototype.addPrices = function (data) {
@@ -22,11 +23,7 @@ var RcPricing;
       let price = prices[row.id];
       if (price !== undefined) delete notFound[row.id];
       row.net = price;
-      let taxrate = document.querySelector(
-        'select[name="rc_product_taxrate"]'
-      ).value;
-      let grossValue = row.net * (1 + taxrate / 100);
-      row.gross = parseFloat(grossValue.toFixed(2));
+      row.gross = this.getGross(price);
     });
 
     // populate not found warning
@@ -54,6 +51,12 @@ var RcPricing;
     return arr;
   };
 
+  Pricing.prototype.getGross = function (net) {
+    if (net == "") return "";
+    let grossValue = net * (1 + this.taxrate() / 100);
+    return parseFloat(grossValue.toFixed(2));
+  };
+
   /**
    * Get prices array-key from row object
    */
@@ -66,6 +69,11 @@ var RcPricing;
       sep = "|";
     }
     return key;
+  };
+
+  Pricing.prototype.getNet = function (gross) {
+    let netValue = gross / (1 + this.taxrate() / 100);
+    return parseFloat(netValue.toFixed(2));
   };
 
   Pricing.prototype.getPrices = function () {
@@ -127,22 +135,14 @@ var RcPricing;
 
     // update net or gross values
     table.on("cellEdited", function (cell) {
+      let val = cell.getValue();
       let field = cell.getField();
-      let taxrate = document.querySelector(
-        'select[name="rc_product_taxrate"]'
-      ).value;
       if (field == "net") {
         // update gross value
-        let netValue = cell.getValue();
-        let grossValue = netValue * (1 + taxrate / 100);
-        grossValue = parseFloat(grossValue.toFixed(2));
-        cell.getRow().update({ gross: grossValue });
+        cell.getRow().update({ gross: RcPricing.getGross(val) });
       } else {
         // update net value
-        let grossValue = cell.getValue();
-        let netValue = grossValue / (1 + taxrate / 100);
-        netValue = parseFloat(netValue.toFixed(2));
-        cell.getRow().update({ net: netValue });
+        cell.getRow().update({ net: RcPricing.getNet(val) });
       }
     });
 
@@ -173,21 +173,22 @@ var RcPricing;
     if (price == "") return;
     let table = this.table;
     table.getData("active").forEach((row) => {
-      let taxrate = document.querySelector(
-        'select[name="rc_product_taxrate"]'
-      ).value;
       if (inputName == "net") {
         row.net = price;
-        let grossValue = row.net * (1 + taxrate / 100);
-        row.gross = parseFloat(grossValue.toFixed(2));
-      } else if (inputName == "gross") {
+        row.gross = this.getGross(price);
+      } else {
         row.gross = price;
-        let netValue = row.gross / (1 + taxrate / 100);
-        row.net = parseFloat(netValue.toFixed(2));
+        row.net = this.getNet(price);
       }
       table.updateData([row]);
     });
     this.saveJson();
+  };
+
+  Pricing.prototype.taxrate = function () {
+    if (this._taxrate !== false) return this._taxrate;
+    return (this._taxrate =
+      document.querySelector('select[name="rc_product_taxrate"]').value * 1);
   };
 
   RcPricing = new Pricing();
