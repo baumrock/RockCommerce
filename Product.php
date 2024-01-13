@@ -7,6 +7,7 @@ use ProcessWire\FieldtypePage;
 use ProcessWire\FieldtypeTextarea;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
+use ProcessWire\InputfieldFieldsetOpen;
 use ProcessWire\InputfieldMarkup;
 use ProcessWire\InputfieldSelect;
 use ProcessWire\PageArray;
@@ -51,7 +52,11 @@ trait Product
   const field_accimages        = self::_prefix . "accimages";
   const field_accbody          = self::_prefix . "accbody";
   const field_acctype          = self::_prefix . "acctype";
-  const field_accproduct       = self::_prefix . "accproduct";
+  const field_relatedproducts  = self::_prefix . "relatedproducts";
+  const field_optionstab       = self::_prefix . "optionstab";
+  const field_acctab           = self::_prefix . "acctab";
+  const field_pricingtab       = self::_prefix . "pricingtab";
+  const field_vartab           = self::_prefix . "vartab";
 
   public function _init(): void
   {
@@ -385,66 +390,69 @@ trait Product
     if (!$page->isProduct) return;
 
     // pricing preview
-    $preview = new InputfieldMarkup();
-    $preview->name = "rockcommerce-preview";
-    $preview->label = "Rendered Price";
-    $preview->icon = "eye";
-    $preview->value = "<style>
-        #preview td {padding:2px}
-        #preview td:first-child {padding-right:20px}
-      </style>" .
-      "<div id='notFoundWarning' class='uk-margin-remove-top uk-text-bold uk-alert uk-alert-warning' hidden>WARNING: See Pricing Field</div>" .
-      "<table id='preview' class='uk-table uk-table-small uk-table-striped uk-margin-remove'>" .
-      "<tr><td>Net</td><td class='uk-width-expand'>{$page->price()->renderNet()}</td></tr>" .
-      "<tr><td>Gross</td><td class='uk-width-expand'>{$page->price()->renderGross()}</td></tr>" .
-      "</table>";
-    $form->add($preview);
+    $tab = $form->get(self::field_pricingtab);
+    if ($tab) {
+      /** @var InputfieldFieldsetOpen $tab */
+      $preview = new InputfieldMarkup();
+      $preview->name = "rockcommerce-preview";
+      $preview->label = "Rendered Price";
+      $preview->icon = "eye";
+      $preview->value = "<style>
+          #preview td {padding:2px}
+          #preview td:first-child {padding-right:20px}
+        </style>" .
+        "<div id='notFoundWarning' class='uk-margin-remove-top uk-text-bold uk-alert uk-alert-warning' hidden>WARNING: See Pricing Field</div>" .
+        "<table id='preview' class='uk-table uk-table-small uk-table-striped uk-margin-remove'>" .
+        "<tr><td>Net</td><td class='uk-width-expand'>{$page->price()->renderNet()}</td></tr>" .
+        "<tr><td>Gross</td><td class='uk-width-expand'>{$page->price()->renderGross()}</td></tr>" .
+        "</table>";
+      $form->insertAfter($preview, $form->get(self::field_taxrate));
 
-    // pricing
-    $fields = [
-      self::field_simplepricing => ['columnWidth' => 25],
-      self::field_taxrate => ['columnWidth' => 25],
-      "rockcommerce-preview" => ['columnWidth' => 50],
+      // pricing
+      $fields = [
+        self::field_simplepricing => ['columnWidth' => 25],
+        self::field_taxrate => ['columnWidth' => 25],
+        "rockcommerce-preview" => ['columnWidth' => 50],
 
-      self::field_net => [
-        'showIf' => self::field_simplepricing . "=1",
-      ],
-
-      self::field_customvariations,
-      self::field_variations,
-      self::field_pricing,
-    ];
-    if (rockcommerce()->noComplexPricing) {
-      $new = [
-        self::field_simplepricing => [
-          'collapsed' => Inputfield::collapsedHidden,
-        ],
         self::field_net => [
-          'columnWidth' => 33,
-          'showIf' => "",
+          'showIf' => self::field_simplepricing . "=1",
         ],
-        self::field_taxrate => ['columnWidth' => 33],
-        "rockcommerce-preview" => ['columnWidth' => 33],
       ];
-      // first merge for field order, second and third for data
-      $fields = array_merge($new, $fields, $new);
+      if (rockcommerce()->noComplexPricing) {
+        $new = [
+          self::field_simplepricing => [
+            'collapsed' => Inputfield::collapsedHidden,
+          ],
+          self::field_net => [
+            'columnWidth' => 33,
+            'showIf' => "",
+          ],
+          self::field_taxrate => ['columnWidth' => 33],
+          "rockcommerce-preview" => ['columnWidth' => 33],
+        ];
+        // first merge for field order, second and third for data
+        $fields = array_merge($new, $fields, $new);
+      }
+      foreach ($fields as $name => $settings) {
+        $field = $form->get($name);
+        if (!$field) continue;
+        foreach ($settings as $k => $v) $field->set($k, $v);
+      }
     }
-    rockmigrations()->wrapFields($form, $fields, [
-      'label' => 'Pricing',
-      'icon' => 'money',
-    ]);
 
-    // options
-    rockmigrations()->wrapFields($form, [
-      self::field_customoptions,
-      self::field_options,
-    ], [
-      'label' => 'Options',
-      'icon' => 'cubes',
-      'collapsed' => $page->customoptions(1) . $page->options(1)
+    // set collapsed state of options
+    if ($f = $form->get(self::field_optionstab)) {
+      $f->collapsed = $page->customoptions(1) . $page->options(1)
         ? Inputfield::collapsedNo
-        : Inputfield::collapsedYes,
-    ]);
+        : Inputfield::collapsedYes;
+    }
+
+    // set collapsed state of accessories
+    if ($f = $form->get(self::field_acctab)) {
+      $f->collapsed = $page->accessories(1) . $page->relatedproducts(1)
+        ? Inputfield::collapsedNo
+        : Inputfield::collapsedYes;
+    }
   }
 
   /**
@@ -463,7 +471,7 @@ trait Product
   {
     $field = $event->object;
     $inputfield = $event->return;
-    if ($field->name !== self::field_accproduct) return;
+    if ($field->name !== self::field_relatedproducts) return;
     $inputfield->findPagesSelector .= ",template=" . rockcommerce()->productTemplates;
   }
 
@@ -568,6 +576,9 @@ trait Product
   public function _migrate(): void
   {
     $rm = rockmigrations();
+    $rm->deleteField(self::_prefix . "accproduct", true);
+
+    // repeater fields
     $rFields = [
       self::field_acctype => [
         'type' => 'toggle',
@@ -579,17 +590,6 @@ trait Product
         'yesLabel' => 'Custom',
         'noLabel' => 'Product',
         'columnWidth' => 30,
-      ],
-      self::field_accproduct => [
-        'type' => 'page',
-        'label' => 'Product',
-        'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
-        'inputfield' => 'InputfieldPageAutocomplete',
-        // this selector will be refined via hook!
-        'findPagesSelector' => 'id>0,template!=admin',
-        'labelFieldName' => 'title',
-        'columnWidth' => 70,
-        'showIf' => self::field_acctype . "=" . self::acc_product,
       ],
       self::field_accbody => [
         'type' => 'textarea',
@@ -615,12 +615,13 @@ trait Product
         'outputFormat' => FieldtypeFile::outputFormatSingle,
         'gridMode' => 'grid', // left, list
         'collapsed' => Inputfield::collapsedBlank,
-        'showIf' => self::field_acctype . "=" . self::acc_custom,
+        'showIf' => '',
       ],
     ];
     foreach ($rFields as &$v) $v['tags'] = "RockCommerce";
     $rm->createFields($rFields);
 
+    // product fields
     $fields = [
       self::field_rctab => [
         'type' => 'FieldsetTabOpen',
@@ -647,6 +648,12 @@ trait Product
         'columnWidth' => 50,
       ],
 
+      // pricing tab
+      self::field_pricingtab => [
+        'type' => 'FieldsetOpen',
+        'label' => 'Pricing',
+        'icon' => 'money',
+      ],
       self::field_simplepricing => [
         'type' => 'toggle',
         'label' => 'Pricing',
@@ -688,12 +695,11 @@ trait Product
         'label' => 'Price To Gross',
         'collapsed' => Inputfield::collapsedHidden,
       ],
-
       self::field_customvariations => [
         'type' => 'textarea',
         'label' => 'Custom Variations',
         'rows' => 5,
-        'icon' => 'cubes',
+        'icon' => '',
         'columnWidth' => 50,
         'notes' => 'Only for this product. Can NOT be filtered. Can NOT be multilingual.',
         'showIf' => self::field_simplepricing . "=0",
@@ -706,13 +712,12 @@ trait Product
         'inputfield' => 'InputfieldAsmSelect',
         'findPagesSelector' => "template=" . Variation::tpl,
         'labelFieldName' => 'title',
-        'icon' => 'cubes',
+        'icon' => 'filter',
         'columnWidth' => 50,
         'notes' => 'Can be filtered. Can be multilingual.',
         'showIf' => self::field_simplepricing . "=0",
         'collapsed' => Inputfield::collapsedNo,
       ],
-
       self::field_pricing => [
         'type' => 'textarea',
         'label' => 'Pricing',
@@ -725,12 +730,32 @@ trait Product
         'showIf' => self::field_simplepricing . "=0",
         'collapsed' => Inputfield::collapsedNo,
       ],
+      self::field_pricingtab . "_END" => [
+        'type' => 'FieldsetClose',
+      ],
 
+      // variations tab
+      self::field_vartab => [
+        'type' => 'FieldsetOpen',
+        'label' => 'Variations',
+        'icon' => 'cubes',
+      ],
+      self::field_vartab . "_END" => [
+        'type' => 'FieldsetClose',
+      ],
+
+      // options
+      self::field_optionstab => [
+        'type' => 'FieldsetOpen',
+        'label' => 'Options',
+        'icon' => 'cubes',
+        'description' => 'Options do not modify the price of the product.',
+      ],
       self::field_customoptions => [
         'type' => 'textarea',
         'label' => 'Custom (only for this product)',
         'rows' => 5,
-        'icon' => 'cubes',
+        'icon' => '',
         'columnWidth' => 50,
         'notes' => 'Can NOT be filtered.',
       ],
@@ -741,32 +766,43 @@ trait Product
         'inputfield' => 'InputfieldAsmSelect',
         'findPagesSelector' => "template=" . Variation::tpl,
         'labelFieldName' => 'title',
-        'icon' => 'cubes',
+        'icon' => 'filter',
         'columnWidth' => 50,
         'notes' => 'Can be filtered.',
       ],
+      self::field_optionstab . "_END" => [
+        'type' => 'FieldsetClose',
+      ],
 
       // accessories
+      self::field_acctab => [
+        'type' => 'FieldsetOpen',
+        'label' => 'Accessories + Related',
+        'icon' => 'cubes',
+      ],
       self::field_accessories => [
-        'label' => 'Accessories',
+        'label' => 'Custom',
+        'description' => '',
+        'notes' => 'Not buyable as single product.',
         'type' => 'FieldtypeRepeater',
         'fields' => [
-          self::field_acctype,
-          self::field_accproduct,
           'title' => [
-            'columnWidth' => 70,
+            'columnWidth' => 100,
             'icon' => 'comment-o',
             'required' => false,
-            'showIf' => self::field_acctype . "=" . self::acc_custom,
+            'showIf' => '',
           ],
           self::field_net => [
-            'columnWidth' => 30,
+            'columnWidth' => 50,
             'icon' => 'money',
             'required' => false,
-            'showIf' => self::field_acctype . "=" . self::acc_custom,
+            'showIf' => '',
           ],
           self::field_gross => [
-            'collapsed' => Inputfield::collapsedHidden,
+            'columnWidth' => 50,
+            'icon' => 'money',
+            'collapsed' => Inputfield::collapsedNo,
+            'showIf' => '',
           ],
           self::field_accbody,
           self::field_accimages,
@@ -775,9 +811,24 @@ trait Product
         'familyFriendly' => 1,
         'repeaterDepth' => 0,
         'repeaterAddLabel' => 'Add New Item',
-        'columnWidth' => 100,
-        'icon' => 'cubes',
+        'columnWidth' => 50,
+        'icon' => '',
         'collapsed' => Inputfield::collapsedBlank,
+      ],
+      self::field_relatedproducts => [
+        'type' => 'page',
+        'label' => 'Related Products',
+        'derefAsPage' => FieldtypePage::derefAsPageArray,
+        'inputfield' => 'InputfieldPageAutocomplete',
+        // this selector will be refined via hook!
+        'findPagesSelector' => 'id>0,template!=admin',
+        'labelFieldName' => 'title',
+        'columnWidth' => 50,
+        'showIf' => '',
+        'icon' => 'link',
+      ],
+      self::field_acctab . "_END" => [
+        'type' => 'FieldsetClose',
       ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";

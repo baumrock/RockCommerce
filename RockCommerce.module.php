@@ -98,7 +98,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $grid->addDir(__DIR__ . "/RockGrid");
 
     // create assets
-    $rm->minify(__DIR__ . "/RockCommerce.js");
+    $rm->minify(__DIR__ . "/RockCommerceBackend.js");
+    $rm->minify(__DIR__ . "/RockCommerceFrontend.js");
     $rm->minify(__DIR__ . "/RockCommerceSite.js");
     $rm->minify(__DIR__ . "/Cart.js");
 
@@ -107,8 +108,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->addAJAX(); // backend endpoints
 
     // hooks
-    $this->wire->addHookAfter(self::webhookurl, $this, "handleWebhook");
-    $this->wire->addHookAfter("Page::render", $this, "initRockCommerceSite");
+    wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
+    wire()->addHookAfter("Page::render",   $this, "initRockCommerceSite");
 
     // now that the module is ready we init the productpage
     // to attach hooks from the product trait
@@ -119,8 +120,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
-    if ($this->wire->page->template == 'admin') {
+    $admin = $this->wire->page->template == 'admin';
+    $ajax = $this->wire->config->ajax;
+    if ($admin and !$ajax) {
       $rm->addStyles(__DIR__ . "/less/backend.less");
+      $rm->addScripts(__DIR__ . "/RockCommerceBackend.min.js");
     }
   }
 

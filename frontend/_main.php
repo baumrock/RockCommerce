@@ -26,7 +26,7 @@ $rf->styles('rockcommerce')
 $rf->scripts()
   ->add('/site/templates/uikit/dist/js/uikit.min.js')
   ->add("$modulePath/lib/htmx.min.js")
-  ->add("$modulePath/RockCommerce.min.js", "defer")
+  ->add("$modulePath/RockCommerceFrontend.min.js", "defer")
   ->addIf("$modulePath/Cart.min.js", $segment == "cart", "defer");
 
 // include the init.php file
