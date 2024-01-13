@@ -22,6 +22,11 @@ var RcPricing;
       let price = prices[row.id];
       if (price !== undefined) delete notFound[row.id];
       row.net = price;
+      let taxrate = document.querySelector(
+        'select[name="rc_product_taxrate"]'
+      ).value;
+      let grossValue = row.net * (1 + taxrate / 100);
+      row.gross = parseFloat(grossValue.toFixed(2));
     });
 
     // populate not found warning
@@ -40,6 +45,8 @@ var RcPricing;
     let arr = {};
     this.table.getData().forEach((row) => {
       delete row["id"];
+      delete row["gross"];
+
       // the empty string makes sure we get a json with
       // all pricing rows even if they are not yet filled
       arr[RcPricing.getKey(row)] = row.net * 1 || "";
@@ -89,6 +96,17 @@ var RcPricing;
         step: 0.01,
       },
     });
+    columns.push({
+      field: "gross",
+      title: "Gross Price",
+      editor: "number",
+      headerFilter: "input",
+      editorParams: {
+        selectContents: true,
+        verticalNavigation: "table",
+        step: 0.01,
+      },
+    });
 
     // create Tabulator
     let table = new Tabulator(id, {
@@ -105,6 +123,27 @@ var RcPricing;
       if (typeof RockCalculator == "undefined") return;
       if (!RockCalculator.metaClick) return;
       RockCalculator.show($(id), cell);
+    });
+
+    // update net or gross values
+    table.on("cellEdited", function (cell) {
+      let field = cell.getField();
+      let taxrate = document.querySelector(
+        'select[name="rc_product_taxrate"]'
+      ).value;
+      if (field == "net") {
+        // update gross value
+        let netValue = cell.getValue();
+        let grossValue = netValue * (1 + taxrate / 100);
+        grossValue = parseFloat(grossValue.toFixed(2));
+        cell.getRow().update({ gross: grossValue });
+      } else {
+        // update net value
+        let grossValue = cell.getValue();
+        let netValue = grossValue / (1 + taxrate / 100);
+        netValue = parseFloat(netValue.toFixed(2));
+        cell.getRow().update({ net: netValue });
+      }
     });
 
     // update textarea whenever data changes
