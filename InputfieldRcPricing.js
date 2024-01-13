@@ -100,9 +100,8 @@ var RcPricing;
       editor: "number",
       headerFilter: "input",
       hozAlign: "right",
-      formatter: (cell) => {
-        return this.money(cell.getValue());
-      },
+      width: 120,
+      formatter: "money",
       editorParams: {
         selectContents: true,
         verticalNavigation: "table",
@@ -115,9 +114,8 @@ var RcPricing;
       editor: "number",
       headerFilter: "input",
       hozAlign: "right",
-      formatter: (cell) => {
-        return this.money(cell.getValue());
-      },
+      width: 120,
+      formatter: "money",
       editorParams: {
         selectContents: true,
         verticalNavigation: "table",

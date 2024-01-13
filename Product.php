@@ -489,8 +489,16 @@ trait Product
       $page->set(self::field_variations, '');
       $page->set(self::field_pricing, '');
     } else {
-      // save pricing json
+      $oldPricing = $page->getUnformatted(self::field_pricing);
       $page->set(self::field_pricing, $page->pricingSleepValue());
+
+      // save old pricing if variations changed
+      if (
+        $page->isChanged(self::field_variations)
+        or $page->isChanged(self::field_customvariations)
+      ) {
+        $page->meta('rc-old-pricing', $oldPricing);
+      } else $page->meta()->remove('rc-old-pricing');
     }
   }
 
@@ -503,7 +511,9 @@ trait Product
     $data = $this->getPricingDataArray(true);
     foreach ($data as $k => &$price) {
       if (!array_key_exists($k, $current)) continue;
-      $price = $current[$k];
+      // use rockmoney to make sure we don't get floating comma issues
+      $p = rockmoney()->parse($current[$k]);
+      $price = $p->getString();
     }
     if ($returnArray) return $data;
     return json_encode($data);
