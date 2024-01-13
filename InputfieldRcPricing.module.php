@@ -25,7 +25,7 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
 
   private function oldPricing($page): string
   {
-    $oldPricing = json_decode($page->meta('rc-old-pricing'), true);
+    $oldPricing = json_decode($page->meta('rc-old-pricing') ?: "", true);
     if (!$oldPricing) return "";
 
     $table = "
@@ -40,9 +40,9 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
     }
     $table .= "</table>";
     return "<div id='notFound' class='uk-alert uk-alert-warning uk-text-bold'>
-        Warning: Variations have been changed!
+        Warning: Variations have been changed - pricing has been reset!
       </div>
-      <div>You can restore old prices manually. Note that these prices will be lost on next save!</div>
+      <div>You can restore old prices manually. Note that this table will only be shown until the next save happens.</div>
       $table";
   }
 
