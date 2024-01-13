@@ -320,6 +320,18 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $cart;
   }
 
+  public function getJsConfig($json = false): array|string
+  {
+    $config = [
+      'debug' => $this->wire->config->debug,
+      'currency' => rockmoney()->currencyStr ?: 'EUR',
+      'locale' => $this->frontendLocale ?: 'de-DE',
+      'priceType' => $this->priceType() ?: 'net',
+    ];
+    if ($json) return json_encode($config);
+    return $config;
+  }
+
   public function getOrder(string $orderid = null): Order|false
   {
     if ($orderid === null) $orderid = $this->wire->input->get('id', 'string');
@@ -431,22 +443,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if ($page->template == 'admin') return;
     if ($this->wire->config->ajax) return;
     if (!$page->viewable()) return;
-
-    $priceType = 'net';
-    if ($this->priceType === self::pricetype_gross) $priceType = 'gross';
-
-    // get config for frontend
-    $config = json_encode(array_filter([
-      'debug' => $this->wire->config->debug,
-      'currency' => rockmoney()->currencyStr,
-      'locale' => $this->frontendLocale,
-      'priceType' => $priceType,
-    ]));
-
     $event->return = str_replace(
       "</body>",
       "<script>document.addEventListener('DOMContentLoaded', function() {
-        RockCommerceSite.init($config);
+        RockCommerceSite.init({$this->getJsConfig(true)});
       });</script></body>",
       $event->return
     );

@@ -54,7 +54,7 @@ var RcPricing;
   Pricing.prototype.getGross = function (net) {
     if (net == "") return "";
     let grossValue = net * (1 + this.taxrate() / 100);
-    return parseFloat(grossValue.toFixed(2));
+    return grossValue.toFixed(2);
   };
 
   /**
@@ -73,7 +73,7 @@ var RcPricing;
 
   Pricing.prototype.getNet = function (gross) {
     let netValue = gross / (1 + this.taxrate() / 100);
-    return parseFloat(netValue.toFixed(2));
+    return netValue.toFixed(2);
   };
 
   Pricing.prototype.getPrices = function () {
@@ -83,6 +83,7 @@ var RcPricing;
   Pricing.prototype.init = function (id, variations, data) {
     this.root = document.querySelector(id).closest(".Inputfield");
     this.textarea = this.root.querySelector("textarea.FieldtypeTextarea");
+    let config = ProcessWire.config.RockCommerce;
 
     // setup columns
     let columns = [];
@@ -98,6 +99,10 @@ var RcPricing;
       title: "Net Price",
       editor: "number",
       headerFilter: "input",
+      hozAlign: "right",
+      formatter: (cell) => {
+        return this.money(cell.getValue());
+      },
       editorParams: {
         selectContents: true,
         verticalNavigation: "table",
@@ -109,6 +114,10 @@ var RcPricing;
       title: "Gross Price",
       editor: "number",
       headerFilter: "input",
+      hozAlign: "right",
+      formatter: (cell) => {
+        return this.money(cell.getValue());
+      },
       editorParams: {
         selectContents: true,
         verticalNavigation: "table",
@@ -135,14 +144,14 @@ var RcPricing;
 
     // update net or gross values
     table.on("cellEdited", function (cell) {
-      let val = cell.getValue();
+      let val = cell.getValue().toFixed(2);
       let field = cell.getField();
       if (field == "net") {
         // update gross value
-        cell.getRow().update({ gross: RcPricing.getGross(val) });
+        cell.getRow().update({ net: val, gross: RcPricing.getGross(val) });
       } else {
         // update net value
-        cell.getRow().update({ net: RcPricing.getNet(val) });
+        cell.getRow().update({ gross: val, net: RcPricing.getNet(val) });
       }
     });
 
@@ -160,6 +169,17 @@ var RcPricing;
     $(document).on("blur", "#set-prices input", function () {
       $(this).val("");
     });
+  };
+
+  /**
+   * Money formatter
+   */
+  Pricing.prototype.money = function (number) {
+    let config = ProcessWire.config.RockCommerce;
+    return new Intl.NumberFormat(config.locale, {
+      currency: config.currency,
+      style: "currency",
+    }).format(number);
   };
 
   Pricing.prototype.saveJson = function () {

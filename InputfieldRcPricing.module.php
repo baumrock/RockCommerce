@@ -54,6 +54,7 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
   {
     rockmigrations()->addScripts(__DIR__ . "/../RockGrid/tabulator/tabulator.min.js");
     rockmigrations()->addStyles(__DIR__ . "/../RockGrid/tabulator/tabulator.min.css");
+    $this->wire->config->js('RockCommerce', rockcommerce()->getJsConfig());
     parent::renderReady($parent, $renderValueMode);
   }
 }
