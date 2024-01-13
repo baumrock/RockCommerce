@@ -155,6 +155,11 @@ var RcPricing;
       "#set-prices input",
       RcPricing.setPrices.bind(this)
     );
+
+    // reset inputfield when focus lost
+    $(document).on("blur", "#set-prices input", function () {
+      $(this).val("");
+    });
   };
 
   Pricing.prototype.saveJson = function () {
@@ -163,10 +168,23 @@ var RcPricing;
 
   Pricing.prototype.setPrices = function (e) {
     e.preventDefault();
-    let price = $("#set-prices input").val();
+    let inputName = $(e.target).attr("name");
+    let price = $(e.target).val();
+    if (price == "") return;
     let table = this.table;
     table.getData("active").forEach((row) => {
-      row.net = price;
+      let taxrate = document.querySelector(
+        'select[name="rc_product_taxrate"]'
+      ).value;
+      if (inputName == "net") {
+        row.net = price;
+        let grossValue = row.net * (1 + taxrate / 100);
+        row.gross = parseFloat(grossValue.toFixed(2));
+      } else if (inputName == "gross") {
+        row.gross = price;
+        let netValue = row.gross / (1 + taxrate / 100);
+        row.net = parseFloat(netValue.toFixed(2));
+      }
       table.updateData([row]);
     });
     this.saveJson();

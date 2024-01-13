@@ -42,7 +42,8 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
       </div>
       <div id='set-prices' class='uk-margin-small-bottom uk-flex uk-flex-middle uk-flex-right'>
         <span class='uk-margin-small-right'>Set price on all visible rows</span>
-        <input type='text' class='uk-input uk-form-small' style='width: 100px;'>
+        <input type='text' name='net' placeholder='net' class='uk-input uk-form-small' style='width: 100px;'>
+        <input type='text' name='gross' placeholder='gross' class='uk-input uk-form-small' style='width: 100px;'>
       </div>
       <div id='$grid'></div>
       <script>RcPricing.init('#$grid', $variations, $data)</script>
