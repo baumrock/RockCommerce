@@ -96,18 +96,18 @@ var RockCommerceSite;
     let root = el.closest("[rc-pricing]");
     let pricing = this.getPricing(root);
     let price = root.querySelector("[rc-price]");
+    let priceType = this.priceType;
 
     // get variations price
     let varKey = this.getSelectedVariationsKey(root);
     let varPrice = pricing.variations[varKey];
-    let total = varPrice.net * 1;
+    let total = priceType == "net" ? varPrice.net * 1 : varPrice.gross * 1;
 
     // add accessory prices
     let accessories = this.getSelectedAccessories(root);
     accessories.forEach(function (id) {
       let accPrice = pricing.accessories[id];
-      console.log(accPrice);
-      total += accPrice.net * 1;
+      total += priceType == "net" ? accPrice.net * 1 : accPrice.gross * 1;
     });
 
     price.textContent = this.money(total);

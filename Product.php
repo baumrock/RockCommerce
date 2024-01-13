@@ -67,6 +67,14 @@ trait Product
 
   /** Frontend API */
 
+  public function frontendPrice($type = null): string
+  {
+    if (!$type) $type = rockcommerce()->priceType();
+    $price = $this->priceFrom();
+    if ($type == "net") return $price->net;
+    if ($type == "gross") return $price->gross;
+  }
+
   public function frontendPricing(): string
   {
     if ($this->frontendPricing) return $this->frontendPricing;
@@ -170,11 +178,6 @@ trait Product
   public function variations(): PageArray
   {
     return $this->getFormatted(self::field_variations . "[]");
-  }
-
-  public function versionPrice(): Price
-  {
-    return $this->priceFrom();
   }
 
   /** Backend */

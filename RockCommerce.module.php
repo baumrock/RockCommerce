@@ -41,9 +41,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   const pricetype_net = 1;
   const pricetype_gross = 0;
-  const pricetype_runtime = 2;
+  const pricetype_runtime = 2; // not yet implemented
 
   public $noComplexPricing = false;
+
+  public $priceType = self::pricetype_net;
 
   /** @var WireArray */
   public $productTemplates = false;
@@ -432,7 +434,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     $priceType = 'net';
     if ($this->priceType === self::pricetype_gross) $priceType = 'gross';
-    else if ($this->priceType === self::pricetype_runtime) $priceType = 'runtime';
 
     // get config for frontend
     $config = json_encode(array_filter([
@@ -585,6 +586,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'parent' => $this->rootPage(),
       'template' => Orders::tpl,
     ]);
+  }
+
+  public function priceType(): string
+  {
+    if ($this->priceType == self::pricetype_gross) return "gross";
+    return "net";
   }
 
   public function processPage(): Page
@@ -853,11 +860,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'label' => 'Frontend Pricing Display',
       'formatType' => 0, // integer
       'labelType' => 100, // custom
-      'useOther' => 1,
+      'useOther' => 0,
       'icon' => 'money',
       'yesLabel' => 'net',
       'noLabel' => 'gross',
-      'otherLabel' => 'define at runtime',
       'defaultOption' => 'net',
       'value' => $this->priceType,
       'notes' => 'Choose how to display pricing on the frontend.',
