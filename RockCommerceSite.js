@@ -2,16 +2,39 @@
 
 /**
  * RockCommerce Frontend Site JS
+ *
  * This file is only loaded on project-specific fontend pages.
  * That are pages not like /rc/cart, but for example yoursite.com/product1
+ *
+ * The
  */
 
 var RockCommerceSite;
 
 (() => {
   function RCSite() {
+    this.locale = "de-DE";
+    this.currency = "EUR";
+    this.priceType = "net";
     this.cartCount = 0;
+    this.debug = false;
   }
+
+  /** ########## Init ########## */
+
+  /**
+   * This method is triggerd from tag injected on Page::render
+   */
+  RCSite.prototype.init = function (config) {
+    for (let prop in config) {
+      this[prop] = config[prop];
+    }
+    this.cartCount = localStorage.getItem("rc-cart-count");
+    this.updateMagicElements();
+    console.log(this);
+  };
+
+  /** ########## Methods ########## */
 
   RCSite.prototype.getPricing = function (el) {
     el = el.closest("[rc-pricing]");
@@ -43,18 +66,13 @@ var RockCommerceSite;
     });
   };
 
-  RCSite.prototype.init = function () {
-    this.cartCount = localStorage.getItem("rc-cart-count");
-    this.updateMagicElements();
-  };
-
   /**
    * Money formatter for the frontend
    */
   RCSite.prototype.money = function (number) {
-    return new Intl.NumberFormat("de-DE", {
+    return new Intl.NumberFormat(this.locale, {
+      currency: this.currency,
       style: "currency",
-      currency: "EUR",
     }).format(number);
   };
 
@@ -95,6 +113,8 @@ var RockCommerceSite;
     price.textContent = this.money(total);
   };
 
+  RockCommerceSite = new RCSite();
+
   /** ########## Event Listeners ########## */
 
   /**
@@ -106,7 +126,4 @@ var RockCommerceSite;
       RockCommerceSite.updatePrice(el);
     }
   });
-
-  RockCommerceSite = new RCSite();
-  RockCommerceSite.init();
 })();

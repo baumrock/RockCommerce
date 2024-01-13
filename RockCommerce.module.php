@@ -39,9 +39,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   ];
   const webhookurl = "/rockcommerce/webhook";
 
-  const frontendpricing_net = 1;
-  const frontendpricing_gross = 0;
-  const frontendpricing_runtime = 2;
+  const pricetype_net = 1;
+  const pricetype_gross = 0;
+  const pricetype_runtime = 2;
 
   public $noComplexPricing = false;
 
@@ -106,6 +106,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // hooks
     $this->wire->addHookAfter(self::webhookurl, $this, "handleWebhook");
+    $this->wire->addHookAfter("Page::render", $this, "initRockCommerceSite");
 
     // now that the module is ready we init the productpage
     // to attach hooks from the product trait
@@ -416,6 +417,38 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // dont render any html
     echo $output;
     return true;
+  }
+
+  /**
+   * Add JS tag on frontend to init RCSite object
+   */
+  public function initRockCommerceSite(HookEvent $event): void
+  {
+    /** @var Page $page */
+    $page = $event->object;
+    if ($page->template == 'admin') return;
+    if ($this->wire->config->ajax) return;
+    if (!$page->viewable()) return;
+
+    $priceType = 'net';
+    if ($this->priceType === self::pricetype_gross) $priceType = 'gross';
+    else if ($this->priceType === self::pricetype_runtime) $priceType = 'runtime';
+
+    // get config for frontend
+    $config = json_encode(array_filter([
+      'debug' => $this->wire->config->debug,
+      'currency' => rockmoney()->currencyStr,
+      'locale' => $this->frontendLocale,
+      'priceType' => $priceType,
+    ]));
+
+    $event->return = str_replace(
+      "</body>",
+      "<script>document.addEventListener('DOMContentLoaded', function() {
+        RockCommerceSite.init($config);
+      });</script></body>",
+      $event->return
+    );
   }
 
   public function invoicesPage(): Invoices
@@ -801,12 +834,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'value' => $this->rawtaxrates,
       'icon' => 'percent',
       'required' => true,
+      'columnWidth' => 50,
+    ]);
+
+    // complex pricing?
+    $fs->add([
+      'type' => 'checkbox',
+      'name' => 'noComplexPricing',
+      'label' => 'Allow only simple pricing for all products',
+      'checked' => $this->noComplexPricing ? 'checked' : '',
+      'columnWidth' => 50,
     ]);
 
     // frontend pricing
     $fs->add([
       'type' => 'toggle',
-      'name' => 'frontendPricing',
+      'name' => 'priceType',
       'label' => 'Frontend Pricing Display',
       'formatType' => 0, // integer
       'labelType' => 100, // custom
@@ -816,16 +859,25 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'noLabel' => 'gross',
       'otherLabel' => 'define at runtime',
       'defaultOption' => 'net',
-      'value' => $this->frontendPricing,
+      'value' => $this->priceType,
       'notes' => 'Choose how to display pricing on the frontend.',
+      'columnWidth' => 50,
     ]);
 
-    // complex pricing?
     $fs->add([
-      'type' => 'checkbox',
-      'name' => 'noComplexPricing',
-      'label' => 'Allow only simple pricing for all products',
-      'checked' => $this->noComplexPricing ? 'checked' : '',
+      'type' => 'text',
+      'name' => 'frontendLocale',
+      'label' => 'Frontend Locale (JavaScript)',
+      'notes' => 'Used to render prices on the frontend. Default is de-DE.',
+      'value' => $this->frontendLocale,
+      'icon' => 'money',
+      'columnWidth' => 50,
+    ]);
+
+    $link = $this->wire->pages->get(2)->url . "module/edit?name=RockMoney";
+    $fs->add([
+      'type' => 'markup',
+      'value' => "Note: PHP pricing settings are defined in the <a href=$link>RockMoney module</a>.",
     ]);
 
     // webhook url
