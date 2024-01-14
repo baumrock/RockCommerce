@@ -61,9 +61,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'autoload' => true,
       'singular' => true,
       'icon' => 'money',
+      // PW 3.0.234 for repeater classes
       'requires' => [
+        'ProcessWire>=3.0.234',
         'RockFrontend>=3.3.0',
-        'RockMigrations>=3.27',
+        'RockMigrations>=3.36',
         'RockMoney>=1.0.1',
         'RockMollie>=1.0.0',
         'RockGrid>=2.2.0',
@@ -77,9 +79,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function init()
   {
-    // attach classloader
-    $this->wire->classLoader->addNamespace("RockCommerce", __DIR__);
-
     // initialize module and api
     $this->loadConfig();
     $this->wire('rockcommerce', $this);

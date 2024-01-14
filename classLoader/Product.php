@@ -34,39 +34,35 @@ trait Product
   const acc_custom = 1;
   const acc_product = 0;
 
-  const field_variations       = self::_prefix . "variations";
-  const field_options          = self::_prefix . "options";
-  const field_rctab            = self::_prefix . "rctab";
-  const field_net              = self::_prefix . "net";
-  const field_taxrate          = self::_prefix . "taxrate";
-  const field_gross            = self::_prefix . "gross";
-  const field_pricing          = self::_prefix . "pricing";
+  const field_variations = self::_prefix . "variations";
+  const field_options = self::_prefix . "options";
+  const field_rctab = self::_prefix . "rctab";
+  const field_net = self::_prefix . "net";
+  const field_taxrate = self::_prefix . "taxrate";
+  const field_gross = self::_prefix . "gross";
+  const field_pricing = self::_prefix . "pricing";
   const field_customvariations = self::_prefix . "customvariations";
-  const field_customoptions    = self::_prefix . "customoptions";
-  const field_simplepricing    = self::_prefix . "simplepricing";
-  const field_tonet            = self::_prefix . "tonet";
-  const field_togross          = self::_prefix . "togross";
-  const field_available        = self::_prefix . "available";
-  const field_searchable       = self::_prefix . "searchable";
-  const field_accessories      = self::_prefix . "accessories";
-  const field_accimages        = self::_prefix . "accimages";
-  const field_accbody          = self::_prefix . "accbody";
-  const field_acctype          = self::_prefix . "acctype";
-  const field_relatedproducts  = self::_prefix . "relatedproducts";
-  const field_optionstab       = self::_prefix . "optionstab";
-  const field_acctab           = self::_prefix . "acctab";
-  const field_pricingtab       = self::_prefix . "pricingtab";
-  const field_vartab           = self::_prefix . "vartab";
+  const field_customoptions = self::_prefix . "customoptions";
+  const field_simplepricing = self::_prefix . "simplepricing";
+  const field_tonet = self::_prefix . "tonet";
+  const field_togross = self::_prefix . "togross";
+  const field_available = self::_prefix . "available";
+  const field_searchable = self::_prefix . "searchable";
+  const field_accessories = self::_prefix . "accessories";
+  const field_accimages = self::_prefix . "accimages";
+  const field_accbody = self::_prefix . "accbody";
+  const field_acctype = self::_prefix . "acctype";
+  const field_relatedproducts = self::_prefix . "relatedproducts";
+  const field_optionstab = self::_prefix . "optionstab";
+  const field_acctab = self::_prefix . "acctab";
+  const field_pricingtab = self::_prefix . "pricingtab";
+  const field_vartab = self::_prefix . "vartab";
 
   public function _init(): void
   {
-    wire()->addHookBefore("InputfieldFloat::render",   $this, "_hookTaxrate");
-    wire()->addHookAfter("Pages::saveReady",           $this, "_hookSaveReady");
+    wire()->addHookBefore("InputfieldFloat::render", $this, "_hookTaxrate");
+    wire()->addHookAfter("Pages::saveReady", $this, "_hookSaveReady");
     wire()->addHookAfter("ProcessPageEdit::buildForm", $this, "_hookBuildForm");
-
-    // hooks for accessories
-    wire()->addHookProperty("Page::isAccessory", $this, "_hookIsAccessory");
-    wire()->addHookProperty("Page::label",       $this, "_hookAccLabel");
     wire()->addHookAfter("Field::getInputfield", $this, "_hookLimitProductAutocomplete");
   }
 
@@ -368,21 +364,6 @@ trait Product
     return $str;
   }
 
-  /**
-   * Add $page->label to accessory repeater items
-   */
-  public function _hookAccLabel(HookEvent $event): void
-  {
-    $page = $event->object;
-    if (!$page->isAccessory) return;
-    if ($page->acctype() == self::acc_custom) {
-      $event->return = $page->title;
-    } else {
-      $product = $page->accproduct();
-      if ($product) $event->return = $product->title;
-    }
-  }
-
   public function _hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
@@ -456,16 +437,7 @@ trait Product
   }
 
   /**
-   * Add $page->isAccessory to accessory repeater items
-   */
-  public function _hookIsAccessory(HookEvent $event): void
-  {
-    $page = $event->object;
-    $event->return = $page->hasField(self::field_acctype);
-  }
-
-  /**
-   * Hook the accessory product select field to only return actual products
+   * Hook the related product select field to only return actual products
    */
   public function _hookLimitProductAutocomplete(HookEvent $event): void
   {
@@ -813,7 +785,7 @@ trait Product
         'repeaterAddLabel' => 'Add New Item',
         'columnWidth' => 50,
         'icon' => '',
-        'collapsed' => Inputfield::collapsedBlank,
+        'collapsed' => Inputfield::collapsedNo,
       ],
       self::field_relatedproducts => [
         'type' => 'page',
