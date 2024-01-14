@@ -88,7 +88,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->watch($this);
     $rm->watch(
-      what: __DIR__ . "/Product.php",
+      what: __DIR__ . "/classLoader/Product.php",
       options: ['trigger' => $this],
     );
 
@@ -566,9 +566,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }
 
     // migrate all products
+    $fired = false;
     foreach ($this->wire->templates as $tpl) {
       $p = $this->wire->pages->newPage("template=$tpl");
       if (!$p->isProduct) continue;
+
+      // trigger _migrate only once for the whole project
+      // this is so that when using multiple templates using the product trait
+      // we don't end up getting the _migrate() of the trait being triggered
+      // more than once
+      if ($fired) continue;
+      $fired = true;
       $p->_migrate();
     }
   }
