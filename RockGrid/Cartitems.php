@@ -2,6 +2,7 @@
 
 namespace RockGrid;
 
+use ProcessWire\ProcessRockCommerce;
 use ProcessWire\WireException;
 use RockCommerce\Cart;
 use RockCommerce\Cartitem;
@@ -81,7 +82,7 @@ class Cartitems extends Grid
   public function isViewable()
   {
     if ($this->wire->user->isSuperuser()) return true;
-    // if($this->wire->user->hasRole('foo')) return true;
+    if ($this->wire->user->hasPermission(ProcessRockCommerce::permission)) return true;
     return false;
   }
 }

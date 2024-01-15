@@ -2,6 +2,7 @@
 
 namespace RockGrid;
 
+use ProcessWire\ProcessRockCommerce;
 use RockCommerce\ProductPage;
 
 use function ProcessWire\rockcommerce;
@@ -71,7 +72,7 @@ class Prices extends Grid
   public function isViewable()
   {
     if ($this->wire->user->isSuperuser()) return true;
-    // if($this->wire->user->hasRole('foo')) return true;
+    if ($this->wire->user->hasPermission(ProcessRockCommerce::permission)) return true;
     return false;
   }
 }
