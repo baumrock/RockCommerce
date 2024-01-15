@@ -1,0 +1,11 @@
+{var $products = $product->related()}
+<div n:if="$products->count()" class="uk-container" {alfred()}>
+  <div class="uk-card uk-card-default uk-card-body uk-margin">
+    <h3 class="uk-text-center">Related Products</h3>
+    <ul>
+      <li n:foreach="$products as $p">
+        <a href="{$p->url}">{$p->title}</a>
+      </li>
+    </ul>
+  </div>
+</div>

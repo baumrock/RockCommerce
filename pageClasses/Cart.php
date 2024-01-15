@@ -80,6 +80,16 @@ class Cart extends Page
 
   /** frontend */
 
+  public function item(string $variation = null): Page|false
+  {
+    // create selector as string
+    // this is to make it match pipes in the value and not treat them as OR
+    $selector = Cartitem::field_variation . "='$variation'";
+    $item = $this->wire->pages->get("parent={$this},$selector");
+    if (!$item->id) return false;
+    return $item;
+  }
+
   public function items(): PageArray
   {
     return $this->children();
@@ -114,16 +124,29 @@ class Cart extends Page
   public function addItem(
     string|Page $product,
     int $amount = null,
+    string $variation = null,
   ): Cartitem {
     if (!$amount) $amount = 1;
     $product = rockcommerce()->getProduct($product);
-    $cartitem = new Cartitem($this);
-    $cartitem->set(Cartitem::field_product, $product);
-    $cartitem->set(Cartitem::field_amount, $amount);
-    $cartitem->save();
+
+    // try to find existing item
+    $item = $this->item($variation);
+    if ($item) {
+      // increase amount
+      $item->of(false);
+      $item->set(Cartitem::field_amount, $item->amount(2) + $amount);
+    } else {
+      // create new item
+      $item = new Cartitem($this);
+      $item->set(Cartitem::field_product, $product);
+      $item->set(Cartitem::field_amount, $amount);
+      $item->set(Cartitem::field_variation, $variation);
+    }
+    $item->save();
+
     $this->wire->session->rcAddedAmount = $amount;
     $this->wire->session->rcAddedProduct = $product->id;
-    return $cartitem;
+    return $item;
   }
 
   public function migrate()

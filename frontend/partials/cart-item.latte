@@ -18,8 +18,9 @@
       <div class="uk-grid-collapse" uk-grid style="row-gap: 10px;">
 
         <div class="uk-width-expand">
-          <div class="uk-text-lead">{$item->cartTitle()}</div>
+          <div class="uk-text-lead">{$item->id}</div>
           <div n:ifcontent>{$item->cartDescription()}</div>
+          <div>{$item->variation()}</div>
         </div>
 
         <div

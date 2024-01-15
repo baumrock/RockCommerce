@@ -12,6 +12,7 @@ use ProcessWire\InputfieldMarkup;
 use ProcessWire\InputfieldSelect;
 use ProcessWire\PageArray;
 use ProcessWire\RepeaterPage;
+use ProcessWire\WireInput;
 use RockMoney\Money;
 use stdClass;
 
@@ -166,6 +167,11 @@ trait Product
     );
   }
 
+  public function related(): PageArray
+  {
+    return $this->getFormatted(self::field_relatedproducts);
+  }
+
   public function simplepricing(): bool
   {
     return !!$this->getFormatted(self::field_simplepricing);
@@ -311,6 +317,29 @@ trait Product
   }
 
   /**
+   * Convert variations array to string used in textarea
+   * Helpful for importing custom variations via API.
+   *
+   * Example array to feed:
+   * array
+   *   'versions: Versionen' => array
+   *     't903s' => 'Travel 903 S'
+   *     't903l' => 'Travel 903 L'
+   */
+  public function getCustomVariationsString(array $variations): string
+  {
+    $variations = $this->sanitizeVariations($variations);
+    $str = "";
+    foreach ($variations as $name => $options) {
+      $str .= "# $name\n";
+      foreach ($options as $k => $v) {
+        $str .= "$k: $v\n";
+      }
+    }
+    return $str;
+  }
+
+  /**
    * Get variations array. This array is used in tabulator to create columns.
    *
    * Example return:
@@ -342,26 +371,19 @@ trait Product
   }
 
   /**
-   * Convert variations array to string used in textarea
-   * Helpful for importing custom variations via API.
+   * Get variation-string from input data used for Cartitems
    *
-   * Example array to feed:
-   * array
-   *   'versions: Versionen' => array
-   *     't903s' => 'Travel 903 S'
-   *     't903l' => 'Travel 903 L'
+   * Returns something like "size:s|version:x"
    */
-  public function getVariationsString(array $variations): string
+  public function getVariationString(WireInput $input): string
   {
-    $variations = $this->sanitizeVariations($variations);
-    $str = "";
-    foreach ($variations as $name => $options) {
-      $str .= "# $name\n";
-      foreach ($options as $k => $v) {
-        $str .= "$k: $v\n";
-      }
+    $vars = [];
+    foreach ($this->getVariationsArray() as $variation => $options) {
+      $allowed = array_keys($options);
+      $value = $input->get($variation, $allowed);
+      $vars[] = "$variation:$value";
     }
-    return $str;
+    return implode("|", $vars);
   }
 
   public function _hookBuildForm(HookEvent $event): void
@@ -782,7 +804,6 @@ trait Product
         'repeaterTitle' => '{label}',
         'familyFriendly' => 1,
         'repeaterDepth' => 0,
-        'repeaterAddLabel' => 'Add New Item',
         'columnWidth' => 50,
         'icon' => '',
         'collapsed' => Inputfield::collapsedNo,
