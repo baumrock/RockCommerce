@@ -52,31 +52,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   private $taxrates = false;
 
-  public static function getModuleInfo()
-  {
-    return [
-      'title' => 'RockCommerce',
-      'version' => '0.0.1',
-      'summary' => 'E-Commerce Module for ProcessWire',
-      'autoload' => true,
-      'singular' => true,
-      'icon' => 'money',
-      // PW 3.0.234 for repeater classes
-      'requires' => [
-        'ProcessWire>=3.0.234',
-        'RockFrontend>=3.3.0',
-        'RockMigrations>=3.36',
-        'RockMoney>=1.0.1',
-        'RockMollie>=1.0.0',
-        'RockGrid>=2.2.0',
-      ],
-      'installs' => [
-        'ProcessRockCommerce',
-        'InputfieldRcPricing',
-      ],
-    ];
-  }
-
   public function init()
   {
     // initialize module and api
