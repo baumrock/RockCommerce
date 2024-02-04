@@ -1,4 +1,44 @@
-# 0.1.0 (2024-01-03)
+# [0.2.0](https://github.com/baumrock/RockCommerce/compare/v0.1.0...v0.2.0) (2024-02-04)
+
+
+### Bug Fixes
+
+* fix editing of variations not working ([8a717ee](https://github.com/baumrock/RockCommerce/commit/8a717eeeb18d53fd3e6cb906d0ed19851b4e9b9d))
+* fix permissions of rockgrids ([8b2a3da](https://github.com/baumrock/RockCommerce/commit/8b2a3da327286d4ecf4649738ca96bed6e0251f0))
+* fix price editor showing wrong data ([d5cf5f3](https://github.com/baumrock/RockCommerce/commit/d5cf5f3c16b3a4ed50d529b0c73f1da75ddf979a))
+* passing null to json_encode deprecated ([5feca9d](https://github.com/baumrock/RockCommerce/commit/5feca9dbc4ec85fb6f494df5c3c76befb4c95fc1))
+* set price on all rows not working ([83ebb89](https://github.com/baumrock/RockCommerce/commit/83ebb8973a45027d084b360576dd4f4f8aba1e69))
+
+
+### Features
+
+* add accessories field ([a9ce624](https://github.com/baumrock/RockCommerce/commit/a9ce624d3872a168cf0993a152b86f660195b648))
+* add accessory class ([bb8b631](https://github.com/baumrock/RockCommerce/commit/bb8b6317aaa90525b479ddc1be373e497008ce3d))
+* add auto-updating cart-count ([d0679e9](https://github.com/baumrock/RockCommerce/commit/d0679e9c6ae6f388dee905e2d07bf5568bb498bd))
+* add basic add to cart functionality ([d8e1a1f](https://github.com/baumrock/RockCommerce/commit/d8e1a1fea905ddeed86c79fc97d81d2be1699e8b))
+* add config noComplexPricing ([d5dd817](https://github.com/baumrock/RockCommerce/commit/d5dd817561a97fad5777438948e6e2e183a95b51))
+* add gross input row ([d47be0c](https://github.com/baumrock/RockCommerce/commit/d47be0c3f3e594162b7f6291a88406eb9b12301d))
+* add hook to add shopping bag to pagelist ([aef36a2](https://github.com/baumrock/RockCommerce/commit/aef36a26b5f41d0c1894ab5fdff1d3753f7bc012))
+* add inputfield/fieldtype for variations ([fa3b39e](https://github.com/baumrock/RockCommerce/commit/fa3b39e149e8be7e4d851087d82ed7f75fe691a1))
+* add money formatter ([cd511bf](https://github.com/baumrock/RockCommerce/commit/cd511bf6c4869921532fe9c7ab6d6ed2bcae528c))
+* add note to restore old pricing ([1b33e6b](https://github.com/baumrock/RockCommerce/commit/1b33e6b267e1c999381ef8be4eace204f72393c5))
+* add price editor feature ([a61cdac](https://github.com/baumrock/RockCommerce/commit/a61cdacd03a4745d187cb8185499bc536ac17be3))
+* add templates to find products ([9ee0d66](https://github.com/baumrock/RockCommerce/commit/9ee0d661d93568d2ac884a097df996268a62f028))
+* add variations to cart ([a3cb7f5](https://github.com/baumrock/RockCommerce/commit/a3cb7f5daab6bdca6e65fade03bad90643bd49a4))
+* better labels for pricing type ([79032f1](https://github.com/baumrock/RockCommerce/commit/79032f12fdaeb361825943127a7876af667f7df4))
+* improve backend ([02a44fa](https://github.com/baumrock/RockCommerce/commit/02a44fa2301ba046dec82ccf6dd2fb7a1d5dd148))
+* improve editor UI ([da6cdb3](https://github.com/baumrock/RockCommerce/commit/da6cdb361d678b12b9b87c99ccaa68c6edca4c8a))
+* improve money formatting on backend ([aab6c04](https://github.com/baumrock/RockCommerce/commit/aab6c04e6727233fad2982f370048c4ebc44c506))
+* improve net/gross input for pricing field ([7948b7f](https://github.com/baumrock/RockCommerce/commit/7948b7f707bd512d6a5554ec1de950df8379d924))
+* live calculation of price on frontend add to cart ([c389d39](https://github.com/baumrock/RockCommerce/commit/c389d39350cf61145bbf79a88b2e0b39385232c9))
+* send config to frontend JS ([386be71](https://github.com/baumrock/RockCommerce/commit/386be71a30e98bdcf6a594644b9b513702d9ca7a))
+* start on add-to-cart with json frontendPricing ([e236ecc](https://github.com/baumrock/RockCommerce/commit/e236ecc2941fcb847b65e4f868fb93d4eb29a951))
+* take priceType into account ([f27107a](https://github.com/baumrock/RockCommerce/commit/f27107aa2fdadf6a3534c6efa8b6af682213df5b))
+* use new rockmigrations auto-classloader ([1f4d5fd](https://github.com/baumrock/RockCommerce/commit/1f4d5fd0ba5d4727930206590aae955c0b301e12))
+
+
+
+# [0.1.0](https://github.com/baumrock/RockCommerce/compare/75b97f97de34164fdc799ce04c6a44a686b15ad6...v0.1.0) (2024-01-03)
 
 
 ### Bug Fixes
