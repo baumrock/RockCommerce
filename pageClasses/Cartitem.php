@@ -23,6 +23,7 @@ class Cartitem extends Page
   const field_page = self::prefix . "page";
   const field_product = self::prefix . "product";
   const field_amount = self::prefix . "amount";
+  const field_variation = self::prefix . "variation";
 
   public function __construct($parent = false)
   {
@@ -146,12 +147,18 @@ class Cartitem extends Page
           'label' => 'Amount',
           'icon' => 'list-ol',
         ],
+        self::field_variation => [
+          'type' => 'text',
+          'label' => 'Variation',
+          'icon' => 'cubes',
+        ],
       ],
       'templates' => [
         self::tpl => [
           'fields-' => [
             self::field_product => ['columnWidth' => 50],
             self::field_amount => ['columnWidth' => 50],
+            self::field_variation,
           ],
           'parentTemplates' => [
             Cart::tpl,

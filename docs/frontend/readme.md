@@ -1,5 +1,7 @@
 # Frontend Rendering
 
+This section is about rendering RockCommerce pages like the cart or the checkout. For site-specific frontend helpers see the next section (links at the bottom of the page).
+
 ## Concept
 
 RockCommerce uses the power of RockFrontend to render all frontend facing pages and make everything customisable by the developer in an easy and efficient way.

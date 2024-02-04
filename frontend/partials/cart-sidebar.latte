@@ -9,7 +9,7 @@
         {=__('Cart')}
       </h3>
       <p class="uk-margin-small-top">
-        {$rc->cart()->itemsCount()}
+        {$cnt = $rc->cart()->itemsCount()}
         {=__('Items')}
       </p>
       <div class="uk-grid-small" uk-grid>
@@ -35,3 +35,6 @@
     </div>
   </div>
 </div>
+<script>
+localStorage.setItem("rc-cart-count", {$cnt});
+</script>

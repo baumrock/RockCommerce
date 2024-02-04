@@ -29,3 +29,13 @@ $wire->addHookAfter("PriceMulti::toString", function ($event) {
 echo new Price(100, 20); // EURO 120,00€
 echo new PriceMulti(100, 200, 20); // from EURO 120,00€ up to EURO 240,00€
 ```
+
+You can also prevent showing the to-price:
+
+```php
+$wire->addHookAfter("PriceMulti::toString", function ($event) {
+  $price = $event->object;
+  $event->return = "from {$price->from}";
+});
+// from 120,00€
+```

@@ -1,6 +1,11 @@
 "use strict";
 
 /**
+ * RockCommerce Frontend JS
+ * This file is only loaded on frontend facing pages under /rc
+ */
+
+/**
  * Hook the htmx after swap event to place markup on multiple
  * targets, which is not possible with regular htmx oob swaps
  */

@@ -3,10 +3,16 @@
 ## Get Cart
 
 ```php
-// get cart by page id
+// get the current user's cart or create a new one
+// this is the recommended version to be used on the frontend
+$cart = rockcommerce()->cart();
+
+// get specific cart by page id
+// returns false if not found!
 $cart = rockcommerce()->getCart(123);
 
 // get cart by page name
+// returns false if not found!
 $cart = rockcommerce()->getCart("0w4esdk");
 ```
 

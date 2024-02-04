@@ -1,0 +1,37 @@
+{var $amount = $session->rcAddedAmount}
+{var $product = $session->rcAddedProduct}
+{if !$product}{$session->redirect('/rc/cart')}{/if}
+{do $product = $rockcommerce->getProduct($product)}
+
+{$rc->view('partials/header')}
+
+<div class="uk-container" {alfred()}>
+  <div class="uk-card uk-card-default uk-card-body uk-margin">
+    <div class="uk-alert uk-alert-success uk-text-center">
+      <h4 class="uk-margin-remove">
+        <svg style="margin-top:-3px" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="m9 12l2 2l4-4"/></g></svg>
+        {=__('Added to cart')}
+      </h4>
+      <h2 class="uk-margin-small-top">
+        {$amount}x
+        {$product->title}<br>
+      </h2>
+    </div>
+    <script>
+    localStorage.setItem("rc-cart-count", {$rc->cart()->itemsCount()});
+    </script>
+
+    <div class="uk-flex uk-flex-wrap uk-flex-center" style="gap:10px;">
+      <a href="{$product->url}" class="uk-button uk-button-default">
+        Continue Shopping
+      </a>
+      <a href="/rc/cart" class="uk-button uk-button-primary">
+        Go to Cart
+      </a>
+    </div>
+  </div>
+
+  {$rc->view('partials/related-products', ['product' => $product])}
+</div>
+
+{$rc->view('partials/footer')}

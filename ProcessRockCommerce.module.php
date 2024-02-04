@@ -17,7 +17,7 @@ class ProcessRockCommerce extends Process
   public static function getModuleInfo()
   {
     return [
-      'title' => 'RockCommerce Dashboard',
+      'title' => 'RockCommerce',
       'version' => '0.0.1',
       'summary' => 'Dashboard for the RockCommerce Shop',
       'icon' => 'bar-chart',
@@ -33,7 +33,22 @@ class ProcessRockCommerce extends Process
       'page' => [
         'name' => 'rockcommerce',
         'parent' => 2,
-        'title' => 'RockCommerce'
+        'title' => 'Shop'
+      ],
+
+      // optional extra navigation that appears in admin
+      // if you change this, you'll need to a Modules > Refresh to see changes
+      'nav' => [
+        [
+          'url' => '',
+          'label' => 'Dashboard',
+          'icon' => 'bar-chart',
+        ],
+        [
+          'url' => '/prices',
+          'label' => 'Price Editor',
+          'icon' => 'table',
+        ],
       ],
     ];
   }
@@ -52,7 +67,7 @@ class ProcessRockCommerce extends Process
   }
 
   /**
-   *
+   * Dashboard
    */
   public function execute()
   {
@@ -169,8 +184,28 @@ class ProcessRockCommerce extends Process
     return $form->render();
   }
 
-  private function rockcommerce(): RockCommerce
+  /**
+   * Manage Prices
+   */
+  public function executePrices()
   {
-    return $this->wire->modules->get('RockCommerce');
+    $this->headline('Price Editor');
+    $this->browserTitle('Price Editor');
+    /** @var InputfieldForm $form */
+    $form = $this->wire->modules->get('InputfieldForm');
+
+    $form->add([
+      'type' => 'RockGrid',
+      'name' => 'price-editor',
+      'label' => false,
+      'icon' => 'pencil-square-o',
+      'grid' => 'Prices',
+      'themeBorder' => 'none',
+      'skipLabel' => Inputfield::skipLabelBlank,
+      // 'description' => "<div class='uk-alert uk-alert-warning'>WARNING: Changes will instantly be saved!</div>",
+      // 'entityEncodeText' => false,
+    ]);
+
+    return $form->render();
   }
 }

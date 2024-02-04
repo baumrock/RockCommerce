@@ -1,0 +1,10 @@
+{foreach $product->getVariationsArray() as $name=>$variations}
+  <div class="uk-margin-small">
+    <h4>{$name}</h4>
+    <select name="{$name}" class="uk-select" rc-variation>
+      {foreach $variations as $k=>$v}
+        <option value="{$k}">{$v}</option>
+      {/foreach}
+    </select>
+  </div>
+{/foreach}

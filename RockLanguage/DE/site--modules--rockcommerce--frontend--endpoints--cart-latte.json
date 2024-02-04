@@ -1,0 +1,9 @@
+{
+    "file": "site\/modules\/RockCommerce\/frontend\/endpoints\/cart.latte",
+    "textdomain": "site--modules--rockcommerce--frontend--endpoints--cart-latte",
+    "translations": {
+        "ca14cb35b4f5012ea8a8e6b8e21dc5e4": {
+            "text": "Warenkorb bearbeiten"
+        }
+    }
+}
