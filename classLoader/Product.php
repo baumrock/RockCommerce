@@ -492,33 +492,38 @@ trait Product
   public function _hookSaveReady(HookEvent $event): void
   {
     $page = $event->arguments('page');
-    if ($page instanceof RepeaterPage) {
-      $this->_hookSaveReadyRepeater($event);
-      return;
-    }
-    if (!$page->isProduct) return;
-    /** @var ProductPage $page */
+    try {
+      if ($page instanceof RepeaterPage) {
+        $this->_hookSaveReadyRepeater($event);
+        return;
+      }
+      if (!$page->isProduct) return;
+      /** @var ProductPage $page */
 
-    // update all prices
-    $page->set(self::field_net, $page->priceFrom(false)->net);
-    $page->set(self::field_gross, $page->priceFrom(false)->gross);
-    $page->set(self::field_tonet, $page->priceTo(false)->net);
-    $page->set(self::field_togross, $page->priceTo(false)->gross);
+      // update all prices
+      $page->set(self::field_net, $page->priceFrom(false)->net);
+      $page->set(self::field_gross, $page->priceFrom(false)->gross);
+      $page->set(self::field_tonet, $page->priceTo(false)->net);
+      $page->set(self::field_togross, $page->priceTo(false)->gross);
 
-    if ($page->simplepricing()) {
-      // reset variations so that price editor does not show old data
-      $page->set(self::field_variations, '');
-      $page->set(self::field_pricing, '');
-    } else {
-      $oldPricing = $page->getUnformatted(self::field_pricing);
-      $page->set(self::field_pricing, $page->pricingSleepValue());
+      if ($page->simplepricing()) {
+        // reset variations so that price editor does not show old data
+        $page->set(self::field_variations, '');
+        $page->set(self::field_pricing, '');
+      } else {
+        $oldPricing = $page->getUnformatted(self::field_pricing);
+        $page->set(self::field_pricing, $page->pricingSleepValue());
 
-      // save old pricing if variations changed
-      if (
-        $page->isChanged(self::field_variations)
-      ) {
-        $page->meta('rc-old-pricing', $oldPricing);
-      } else $page->meta()->remove('rc-old-pricing');
+        // save old pricing if variations changed
+        if (
+          $page->isChanged(self::field_variations)
+        ) {
+          $page->meta('rc-old-pricing', $oldPricing);
+        } else $page->meta()->remove('rc-old-pricing');
+      }
+    } catch (\Throwable $th) {
+      $this->error($th->getMessage());
+      $this->log($th->getMessage());
     }
   }
 
