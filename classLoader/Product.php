@@ -515,11 +515,13 @@ trait Product
         $page->set(self::field_pricing, $page->pricingSleepValue());
 
         // save old pricing if variations changed
-        if (
-          $page->isChanged(self::field_variations)
-        ) {
-          $page->meta('rc-old-pricing', $oldPricing);
-        } else $page->meta()->remove('rc-old-pricing');
+        if ($page->id) {
+          if (
+            $page->isChanged(self::field_variations)
+          ) {
+            $page->meta('rc-old-pricing', $oldPricing);
+          } else $page->meta()->remove('rc-old-pricing');
+        }
       }
     } catch (\Throwable $th) {
       $this->error($th->getMessage());
