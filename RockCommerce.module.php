@@ -136,7 +136,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function addHTMX(): void
   {
-    bd('MOVED TO ROCKFRONTEND!!!');
+    return;
+    // MOVED TO ROCKFRONTEND!!!
     foreach ($this->viewFolders(absolute: true, reverse: true) as $folder) {
       $endpoints = $this->wire->files->find(
         "$folder/htmx",
