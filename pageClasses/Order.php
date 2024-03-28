@@ -458,7 +458,7 @@ class Order extends Page
       $url = $this->editUrl(true);
 
       $body = "<h2>{$this->title}</h2>
-        <p>Price: {$this->price(1)}</p>
+        <p>Total: {$this->total(1)}</p>
         <p>E-Mail: {$this->email(1)}</p>
         <p>Order: <a href='$url'>$url</a></p>
         ";
