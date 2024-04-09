@@ -144,17 +144,26 @@ class Order extends Page
   }
 
   /**
-   * Get order details
+   * Get or set order details
    *
    * Usage:
    * $order->details(); // get array of all order details
    * $order->details('forename'); // get single value
+   *
+   * Set detail foo to value bar:
+   * $order->details('foo', 'bar');
    */
-  public function details($prop = null)
+  public function details($prop = null, $val = null)
   {
     $details = $this->meta('details');
     if (!is_array($details)) $details = [];
     if ($prop) {
+      if ($val !== null) {
+        // set value
+        $details[$prop] = $val;
+        $this->meta('details', $details);
+        return $val;
+      }
       if (array_key_exists($prop, $details)) return $details[$prop];
       return null;
     }
