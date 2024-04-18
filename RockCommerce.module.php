@@ -85,6 +85,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
     wire()->addHookAfter("Page::render",   $this, "initRockCommerceSite");
 
+    if (!$this->showRootPageInTree) $rm->hidePageFromTree($this->rootPage());
+
     // now that the module is ready we init the productpage
     // to attach hooks from the product trait
     (new ProductPage())->_init();
@@ -885,6 +887,18 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'value' => $this->webhook,
       'notes' => "This is the base url that the payment provider triggers on status updates.
         Usually this is your production domain but during development it could be a temporary ngrok domain.",
+    ]);
+
+    $fs = new InputfieldFieldset();
+    $fs->label = 'Backend';
+    $fs->icon = 'cogs';
+    $inputfields->add($fs);
+
+    $fs->add([
+      'type' => 'checkbox',
+      'name' => 'showRootPageInTree',
+      'checked' => $this->showRootPageInTree ? 'checked' : '',
+      'label' => 'Show rootpage in pagetree',
     ]);
 
     return $inputfields;
