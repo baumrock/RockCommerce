@@ -42,7 +42,6 @@ trait Product
   const field_taxrate = self::_prefix . "taxrate";
   const field_gross = self::_prefix . "gross";
   const field_pricing = self::_prefix . "pricing";
-  const field_customvariations = self::_prefix . "customvariations";
   const field_customoptions = self::_prefix . "customoptions";
   const field_simplepricing = self::_prefix . "simplepricing";
   const field_tonet = self::_prefix . "tonet";
@@ -210,37 +209,39 @@ trait Product
 
   public function customVariations(): array
   {
-    $arr = [];
-    $lines = explode("\n", (string)$this->getFormatted(self::field_customvariations));
-    $catname = false;
-    $sanitizer = wire()->sanitizer;
-    foreach ($lines as $line) {
-      $line = trim($line);
+    return [];
 
-      // skip empty lines
-      if (!$line) continue;
+    // $arr = [];
+    // $lines = explode("\n", (string)$this->getFormatted(self::field_customvariations));
+    // $catname = false;
+    // $sanitizer = wire()->sanitizer;
+    // foreach ($lines as $line) {
+    //   $line = trim($line);
 
-      // new category?
-      if (str_starts_with($line, "# ")) {
-        $str = trim($line, "# ");
-        $parts = explode(":", $str, 2);
-        $catname = $sanitizer->pageName(@$parts[0]);
-        if (!$catname) continue;
-        $arr[$catname] = [];
-        continue;
-      }
+    //   // skip empty lines
+    //   if (!$line) continue;
 
-      // populate values
-      if (!$catname) continue;
-      if (!array_key_exists($catname, $arr)) continue;
-      $parts = explode(":", $line, 2);
-      $key = $sanitizer->pageName(@$parts[0]);
-      $val = trim((string)@$parts[1]);
-      $arr[$catname][$key] = $val;
-    }
+    //   // new category?
+    //   if (str_starts_with($line, "# ")) {
+    //     $str = trim($line, "# ");
+    //     $parts = explode(":", $str, 2);
+    //     $catname = $sanitizer->pageName(@$parts[0]);
+    //     if (!$catname) continue;
+    //     $arr[$catname] = [];
+    //     continue;
+    //   }
 
-    // bd($str);
-    return $arr;
+    //   // populate values
+    //   if (!$catname) continue;
+    //   if (!array_key_exists($catname, $arr)) continue;
+    //   $parts = explode(":", $line, 2);
+    //   $key = $sanitizer->pageName(@$parts[0]);
+    //   $val = trim((string)@$parts[1]);
+    //   $arr[$catname][$key] = $val;
+    // }
+
+    // // bd($str);
+    // return $arr;
   }
 
   /**
@@ -491,35 +492,40 @@ trait Product
   public function _hookSaveReady(HookEvent $event): void
   {
     $page = $event->arguments('page');
-    if ($page instanceof RepeaterPage) {
-      $this->_hookSaveReadyRepeater($event);
-      return;
-    }
-    if (!$page->isProduct) return;
-    /** @var ProductPage $page */
+    try {
+      if ($page instanceof RepeaterPage) {
+        $this->_hookSaveReadyRepeater($event);
+        return;
+      }
+      if (!$page->isProduct) return;
+      /** @var ProductPage $page */
 
-    // update all prices
-    $page->set(self::field_net, $page->priceFrom(false)->net);
-    $page->set(self::field_gross, $page->priceFrom(false)->gross);
-    $page->set(self::field_tonet, $page->priceTo(false)->net);
-    $page->set(self::field_togross, $page->priceTo(false)->gross);
+      // update all prices
+      $page->set(self::field_net, $page->priceFrom(false)->net);
+      $page->set(self::field_gross, $page->priceFrom(false)->gross);
+      $page->set(self::field_tonet, $page->priceTo(false)->net);
+      $page->set(self::field_togross, $page->priceTo(false)->gross);
 
-    if ($page->simplepricing()) {
-      // reset variations so that price editor does not show old data
-      $page->set(self::field_customvariations, '');
-      $page->set(self::field_variations, '');
-      $page->set(self::field_pricing, '');
-    } else {
-      $oldPricing = $page->getUnformatted(self::field_pricing);
-      $page->set(self::field_pricing, $page->pricingSleepValue());
+      if ($page->simplepricing()) {
+        // reset variations so that price editor does not show old data
+        $page->set(self::field_variations, '');
+        $page->set(self::field_pricing, '');
+      } else {
+        $oldPricing = $page->getUnformatted(self::field_pricing);
+        $page->set(self::field_pricing, $page->pricingSleepValue());
 
-      // save old pricing if variations changed
-      if (
-        $page->isChanged(self::field_variations)
-        or $page->isChanged(self::field_customvariations)
-      ) {
-        $page->meta('rc-old-pricing', $oldPricing);
-      } else $page->meta()->remove('rc-old-pricing');
+        // save old pricing if variations changed
+        if ($page->id) {
+          if (
+            $page->isChanged(self::field_variations)
+          ) {
+            $page->meta('rc-old-pricing', $oldPricing);
+          } else $page->meta()->remove('rc-old-pricing');
+        }
+      }
+    } catch (\Throwable $th) {
+      $this->error($th->getMessage());
+      $this->log($th->getMessage());
     }
   }
 
@@ -590,6 +596,7 @@ trait Product
   {
     $rm = rockmigrations();
     $rm->deleteField(self::_prefix . "accproduct", true);
+    $rm->deleteField(self::_prefix . "customvariations", true);
 
     // repeater fields
     $rFields = [
@@ -707,16 +714,6 @@ trait Product
         'type' => 'RockMoney',
         'label' => 'Price To Gross',
         'collapsed' => Inputfield::collapsedHidden,
-      ],
-      self::field_customvariations => [
-        'type' => 'textarea',
-        'label' => 'Custom Variations',
-        'rows' => 5,
-        'icon' => '',
-        'columnWidth' => 50,
-        'notes' => 'Only for this product. Can NOT be filtered. Can NOT be multilingual.',
-        'showIf' => self::field_simplepricing . "=0",
-        'collapsed' => Inputfield::collapsedNo,
       ],
       self::field_variations => [
         'type' => 'page',

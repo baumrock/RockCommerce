@@ -168,17 +168,26 @@ class Order extends Page
   }
 
   /**
-   * Get order details
+   * Get or set order details
    *
    * Usage:
    * $order->details(); // get array of all order details
    * $order->details('forename'); // get single value
+   *
+   * Set detail foo to value bar:
+   * $order->details('foo', 'bar');
    */
-  public function details($prop = null)
+  public function details($prop = null, $val = null)
   {
     $details = $this->meta('details');
     if (!is_array($details)) $details = [];
     if ($prop) {
+      if ($val !== null) {
+        // set value
+        $details[$prop] = $val;
+        $this->meta('details', $details);
+        return $val;
+      }
       if (array_key_exists($prop, $details)) return $details[$prop];
       return null;
     }
@@ -458,7 +467,7 @@ class Order extends Page
       $url = $this->editUrl(true);
 
       $body = "<h2>{$this->title}</h2>
-        <p>Price: {$this->price(1)}</p>
+        <p>Total: {$this->total(1)}</p>
         <p>E-Mail: {$this->email(1)}</p>
         <p>Order: <a href='$url'>$url</a></p>
         ";
