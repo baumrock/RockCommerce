@@ -27,6 +27,7 @@ $rf->scripts()
 <head>
   <?= $rf->view('head_top') ?>
   <meta charset="UTF-8">
+  <meta name="robots" content="noindex">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= $page->get(RootPage::field_pagetitle) ?: 'Checkout' ?></title>
   <?= $rf->view('head_bottom') ?>
