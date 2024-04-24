@@ -46,6 +46,7 @@ $layout = $rc->view("endpoints/$segment") ?: $rc->view('endpoints/default');
 <head>
   <?= $rc->headTop ?>
   <meta charset="UTF-8">
+  <meta name="robots" content="noindex">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= $rc->pageTitle ?></title>
   <?= $rc->headBottom ?>
