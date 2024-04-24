@@ -3,7 +3,6 @@
 namespace RockCommerce;
 
 use ProcessWire\FieldtypeFile;
-use ProcessWire\FieldtypeTextarea;
 use ProcessWire\InputfieldForm;
 use ProcessWire\Page;
 use ProcessWire\RockMigrations;
@@ -20,6 +19,8 @@ class RootPage extends Page
   const field_trailingslash = self::prefix . "trailingslash";
   const field_terms = self::prefix . "terms";
   const field_pagetitle = self::prefix . "pagetitle";
+
+  public $noSitemap = true;
 
   public function editForm(InputfieldForm $form): void
   {
