@@ -21,6 +21,8 @@ class RootPage extends Page
   const field_trailingslash = self::prefix . "trailingslash";
   const field_footerlinks = self::prefix . "footerlinks";
 
+  public $noSitemap = true;
+
   public function editForm(InputfieldForm $form): void
   {
     $form->remove('title');
