@@ -153,14 +153,15 @@ class Cart extends Page
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
+    $rm->deleteField(self::field_items, true);
     $rm->migrate([
       'fields' => [
-        self::field_items => [
-          'type' => 'RockGrid',
-          'label' => 'Cart Items',
-          'grid' => 'Cartitems',
-          'icon' => 'shopping-cart',
-        ],
+        // self::field_items => [
+        //   'type' => 'RockGrid',
+        //   'label' => 'Cart Items',
+        //   'grid' => 'Cartitems',
+        //   'icon' => 'shopping-cart',
+        // ],
         self::field_order => [
           'type' => 'page',
           'label' => 'Order',
@@ -179,7 +180,7 @@ class Cart extends Page
             'title' => [
               'collapsed' => Inputfield::collapsedHidden,
             ],
-            self::field_items,
+            // self::field_items,
           ],
           'parentTemplates' => [
             Carts::tpl,

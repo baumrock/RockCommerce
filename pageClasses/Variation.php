@@ -14,6 +14,7 @@ class Variation extends Page
   const prefix = "rockcommerce_variation_";
 
   const field_options = self::prefix . "options";
+  const field_comment = self::prefix . "comment";
 
   private $optionsArray;
 
@@ -72,13 +73,24 @@ class Variation extends Page
           'columnWidth' => 100,
           'icon' => 'cubes',
         ],
+        self::field_comment => [
+          'type' => 'text',
+          'label' => 'Internal Comment',
+          'icon' => 'comment-o',
+          'textformatters' => [
+            'TextformatterEntities',
+          ],
+        ],
       ],
       'templates' => [
         self::tpl => [
           'fields' => [
             'title' => [
               'label' => 'Variation Label',
-              'columnWidth' => 100,
+              'columnWidth' => 50,
+            ],
+            self::field_comment => [
+              'columnWidth' => 50,
             ],
             self::field_options,
           ],

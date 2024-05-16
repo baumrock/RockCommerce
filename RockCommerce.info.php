@@ -18,7 +18,7 @@ $info = [
     'RockMigrations>=4.3.0',
     'RockMoney>=1.0.1',
     'RockMollie>=1.2.0',
-    'RockGrid>=2.2.0',
+    'RockGrid>=3.0.0',
   ],
   'installs' => [
     'ProcessRockCommerce',

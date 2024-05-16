@@ -68,8 +68,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
 
     /** @var RockGrid $grid */
-    $grid = $this->wire->modules->get('RockGrid');
-    $grid->addDir(__DIR__ . "/RockGrid");
+    // $grid = $this->wire->modules->get('RockGrid');
+    // $grid->addDir(__DIR__ . "/RockGrid");
 
     // create assets
     $rm->minify(__DIR__ . "/RockCommerceBackend.js");
@@ -343,7 +343,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $templates = new WireArray();
     foreach ($this->wire->templates as $tpl) {
-      if (!$tpl->fields->has("name=" . ProductPage::field_available)) continue;
+      if (!$tpl->fields->has("name=" . ProductPage::field_canbebought)) continue;
       $templates->add($tpl);
     }
     return $templates;
@@ -617,6 +617,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function setCart(Cart $cart): void
   {
     $this->wire->session->set(self::session_cart, $cart->name);
+  }
+
+  public function ___taxrate($product): float
+  {
+    return (float)$this->wire->config->rockcommerceTaxrate;
   }
 
   public function ___view(
@@ -902,5 +907,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
 
     return $inputfields;
+  }
+
+  public function variationsPage(): Variations
+  {
+    return $this->wire->pages->get([
+      'parent' => $this->rootPage(),
+      'name' => 'variations',
+    ]);
   }
 }
