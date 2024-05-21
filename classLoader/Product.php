@@ -3,6 +3,7 @@
 namespace RockCommerce;
 
 use ProcessWire\FieldtypePage;
+use ProcessWire\FieldtypeRockGrid;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\RockMoney;
@@ -71,6 +72,11 @@ trait Product
 
     // $rm->removeFieldFromTemplate(self::field_variation, $this);
 
+    $f = wire()->fields->get(self::field_variation);
+    if ($f->id && !$f->type instanceof FieldtypeRockGrid) {
+      $rm->deleteField($f);
+    }
+
     // product fields
     $fields = [
       self::field_rctab => [
@@ -85,12 +91,9 @@ trait Product
       ],
 
       self::field_variation => [
-        'type' => 'page',
-        'label' => 'Variation',
-        'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
-        'inputfield' => 'InputfieldPageAutocomplete',
-        'findPagesSelector' => 'id>0,template=' . Variation::tpl,
-        'labelFieldName' => 'title',
+        'type' => 'RockGrid',
+        'label' => 'Variations',
+        'grid' => 'RockCommerce\SelectVariations',
       ],
       self::field_variationcomment => [
         'type' => 'textarea',
@@ -108,16 +111,17 @@ trait Product
         'type' => 'FieldtypeRepeater',
         'fields' => [
           self::field_variation => [
-            'columnWidth' => 50,
+            'columnWidth' => 100,
           ],
           self::field_variationchangesprice => [
-            'columnWidth' => 50,
+            'columnWidth' => 100,
           ],
           self::field_variationcomment,
         ],
-        'repeaterTitle' => '{' . self::field_variation . '}: {' . self::field_variationcomment . '}',
+        'repeaterTitle' => '{' . self::field_variationcomment . '}',
         'familyFriendly' => 1,
         'repeaterDepth' => 0,
+        'repeaterCollapse' => '0', // New items open, existing items collapsed (recommended for most cases)
         'repeaterAddLabel' => 'Add New Variation',
         'columnWidth' => 100,
       ],

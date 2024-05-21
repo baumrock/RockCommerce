@@ -9,12 +9,12 @@ use function ProcessWire\wire;
 
 class SelectVariationOptions extends Grid
 {
-  public function getData2()
+  public function getData()
   {
     $arr = wire()->pages->findRaw(
       [
         'parent' => rockcommerce()->variationsPage(),
-        'id' => wire()->input->get->var,
+        // 'id' => wire()->input->get->var,
       ],
       [
         'title',
@@ -24,16 +24,7 @@ class SelectVariationOptions extends Grid
         'nulls' => true,
       ]
     );
-    foreach ($arr as $variation) {
-      $result = [];
-      foreach ($variation[Variation::field_options] as $id => $val) {
-        $result[] = [
-          'id' => $id,
-          'title' => $val['title'],
-        ];
-      }
-      return $result;
-    }
+    return $arr;
   }
 
   /**

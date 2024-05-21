@@ -10,6 +10,7 @@ use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\ProductPage;
 use RockCommerce\RootPage;
+use RockCommerce\Variation;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
@@ -42,6 +43,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   const pricetype_net = 1;
   const pricetype_gross = 0;
   const pricetype_runtime = 2; // not yet implemented
+
+  /** @var array */
+  public $findRawVariationOptions;
 
   public $noComplexPricing = false;
 
@@ -276,6 +280,35 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if ($log) $this->wire->log($str);
     if (!$this->debug) return;
     echo "$str\n\n";
+  }
+
+  public function findRawVariationOptions(): array
+  {
+    // get options from cache if already loaded
+    if ($this->findRawVariationOptions) return $this->findRawVariationOptions;
+
+    // find raw variations
+    $arr = wire()->pages->findRaw(
+      ['parent' => $this->variationsPage()],
+      [
+        'title',
+        Variation::field_options . '.title',
+      ],
+      ['nulls' => true]
+    );
+
+    $result = [];
+    foreach ($arr as $varid => $fields) {
+      foreach ($fields[Variation::field_options] as $optid => $data) {
+        $result[] = [
+          'id' => $optid,
+          'varid' => $varid,
+          'variation' => $fields['title'],
+          'title' => $data['title'],
+        ];
+      }
+    }
+    return $result;
   }
 
   /**
