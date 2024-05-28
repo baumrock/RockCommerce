@@ -1,6 +1,6 @@
 document.addEventListener("RockGrid:init", (e) => {
   let grid = e.detail;
-  if (grid.hash !== "RockCommerce-ProductItems") return;
+  if (grid.name !== "RockCommerce-ProductItems") return;
 
   var table = new Tabulator(grid.div, {
     layout: "fitDataStretch",

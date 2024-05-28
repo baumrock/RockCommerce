@@ -1,6 +1,8 @@
 document.addEventListener("RockGrid:init", (e) => {
   let grid = e.detail;
-  if (grid.hash !== "RockCommerce-ProductVariations") return;
+
+  // do everything below only for this specific grid
+  if (grid.name !== "RockCommerce-ProductVariations") return;
 
   // initialize table
   var table = new Tabulator(grid.div, {
@@ -24,7 +26,7 @@ document.addEventListener("RockGrid:init", (e) => {
         col.headerFilter = true;
 
         // custom settings
-        if (col.field == "id" || col.field == "var:id") {
+        if (col.field == "id" || col.field == "varID") {
           col.visible = false;
         } else if (col.field == "name") {
           col.headerFilter = true; // add header filter to every column
@@ -42,5 +44,18 @@ document.addEventListener("RockGrid:init", (e) => {
     selectableRows: true,
   });
 
+  // fire tableBuilt event on RockGrid - don't remove this!
   table.on("tableBuilt", () => grid.tableBuilt(table));
+
+  // ##### custom events #####
+
+  // add filter to show only one single variation
+  table.on("rowSelected", (row) => {
+    let id = row.getData().varID;
+    table.setFilter("varID", "=", id);
+  });
+  table.on("rowSelectionChanged", () => {
+    if (table.getSelectedRows().length) return;
+    table.clearFilter(true);
+  });
 });
