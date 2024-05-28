@@ -304,7 +304,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
           'id' => $optid,
           'varid' => $varid,
           'variation' => $fields['title'],
-          'title' => $data['title'],
+          'option' => $data['title'],
         ];
       }
     }

@@ -11,7 +11,7 @@ use function ProcessWire\wire;
 
 class Accessory extends RepeaterPage
 {
-  const field = ProductPage::field_accessories;
+  const field = 'TBD';
 
   /** @var Money */
   public $gross;

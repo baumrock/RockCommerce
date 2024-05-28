@@ -6,6 +6,7 @@ use ProcessWire\FieldtypePage;
 use ProcessWire\FieldtypeRockGrid;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
+use ProcessWire\RepeaterPage;
 use ProcessWire\RockMoney;
 
 use function ProcessWire\rockcommerce;
@@ -24,20 +25,39 @@ trait Product
   const field_variationcomment      = self::_prefix . "variationcomment";
   const field_variationchangesprice = self::_prefix . "variationchangesprice";
   const field_pricing               = self::_prefix . "pricing";
+  const field_items                 = self::_prefix . "items";
   const field_discounts             = self::_prefix . "discounts";
 
   public function _init(): void
   {
-    wire()->addHookAfter('ProcessPageEdit::buildForm', $this, '_hookBuildForm');
+    wire()->addHookAfter('ProcessPageEdit::buildForm',      $this, '_hookBuildForm');
+    wire()->addHookProperty('Page::variationRepeaterLabel', $this, 'variationRepeaterLabel');
+  }
+
+  protected function variationRepeaterLabel(HookEvent $event): void
+  {
+    $page = $event->object;
+    try {
+      $variations = json_decode($page->get(self::field_variation));
+      if (!is_object($variations)) return;
+      if (!is_array($variations->selected)) return;
+      if (!$cnt = count($variations->selected)) return;
+      $first = $variations->selected[0];
+      $option = wire()->pages->get($first);
+      if (!$option instanceof RepeaterPage) return;
+      $event->return = $option->getForPage()->title . " ({$cnt}x)";
+    } catch (\Throwable $th) {
+      $event->return = $th->getMessage();
+    }
   }
 
   protected function _hookBuildForm(HookEvent $event): void
   {
-    return;
     $form = $event->return;
     $pricing = $form->get(self::field_pricing);
     $p = $event->process->getPage();
     if (!$p->isProduct) return;
+    return;
 
     $pricing->add([
       'type' => 'markup',
@@ -76,6 +96,8 @@ trait Product
     if ($f->id && !$f->type instanceof FieldtypeRockGrid) {
       $rm->deleteField($f);
     }
+    $rm->deleteField(self::field_variationchangesprice);
+    $rm->deleteField(self::field_discounts);
 
     // product fields
     $fields = [
@@ -93,32 +115,24 @@ trait Product
       self::field_variation => [
         'type' => 'RockGrid',
         'label' => 'Variations',
-        'grid' => 'RockCommerce\SelectVariations',
+        'grid' => 'RockCommerce\ProductVariations',
       ],
       self::field_variationcomment => [
         'type' => 'textarea',
         'label' => 'Comment',
         'rows' => 5,
         'icon' => 'comment-o',
-      ],
-      self::field_variationchangesprice => [
-        'type' => 'checkbox',
-        'label' => 'Changes Price',
+        'collapsed' => Inputfield::collapsedBlank,
       ],
       self::field_variations => [
         'label' => 'Variations',
         'icon' => 'cubes',
         'type' => 'FieldtypeRepeater',
         'fields' => [
-          self::field_variation => [
-            'columnWidth' => 100,
-          ],
-          self::field_variationchangesprice => [
-            'columnWidth' => 100,
-          ],
           self::field_variationcomment,
+          self::field_variation,
         ],
-        'repeaterTitle' => '{' . self::field_variationcomment . '}',
+        'repeaterTitle' => '{variationRepeaterLabel}',
         'familyFriendly' => 1,
         'repeaterDepth' => 0,
         'repeaterCollapse' => '0', // New items open, existing items collapsed (recommended for most cases)
@@ -132,10 +146,10 @@ trait Product
         'icon' => 'money',
       ],
 
-      self::field_discounts => [
-        'type' => 'text',
-        'label' => 'Discounts',
-        'icon' => 'percent',
+      self::field_items => [
+        'type' => 'RockGrid',
+        'label' => 'Items',
+        'grid' => 'RockCommerce\ProductItems',
       ],
 
       self::field_pricing . "_END" => [
@@ -150,7 +164,6 @@ trait Product
       // don't add some fields to the template
       if ($k == self::field_variation) continue;
       if ($k == self::field_variationcomment) continue;
-      if ($k == self::field_variationchangesprice) continue;
 
       $rm->addFieldToTemplate($k, $this);
       $fieldnames[] = $k;
