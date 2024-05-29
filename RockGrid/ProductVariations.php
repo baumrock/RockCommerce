@@ -16,6 +16,10 @@ class ProductVariations extends Grid
       'icon' => 'plus',
       'label' => 'New Variation',
       'href' => rockcommerce()->addVariationsUrl(),
+      'attrs' => [
+        'rg-modal',
+        'rg-modal-reload',
+      ],
     ]);
 
     $this->buttonsRight->add([

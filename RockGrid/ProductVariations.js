@@ -78,11 +78,3 @@ document.addEventListener("RockGrid:init", (e) => {
     });
   });
 });
-
-// ### create new variation in modal window
-(() => {
-  document.addEventListener("RockGrid:buttonClick", (e) => {
-    if (e.detail.name !== "newVariation") return;
-    // RockGridEdit()
-  });
-})();
