@@ -11,17 +11,23 @@ class ProductVariations extends Grid
 {
   public function buildUI(): void
   {
+    $this->buttonsLeft->add([
+      'name' => 'newVariation',
+      'icon' => 'plus',
+      'label' => 'New Variation',
+    ]);
+
     $this->buttonsRight->add([
       'name' => 'refresh',
       'icon' => 'refresh',
       'tooltip' => 'Reload data',
     ]);
-    // $this->buttonsRight->add([
-    //   'name' => 'removeFilters',
-    //   'label' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3 3l18 18M9 5h9.5a1 1 0 0 1 .5 1.5l-4.049 4.454M14 14v5l-4-3v-4L5 6.5a1 1 0 0 1 .18-1.316"/></svg>',
-    //   'tooltip' => 'Remove all filters',
-    //   'hidden' => true,
-    // ]);
+    $this->buttonsRight->add([
+      'name' => 'removeFilters',
+      'label' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3 3l18 18M9 5h9.5a1 1 0 0 1 .5 1.5l-4.049 4.454M14 14v5l-4-3v-4L5 6.5a1 1 0 0 1 .18-1.316"/></svg>',
+      'tooltip' => 'Remove all filters',
+      'hidden' => true,
+    ]);
     $this->buttonsRight->add([
       'name' => 'selectFiltered',
       'label' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.18 20.274L9 21v-8.5L4.52 7.572A2 2 0 0 1 4 6.227V4h16v2.172a2 2 0 0 1-.586 1.414L15 12v3m0 4l2 2l4-4"/></svg>',

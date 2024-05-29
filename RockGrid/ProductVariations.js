@@ -16,7 +16,7 @@ document.addEventListener("RockGrid:init", (e) => {
       },
     },
 
-    layout: "fitDataFill",
+    layout: "fitDataStretch",
     autoColumns: true, //create columns from data field names
     autoColumnsDefinitions: function (definitions) {
       //definitions - array of column definition objects
@@ -30,6 +30,13 @@ document.addEventListener("RockGrid:init", (e) => {
           col.visible = false;
         } else if (col.field == "name") {
           col.headerFilter = true; // add header filter to every column
+        } else if (col.field == "Variation") {
+          col.formatter = "modal";
+          col.formatterParams = {
+            icon: true,
+            tooltip: "bearbeiten",
+            field: "varID",
+          };
         }
       });
 
@@ -39,8 +46,6 @@ document.addEventListener("RockGrid:init", (e) => {
     // pagination
     pagination: true,
     paginationSize: 10,
-
-    // enable row selection
     selectableRows: true,
   });
 
@@ -52,6 +57,7 @@ document.addEventListener("RockGrid:init", (e) => {
   // add filter to show only one single variation
   table.on("rowSelected", (row) => {
     let id = row.getData().varID;
+    // table.clearFilter(true);
     table.setFilter("varID", "=", id);
   });
   table.on("rowSelectionChanged", () => {
@@ -59,3 +65,11 @@ document.addEventListener("RockGrid:init", (e) => {
     table.clearFilter(true);
   });
 });
+
+// ### create new variation in modal window
+(() => {
+  document.addEventListener("RockGrid:buttonClick", (e) => {
+    if (e.detail.name !== "newVariation") return;
+    // RockGridEdit()
+  });
+})();

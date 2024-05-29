@@ -2,12 +2,13 @@
 
 namespace RockCommerce;
 
-use ProcessWire\FieldtypePage;
+use ProcessWire\FieldtypeFieldsetOpen;
 use ProcessWire\FieldtypeRockGrid;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\RepeaterPage;
 use ProcessWire\RockMoney;
+use ProcessWire\WireArray;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
@@ -25,30 +26,13 @@ trait Product
   const field_variationcomment      = self::_prefix . "variationcomment";
   const field_variationchangesprice = self::_prefix . "variationchangesprice";
   const field_pricing               = self::_prefix . "pricing";
-  const field_items                 = self::_prefix . "items";
   const field_discounts             = self::_prefix . "discounts";
 
   public function _init(): void
   {
     wire()->addHookAfter('ProcessPageEdit::buildForm',      $this, '_hookBuildForm');
     wire()->addHookProperty('Page::variationRepeaterLabel', $this, 'variationRepeaterLabel');
-  }
-
-  protected function variationRepeaterLabel(HookEvent $event): void
-  {
-    $page = $event->object;
-    try {
-      $variations = json_decode($page->get(self::field_variation));
-      if (!is_object($variations)) return;
-      if (!is_array($variations->selected)) return;
-      if (!$cnt = count($variations->selected)) return;
-      $first = $variations->selected[0];
-      $option = wire()->pages->get($first);
-      if (!$option instanceof RepeaterPage) return;
-      $event->return = $option->getForPage()->title . " ({$cnt}x)";
-    } catch (\Throwable $th) {
-      $event->return = $th->getMessage();
-    }
+    wire()->addHookAfter('Inputfield::render',              $this, 'preloadRockGrid');
   }
 
   protected function _hookBuildForm(HookEvent $event): void
@@ -93,11 +77,17 @@ trait Product
     // $rm->removeFieldFromTemplate(self::field_variation, $this);
 
     $f = wire()->fields->get(self::field_variation);
-    if ($f->id && !$f->type instanceof FieldtypeRockGrid) {
+    if ($f && !$f->type instanceof FieldtypeRockGrid) {
       $rm->deleteField($f);
     }
     $rm->deleteField(self::field_variationchangesprice);
     $rm->deleteField(self::field_discounts);
+    $f = wire()->fields->get(self::field_pricing);
+    if ($f && $f->type instanceof FieldtypeFieldsetOpen) {
+      $rm->deleteField(self::field_pricing);
+      $rm->deleteField(self::field_pricing . '_END');
+      $rm->deleteField(self::_prefix . 'items');
+    }
 
     // product fields
     $fields = [
@@ -139,22 +129,6 @@ trait Product
         'repeaterAddLabel' => 'Add New Variation',
         'columnWidth' => 100,
       ],
-
-      self::field_pricing => [
-        'type' => 'FieldsetOpen',
-        'label' => 'Pricing',
-        'icon' => 'money',
-      ],
-
-      self::field_items => [
-        'type' => 'RockGrid',
-        'label' => 'Items',
-        'grid' => 'RockCommerce\ProductItems',
-      ],
-
-      self::field_pricing . "_END" => [
-        'type' => 'FieldsetClose',
-      ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";
     $rm->createFields($fields);
@@ -171,8 +145,42 @@ trait Product
     $rm->setFieldOrder($fieldnames, $this);
   }
 
+  /**
+   * // TODO Replace this with a proper solution
+   * See https://processwire.com/talk/topic/30045-inputfieldrenderready/
+   * @param HookEvent $event
+   * @return void
+   */
+  protected function preloadRockGrid(HookEvent $event): void
+  {
+    $f = $event->object;
+    if ($f->name !== self::field_variations) return;
+    foreach ($f->hasField->fields as $fname) {
+      $field = wire()->fields->get($fname);
+      $inputfield = $field->getInputfield($event->process->getPage());
+      $inputfield->renderReady();
+    }
+  }
+
   public function taxrate(): float
   {
     return rockcommerce()->taxrate($this);
+  }
+
+  protected function variationRepeaterLabel(HookEvent $event): void
+  {
+    $page = $event->object;
+    try {
+      $variations = json_decode($page->get(self::field_variation));
+      if (!is_object($variations)) return;
+      if (!is_array($variations->selected)) return;
+      if (!$cnt = count($variations->selected)) return;
+      $first = $variations->selected[0];
+      $option = wire()->pages->get($first);
+      if (!$option instanceof RepeaterPage) return;
+      $event->return = $option->getForPage()->title . " ({$cnt}x)";
+    } catch (\Throwable $th) {
+      $event->return = $th->getMessage();
+    }
   }
 }
