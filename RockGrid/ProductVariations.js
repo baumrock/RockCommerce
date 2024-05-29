@@ -64,6 +64,19 @@ document.addEventListener("RockGrid:init", (e) => {
     if (table.getSelectedRows().length) return;
     table.clearFilter(true);
   });
+
+  // select/unselect all on click in variation row
+  table.on("cellClick", (e, cell) => {
+    let field = cell.getField();
+    if (field !== "Variation") return;
+    let varID = cell.getRow().getData().varID;
+    let selected = cell.getRow().isSelected();
+    let rows = table.getRows().filter((row) => row.getData().varID === varID);
+    rows.forEach((row) => {
+      if (selected) table.selectRow(row);
+      else table.deselectRow(row);
+    });
+  });
 });
 
 // ### create new variation in modal window
