@@ -176,6 +176,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }
   }
 
+  public function addVariationsUrl(): string
+  {
+    return $this->wire->pages->get(2)->url
+      . 'page/add/?parent_id='
+      . $this->variationsPage();
+  }
+
   public function badge($str, $cls = '')
   {
     if (!"$str") return;

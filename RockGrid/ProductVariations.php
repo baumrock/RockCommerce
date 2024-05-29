@@ -15,6 +15,7 @@ class ProductVariations extends Grid
       'name' => 'newVariation',
       'icon' => 'plus',
       'label' => 'New Variation',
+      'href' => rockcommerce()->addVariationsUrl(),
     ]);
 
     $this->buttonsRight->add([
@@ -60,11 +61,15 @@ class ProductVariations extends Grid
     $raw = wire()->pages->findRaw(
       [
         'parent' => rockcommerce()->variationsPage(),
+
+        // workaround to select only pages that have options
+        // findRaw() fails if this check is removed!
+        Variation::field_options . '.count>' => 0,
       ],
       [
         'title',
         Variation::field_comment => 'comment',
-        $options,
+        $options, // options.title
       ],
       [
         'flat' => true,
@@ -75,7 +80,9 @@ class ProductVariations extends Grid
     // convert array to rockgrid format
     $data = [];
     foreach ($raw as $varID => $variation) {
-      foreach ($variation[$options] as $optID => $opt) {
+      $opts = $variation[$options];
+      if (!is_array($opts)) $opts = [];
+      foreach ($opts as $optID => $opt) {
         $data[] = [
           'id' => $optID,
           'Variation' => $variation['title'],
