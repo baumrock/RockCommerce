@@ -7,8 +7,8 @@ use ProcessWire\FieldtypeRockGrid;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\RepeaterPage;
+use ProcessWire\RepeaterPageArray;
 use ProcessWire\RockMoney;
-use ProcessWire\WireArray;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
@@ -26,7 +26,9 @@ trait Product
   const field_variationcomment      = self::_prefix . "variationcomment";
   const field_variationchangesprice = self::_prefix . "variationchangesprice";
   const field_pricing               = self::_prefix . "pricing";
+  const field_pricingset            = self::_prefix . "pricingset";
   const field_discounts             = self::_prefix . "discounts";
+  const field_pricingvars           = self::_prefix . "pricingvars";
 
   public function _init(): void
   {
@@ -38,36 +40,34 @@ trait Product
   protected function _hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
-    $pricing = $form->get(self::field_pricing);
     $p = $event->process->getPage();
     if (!$p->isProduct) return;
-    return;
+    $config = $this->wire->config;
 
-    $pricing->add([
-      'type' => 'markup',
-      'label' => 'Base Price Min',
-      'value' => 'NET: ' . (new RockMoney())->parse(100)
-        . '<br>GROSS: ' . (new RockMoney())->parse(100)->times(1 + $p->taxrate()),
-      'columnWidth' => 33,
-    ]);
-    $pricing->add([
-      'type' => 'markup',
-      'label' => 'Base Price Max',
-      'value' => (new RockMoney())->parse(250),
-      'columnWidth' => 33,
-    ]);
-    $pricing->add([
-      'type' => 'markup',
-      'label' => 'Rendered Price',
-      'value' => 'bar',
-      'columnWidth' => 34,
-    ]);
-    $pricing->add([
-      'type' => 'textarea',
-      'label' => 'Price Editor',
-      'value' => 'bar',
-      'icon' => 'table',
-    ]);
+    $pricingvars = $form->get(self::field_pricingvars);
+    if ($config->rockcommerceDebug) {
+      $pricingvars->prependMarkup("
+        <div class='uk-margin-small'>
+          <div>productOptionsString: {$p->productOptionsString()}</div>
+          <div>pricingOptionsString: ...</div>
+        </div>
+      ");
+    }
+
+    $pricing = $form->get(self::field_pricing);
+  }
+
+  public function productOptionsString(): string
+  {
+    $arr = [];
+    foreach ($this->variations(true) as $variation) {
+      if (!$variation instanceof ProductVariation) continue;
+      $str = $variation->id;
+      $options = $variation->getFormatted(self::field_variation);
+      // $str .= ':' . trim(json_encode($options->selected), "[]");
+      $arr[] = $str;
+    }
+    return implode("|", $arr);
   }
 
   public function _migrate(): void
@@ -129,6 +129,25 @@ trait Product
         'repeaterAddLabel' => 'Add New Variation',
         'columnWidth' => 100,
       ],
+      self::field_pricingset => [
+        'type' => 'FieldsetOpen',
+        'label' => 'Pricing',
+        'icon' => 'money',
+      ],
+      self::field_pricingvars => [
+        'type' => 'text',
+        'label' => 'Variations changing the price',
+        'icon' => 'check-square-o',
+      ],
+      self::field_pricing => [
+        'type' => 'RockGrid',
+        'label' => 'Pricing',
+        'grid' => 'RockCommerce\ProductPricing',
+        'icon' => 'table',
+      ],
+      self::field_pricingset . "_END" => [
+        'type' => 'FieldsetClose',
+      ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";
     $rm->createFields($fields);
@@ -182,5 +201,18 @@ trait Product
     } catch (\Throwable $th) {
       $event->return = $th->getMessage();
     }
+  }
+
+  public function variations($raw = false): RepeaterPageArray
+  {
+    $arr = $this->getFormatted(self::field_variations);
+    if ($raw) return $arr;
+    $vars = new VariationsArray(
+      $arr->getForPage(),
+      $arr->getForField()
+    );
+    $vars->import($arr);
+    $vars->raw = $arr;
+    return $vars;
   }
 }
