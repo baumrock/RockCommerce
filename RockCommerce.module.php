@@ -31,14 +31,15 @@ function rockcommerce(): RockCommerce
  */
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
-  const prefix = "rockcommerce_";
+  const prefix = 'rockcommerce_';
+  const maintenance = 'rockcommerce_maintenance';
 
   const session_cart = 'rockcommerce_cart';
   const viewFolders = [
     '/site/templates/RockCommerce/frontend',
     '/site/modules/RockCommerce/frontend',
   ];
-  const webhookurl = "/rockcommerce/webhook";
+  const webhookurl = '/rockcommerce/webhook';
 
   const pricetype_net = 1;
   const pricetype_gross = 0;
@@ -71,9 +72,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       options: ['trigger' => $this],
     );
 
-    /** @var RockGrid $grid */
-    // $grid = $this->wire->modules->get('RockGrid');
-    // $grid->addDir(__DIR__ . "/RockGrid");
+    // trigger maintenance from time to time
+    $expire = 60 * 60 * 1; // every hour
+    $this->wire->cache->get(self::maintenance, $expire, function () {
+      $this->maintenance();
+    });
 
     // create assets
     $rm->minify(__DIR__ . "/RockCommerceBackend.js");
@@ -94,6 +97,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // now that the module is ready we init the productpage
     // to attach hooks from the product trait
     (new ProductPage())->_init();
+  }
+
+  public function maintenance(): void
+  {
+    // remove unused variations
+    $oldVariations = $this->wire->pages->find([
+      'parent' => $this->variationsPage(),
+      'title' => '',
+      'created<' => time() - 60 * 60, // older than 1h
+    ]);
+    foreach ($oldVariations as $p) $p->delete();
   }
 
   public function ready()

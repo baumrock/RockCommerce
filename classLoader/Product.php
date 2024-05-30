@@ -6,8 +6,8 @@ use ProcessWire\FieldtypeFieldsetOpen;
 use ProcessWire\FieldtypeRockGrid;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
-use ProcessWire\RepeaterPage;
-use ProcessWire\RepeaterPageArray;
+use ProcessWire\Page;
+use RockGrid\RockGridField;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
@@ -41,19 +41,6 @@ trait Product
     $form = $event->return;
     $p = $event->process->getPage();
     if (!$p->isProduct) return;
-    $config = $this->wire->config;
-
-    $pricingvars = $form->get(self::field_pricingvars);
-    if ($config->rockcommerceDebug) {
-      $pricingvars->prependMarkup("
-        <div class='uk-margin-small'>
-          <div>productOptionsString: {$p->productOptionsString()}</div>
-          <div>pricingOptionsString: ...</div>
-        </div>
-      ");
-    }
-
-    $pricing = $form->get(self::field_pricing);
   }
 
   public function productOptionsString(): string
@@ -187,31 +174,19 @@ trait Product
 
   protected function variationRepeaterLabel(HookEvent $event): void
   {
+    /** @var Page $page */
     $page = $event->object;
     try {
-      $variations = json_decode($page->get(self::field_variation));
-      if (!is_object($variations)) return;
-      if (!is_array($variations->selected)) return;
-      if (!$cnt = count($variations->selected)) return;
-      $first = $variations->selected[0];
-      $option = wire()->pages->get($first);
-      if (!$option instanceof RepeaterPage) return;
-      $event->return = $option->getForPage()->title . " ({$cnt}x)";
+      $var = $page->getFormatted(self::field_variation);
+      if (!$var instanceof RockGridField) return;
+      $options = $var->getSelectedPages();
+      if (!$options->count()) return;
+      $option = $options->first();
+      $variation = $option->getForPage();
+      $all = $variation->getFormatted(Variation::field_options)->count();
+      $event->return = $variation->title . " ({$options->count()}/$all)";
     } catch (\Throwable $th) {
       $event->return = $th->getMessage();
     }
-  }
-
-  public function variations($raw = false): RepeaterPageArray
-  {
-    $arr = $this->getFormatted(self::field_variations);
-    if ($raw) return $arr;
-    $vars = new VariationsArray(
-      $arr->getForPage(),
-      $arr->getForField()
-    );
-    $vars->import($arr);
-    $vars->raw = $arr;
-    return $vars;
   }
 }
