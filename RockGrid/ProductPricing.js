@@ -5,7 +5,7 @@ document.addEventListener("RockGrid:init", (e) => {
   if (grid.name !== "RockCommerce-ProductPricing") return;
 
   // build the tabulator table
-  var table = new Tabulator(grid.div, {
+  var table = grid.tabulator({
     layout: "fitDataStretch",
     ajaxURL: grid.ajaxURL,
     autoColumns: true,
@@ -20,7 +20,4 @@ document.addEventListener("RockGrid:init", (e) => {
 
     selectableRows: true,
   });
-
-  // fire tableBuilt event on RockGrid - don't remove this!
-  table.on("tableBuilt", () => grid.tableBuilt(table));
 });

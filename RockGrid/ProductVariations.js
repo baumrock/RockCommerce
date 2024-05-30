@@ -5,7 +5,7 @@ document.addEventListener("RockGrid:init", (e) => {
   if (grid.name !== "RockCommerce-ProductVariations") return;
 
   // initialize table
-  var table = new Tabulator(grid.div, {
+  let table = grid.tabulator({
     // ajax
     ajaxURL: grid.ajaxURL,
     ajaxConfig: {
@@ -21,9 +21,24 @@ document.addEventListener("RockGrid:init", (e) => {
     autoColumnsDefinitions: function (definitions) {
       //definitions - array of column definition objects
 
-      definitions.forEach((col) => {
+      definitions.push({
+        field: "tbd",
+        title: "TBD",
+        editor: "number",
+        editorParams: {
+          selectContents: true,
+          verticalNavigation: "table",
+        },
+        formatter: "money",
+        formatterParams: {
+          decimal: ",",
+          thousand: ".",
+        },
+      });
+
+      definitions.forEach((col, i) => {
         // global settings
-        col.headerFilter = true;
+        if (col.field !== "tbd") col.headerFilter = true;
 
         // custom settings
         if (col.field == "id" || col.field == "varID") {
@@ -46,11 +61,8 @@ document.addEventListener("RockGrid:init", (e) => {
     // pagination
     pagination: true,
     paginationSize: 10,
-    selectableRows: true,
+    // selectableRows: true,
   });
-
-  // fire tableBuilt event on RockGrid - don't remove this!
-  table.on("tableBuilt", () => grid.tableBuilt(table));
 
   // ##### custom events #####
 
@@ -68,13 +80,45 @@ document.addEventListener("RockGrid:init", (e) => {
   // select/unselect all on click in variation row
   table.on("cellClick", (e, cell) => {
     let field = cell.getField();
-    if (field !== "Variation") return;
-    let varID = cell.getRow().getData().varID;
-    let selected = cell.getRow().isSelected();
-    let rows = table.getRows().filter((row) => row.getData().varID === varID);
-    rows.forEach((row) => {
-      if (selected) table.selectRow(row);
-      else table.deselectRow(row);
-    });
+
+    if (field === "tbd") {
+      return;
+    }
+
+    if (field === "Variation") {
+      let varID = cell.getRow().getData().varID;
+      let selected = cell.getRow().isSelected();
+      let rows = table.getRows().filter((row) => row.getData().varID === varID);
+      rows.forEach((row) => {
+        if (selected) table.deselectRow(row);
+        else table.selectRow(row);
+      });
+      return;
+    }
+
+    cell.getRow().toggleSelect();
   });
+
+  // ##### price input
+  table.on("cellEdited", (cell) => {
+    if (cell.getField() !== "tbd") return;
+
+    let val = cell.getValue();
+    if (typeof val === "undefined") return;
+    if (val !== "") {
+      val = Math.round(val * 100) / 100;
+      cell.setValue(val);
+    }
+
+    let prices = grid.sleepValue.prices || {};
+    prices[cell.getRow().getData().id] = val;
+    grid.sleep("prices", prices);
+  });
+  table.on("dataProcessed", () => {
+    let prices = grid.sleepValue.prices || {};
+    for (let [id, price] of Object.entries(prices)) {
+      table.updateRow(id, { tbd: price });
+    }
+  });
+  // ##### END price input
 });
