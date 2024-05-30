@@ -8,7 +8,6 @@ use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\RepeaterPage;
 use ProcessWire\RepeaterPageArray;
-use ProcessWire\RockMoney;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
