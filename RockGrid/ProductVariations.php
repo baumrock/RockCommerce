@@ -58,6 +58,7 @@ class ProductVariations extends Grid
       'hidden' => true,
     ]);
   }
+
   public function getData(): array
   {
     // find repeater items

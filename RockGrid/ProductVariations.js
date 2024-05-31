@@ -22,8 +22,22 @@ document.addEventListener("RockGrid:init", (e) => {
       //definitions - array of column definition objects
 
       definitions.push({
-        field: "tbd",
-        title: "TBD",
+        field: "pricechange",
+        title: "pricechange",
+        editor: "number",
+        editorParams: {
+          selectContents: true,
+          verticalNavigation: "table",
+        },
+        formatter: "money",
+        formatterParams: {
+          decimal: ",",
+          thousand: ".",
+        },
+      });
+      definitions.push({
+        field: "fullprice",
+        title: "fullprice",
         editor: "number",
         editorParams: {
           selectContents: true,
@@ -36,22 +50,29 @@ document.addEventListener("RockGrid:init", (e) => {
         },
       });
 
-      definitions.forEach((col, i) => {
-        // global settings
-        if (col.field !== "tbd") col.headerFilter = true;
+      let sort = ["Variation", "Option", "pricechange", "fullprice", "Comment"];
+      // Sort definitions based on the sort array
+      definitions.sort((a, b) => {
+        let indexA = sort.indexOf(a.field);
+        let indexB = sort.indexOf(b.field);
+        if (indexA === -1) indexA = sort.length;
+        if (indexB === -1) indexB = sort.length;
+        return indexA - indexB;
+      });
 
-        // custom settings
+      definitions.forEach((col, i) => {
         if (col.field == "id" || col.field == "varID") {
           col.visible = false;
-        } else if (col.field == "name") {
-          col.headerFilter = true; // add header filter to every column
         } else if (col.field == "Variation") {
+          col.headerFilter = true;
           col.formatter = "modal";
           col.formatterParams = {
             icon: true,
             tooltip: "bearbeiten",
             field: "varID",
           };
+        } else if (col.field == "Option") {
+          col.headerFilter = true;
         }
       });
 
@@ -81,11 +102,9 @@ document.addEventListener("RockGrid:init", (e) => {
   table.on("cellClick", (e, cell) => {
     let field = cell.getField();
 
-    if (field === "tbd") {
-      return;
-    }
-
-    if (field === "Variation") {
+    if (field === "Option") {
+      cell.getRow().toggleSelect();
+    } else if (field === "Variation") {
       let varID = cell.getRow().getData().varID;
       let selected = cell.getRow().isSelected();
       let rows = table.getRows().filter((row) => row.getData().varID === varID);
@@ -93,15 +112,12 @@ document.addEventListener("RockGrid:init", (e) => {
         if (selected) table.deselectRow(row);
         else table.selectRow(row);
       });
-      return;
     }
-
-    cell.getRow().toggleSelect();
   });
 
   // ##### price input
   table.on("cellEdited", (cell) => {
-    if (cell.getField() !== "tbd") return;
+    if (cell.getField() !== "pricechange") return;
 
     let val = cell.getValue();
     if (typeof val === "undefined") return;
@@ -110,15 +126,40 @@ document.addEventListener("RockGrid:init", (e) => {
       cell.setValue(val);
     }
 
-    let prices = grid.sleepValue.prices || {};
-    prices[cell.getRow().getData().id] = val;
-    grid.sleep("prices", prices);
+    let pricechanges = grid.sleepValue.pricechanges || {};
+    pricechanges[cell.getRow().getData().id] = val;
+    grid.sleep("pricechanges", pricechanges);
   });
   table.on("dataProcessed", () => {
-    let prices = grid.sleepValue.prices || {};
-    for (let [id, price] of Object.entries(prices)) {
-      table.updateRow(id, { tbd: price });
+    let pricechanges = grid.sleepValue.pricechanges || {};
+    for (let [id, price] of Object.entries(pricechanges)) {
+      table.updateRow(id, { pricechange: price });
     }
   });
   // ##### END price input
+
+  // ##### calc pricechange from fullprice
+  table.on("cellEdited", (cell) => {
+    if (cell.getField() !== "fullprice") return;
+
+    let baseprice = document.getElementById(
+      "Inputfield_rc_product_basepricenet"
+    );
+    if (!baseprice) return;
+
+    let val = cell.getValue();
+    if (typeof val === "undefined") return;
+    if (val === "") return;
+
+    val = Math.round(val * 100) / 100;
+    cell.setValue(val);
+
+    let basepriceValue = parseFloat(baseprice.value);
+    if (!isNaN(basepriceValue)) {
+      let newPriceChange = val - basepriceValue;
+      let changeCell = cell.getRow().getCell("pricechange");
+      changeCell.setValue(newPriceChange);
+    }
+  });
+  // ##### END calc pricechange from fullprice
 });

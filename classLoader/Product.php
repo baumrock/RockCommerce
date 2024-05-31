@@ -28,6 +28,7 @@ trait Product
   const field_pricingset            = self::_prefix . "pricingset";
   const field_discounts             = self::_prefix . "discounts";
   const field_pricingvars           = self::_prefix . "pricingvars";
+  const field_baseprice             = self::_prefix . "baseprice";
 
   public function _init(): void
   {
@@ -75,6 +76,10 @@ trait Product
       $rm->deleteField(self::_prefix . 'items');
     }
 
+    $rm->deleteField(self::field_pricingvars);
+    $rm->deleteField(self::field_pricing);
+    $rm->deleteField(self::field_pricingset);
+
     // product fields
     $fields = [
       self::field_rctab => [
@@ -86,6 +91,12 @@ trait Product
       self::field_canbebought => [
         'type' => 'checkbox',
         'label' => 'Product can be bought',
+      ],
+
+      self::field_baseprice => [
+        'type' => 'RockMoney',
+        'label' => 'Base Price',
+        'icon' => 'money',
       ],
 
       self::field_variation => [
@@ -114,25 +125,6 @@ trait Product
         'repeaterCollapse' => '0', // New items open, existing items collapsed (recommended for most cases)
         'repeaterAddLabel' => 'Add New Variation',
         'columnWidth' => 100,
-      ],
-      self::field_pricingset => [
-        'type' => 'FieldsetOpen',
-        'label' => 'Pricing',
-        'icon' => 'money',
-      ],
-      self::field_pricingvars => [
-        'type' => 'text',
-        'label' => 'Variations changing the price',
-        'icon' => 'check-square-o',
-      ],
-      self::field_pricing => [
-        'type' => 'RockGrid',
-        'label' => 'Pricing',
-        'grid' => 'RockCommerce\ProductPricing',
-        'icon' => 'table',
-      ],
-      self::field_pricingset . "_END" => [
-        'type' => 'FieldsetClose',
       ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";
