@@ -29,7 +29,7 @@ trait Product
   const field_pricingset            = self::_prefix . "pricingset";
   const field_discounts             = self::_prefix . "discounts";
   const field_pricingvars           = self::_prefix . "pricingvars";
-  const field_baseprice             = self::_prefix . "baseprice";
+  const field_price                 = self::_prefix . "price";
 
   public function _init(): void
   {
@@ -92,6 +92,7 @@ trait Product
     $rm->deleteField(self::field_pricingvars);
     $rm->deleteField(self::field_pricing);
     $rm->deleteField(self::field_pricingset);
+    $rm->deleteField('rc_product_baseprice');
 
     // product fields
     $fields = [
@@ -106,9 +107,9 @@ trait Product
         'label' => 'Product can be bought',
       ],
 
-      self::field_baseprice => [
+      self::field_price => [
         'type' => 'RockMoney',
-        'label' => 'Base Price',
+        'label' => 'Net Price',
         'icon' => 'money',
       ],
 
@@ -116,6 +117,7 @@ trait Product
         'type' => 'RockGrid',
         'label' => 'Variations',
         'grid' => 'RockCommerce\ProductVariations',
+        'notes' => 'You can use "p" in the price column, eg 2500-p',
       ],
       self::field_variationcomment => [
         'type' => 'textarea',

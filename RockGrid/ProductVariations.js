@@ -16,32 +16,18 @@ document.addEventListener("RockGrid:init", (e) => {
       },
     },
 
-    layout: "fitDataStretch",
+    layout: "fitData",
     autoColumns: true, //create columns from data field names
-    autoColumnsDefinitions: function (definitions) {
-      //definitions - array of column definition objects
-
-      definitions.push({
-        field: "pricechange",
-        title: "pricechange",
+    autoColumnsDefinitions: function (defs) {
+      defs.push({
+        field: "price",
+        title: "price",
         editor: "calc",
+        width: 120,
         editorParams: {
-          selectContents: true,
-        },
-        formatter: "money",
-        formatterParams: {
-          decimal: ",",
-          thousand: ".",
-        },
-        hozAlign: "right",
-      });
-      definitions.push({
-        field: "fullprice",
-        title: "fullprice",
-        editor: "calc",
-        editorParams: {
-          selectContents: true,
-          verticalNavigation: "table",
+          vars: {
+            p: "#Inputfield_rc_product_price",
+          },
         },
         formatter: "money",
         formatterParams: {
@@ -51,20 +37,10 @@ document.addEventListener("RockGrid:init", (e) => {
         hozAlign: "right",
       });
 
-      let sort = ["Variation", "Option", "pricechange", "fullprice", "Comment"];
-      // Sort definitions based on the sort array
-      definitions.sort((a, b) => {
-        let indexA = sort.indexOf(a.field);
-        let indexB = sort.indexOf(b.field);
-        if (indexA === -1) indexA = sort.length;
-        if (indexB === -1) indexB = sort.length;
-        return indexA - indexB;
-      });
-
-      definitions.forEach((col, i) => {
+      defs.forEach((col, i) => {
         if (col.field == "id" || col.field == "varID") {
           col.visible = false;
-        } else if (col.field == "Variation") {
+        } else if (col.field == "variation") {
           col.headerFilter = true;
           col.formatter = "modal";
           col.formatterParams = {
@@ -72,12 +48,15 @@ document.addEventListener("RockGrid:init", (e) => {
             tooltip: "bearbeiten",
             field: "varID",
           };
-        } else if (col.field == "Option") {
+        } else if (col.field == "option") {
           col.headerFilter = true;
+        } else if (col.field == "comment") {
+          col.title = "";
+          col.headerSort = false;
         }
       });
 
-      return definitions;
+      return defs;
     },
 
     // pagination
@@ -103,9 +82,9 @@ document.addEventListener("RockGrid:init", (e) => {
   table.on("cellClick", (e, cell) => {
     let field = cell.getField();
 
-    if (field === "Option") {
+    if (field === "option") {
       cell.getRow().toggleSelect();
-    } else if (field === "Variation") {
+    } else if (field === "variation") {
       let varID = cell.getRow().getData().varID;
       let selected = cell.getRow().isSelected();
       let rows = table.getRows().filter((row) => row.getData().varID === varID);
@@ -118,45 +97,20 @@ document.addEventListener("RockGrid:init", (e) => {
 
   // ##### price input
   table.on("cellEdited", (cell) => {
-    if (cell.getField() !== "pricechange") return;
+    if (cell.getField() !== "price") return;
 
     let val = cell.getValue();
     if (typeof val === "undefined") return;
 
-    let pricechanges = grid.sleepValue.pricechanges || {};
-    if (val !== "") pricechanges[cell.getRow().getData().id] = val;
-    grid.sleep("pricechanges", pricechanges);
+    let prices = grid.sleepValue.prices || {};
+    if (val !== "") prices[cell.getRow().getData().id] = val;
+    grid.sleep("prices", prices);
   });
   table.on("dataProcessed", () => {
-    let pricechanges = grid.sleepValue.pricechanges || {};
-    for (let [id, price] of Object.entries(pricechanges)) {
-      table.updateRow(id, { pricechange: price });
+    let prices = grid.sleepValue.prices || {};
+    for (let [id, price] of Object.entries(prices)) {
+      table.updateRow(id, { price: price });
     }
   });
   // ##### END price input
-
-  // ##### calc pricechange from fullprice
-  table.on("cellEdited", (cell) => {
-    if (cell.getField() !== "fullprice") return;
-
-    let baseprice = document.getElementById(
-      "Inputfield_rc_product_basepricenet"
-    );
-    if (!baseprice) return;
-
-    let val = cell.getValue();
-    if (typeof val === "undefined") return;
-    if (val === "") return;
-
-    val = Math.round(val * 100) / 100;
-    cell.setValue(val);
-
-    let basepriceValue = parseFloat(baseprice.value);
-    if (!isNaN(basepriceValue)) {
-      let newPriceChange = val - basepriceValue;
-      let changeCell = cell.getRow().getCell("pricechange");
-      changeCell.setValue(newPriceChange);
-    }
-  });
-  // ##### END calc pricechange from fullprice
 });

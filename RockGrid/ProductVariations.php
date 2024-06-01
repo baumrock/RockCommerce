@@ -90,9 +90,9 @@ class ProductVariations extends Grid
       foreach ($opts as $optID => $opt) {
         $data[] = [
           'id' => $optID,
-          'Variation' => $variation['title'],
-          'Option' => $opt,
-          'Comment' => $variation['comment'],
+          'variation' => $variation['title'],
+          'option' => $opt,
+          'comment' => $variation['comment'],
           'varID' => $varID,
         ];
       }
