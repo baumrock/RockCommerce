@@ -45,12 +45,7 @@ class ProcessRockCommerce extends Process
           'icon' => 'bar-chart',
         ],
         [
-          'url' => '/prices/',
-          'label' => 'Price Editor',
-          'icon' => 'table',
-        ],
-        [
-          'url' => '/settings/',
+          'url' => 'settings/',
           'label' => 'Settings',
           'icon' => 'cogs',
         ],
@@ -189,66 +184,10 @@ class ProcessRockCommerce extends Process
     return $form->render();
   }
 
-  /**
-   * Manage Prices
-   */
-  public function executePrices()
-  {
-    $this->headline('Price Editor');
-    $this->browserTitle('Price Editor');
-    /** @var InputfieldForm $form */
-    $form = $this->wire->modules->get('InputfieldForm');
-
-    $form->add([
-      'type' => 'RockGrid',
-      'name' => 'price-editor',
-      'label' => false,
-      'icon' => 'pencil-square-o',
-      'grid' => 'Prices',
-      'themeBorder' => 'none',
-      'skipLabel' => Inputfield::skipLabelBlank,
-      // 'description' => "<div class='uk-alert uk-alert-warning'>WARNING: Changes will instantly be saved!</div>",
-      // 'entityEncodeText' => false,
-    ]);
-
-    return $form->render();
-  }
-
   public function executeSettings()
   {
-    $this->headline(' ');
-    $this->browserTitle(' ');
-
-    /** @var InputfieldForm $form */
-    $form = $this->wire->modules->get('InputfieldForm');
-
-    // load the pagelist javascript
-    $this->wire->modules->get('ProcessPageList');
-    $root = rockcommerce()->rootPage();
-    $url = $this->wire->pages->get(2)->url . 'module/edit?name=RockCommerce';
-    $form->add([
-      'name' => 'rockcommerceroot',
-      'type' => 'markup',
-      'label' => 'RockCommerce Settings',
-      'themeBorder' => 'none',
-      'icon' => 'money',
-      'notes' => "You can change the module settings [here]($url).",
-      'value' => "
-        <style>
-        .PageListTemplate_rockforms_entry .PageListActionLock,
-        .PageListTemplate_rockforms_entry .PageListActionMove {
-          display: none !important;
-        }
-        </style>
-        <div id='rockcommerceroot'></div>
-        <script>
-        $('#rockcommerceroot').ProcessPageList({
-          rootPageID: $root,
-          showRootPage: false,
-        });
-        </script>",
-    ]);
-
-    return $form->render();
+    $url = $this->wire->pages->get(2)->url;
+    $p = rockcommerce()->rootPage();
+    $this->wire->session->redirect($url . "page/?id=$p");
   }
 }
