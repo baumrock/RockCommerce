@@ -53,6 +53,15 @@ document.addEventListener("RockGrid:init", (e) => {
         } else if (col.field == "comment") {
           col.title = "";
           col.headerSort = false;
+          col.width = 50;
+          col.hozAlign = "center";
+          col.formatter = (cell) => {
+            let value = cell.getValue();
+            if (!value) return;
+            return (
+              "<i class='fa fa-comment-o' title='" + value + "' uk-tooltip></i>"
+            );
+          };
         } else if (col.field == "gprice") {
           col.width = 120;
           col.formatter = "money";
@@ -82,8 +91,10 @@ document.addEventListener("RockGrid:init", (e) => {
     table.setFilter("varID", "=", id);
   });
   table.on("rowSelectionChanged", () => {
+    table.redraw(true);
     if (table.getSelectedRows().length) return;
     table.clearFilter(true);
+    table.redraw(true);
   });
 
   // select/unselect all on click in variation row
