@@ -24,21 +24,21 @@ document.addEventListener("RockGrid:init", (e) => {
       definitions.push({
         field: "pricechange",
         title: "pricechange",
-        editor: "number",
+        editor: "calc",
         editorParams: {
           selectContents: true,
-          verticalNavigation: "table",
         },
         formatter: "money",
         formatterParams: {
           decimal: ",",
           thousand: ".",
         },
+        hozAlign: "right",
       });
       definitions.push({
         field: "fullprice",
         title: "fullprice",
-        editor: "number",
+        editor: "calc",
         editorParams: {
           selectContents: true,
           verticalNavigation: "table",
@@ -48,6 +48,7 @@ document.addEventListener("RockGrid:init", (e) => {
           decimal: ",",
           thousand: ".",
         },
+        hozAlign: "right",
       });
 
       let sort = ["Variation", "Option", "pricechange", "fullprice", "Comment"];
@@ -121,13 +122,9 @@ document.addEventListener("RockGrid:init", (e) => {
 
     let val = cell.getValue();
     if (typeof val === "undefined") return;
-    if (val !== "") {
-      val = Math.round(val * 100) / 100;
-      cell.setValue(val);
-    }
 
     let pricechanges = grid.sleepValue.pricechanges || {};
-    pricechanges[cell.getRow().getData().id] = val;
+    if (val !== "") pricechanges[cell.getRow().getData().id] = val;
     grid.sleep("pricechanges", pricechanges);
   });
   table.on("dataProcessed", () => {

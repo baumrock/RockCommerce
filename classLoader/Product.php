@@ -6,6 +6,7 @@ use ProcessWire\FieldtypeFieldsetOpen;
 use ProcessWire\FieldtypeRockGrid;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
+use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use RockGrid\RockGridField;
 
@@ -40,8 +41,20 @@ trait Product
   protected function _hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
+    if (!$form instanceof InputfieldWrapper) return;
+
     $p = $event->process->getPage();
     if (!$p->isProduct) return;
+
+    if ($f = $form->get('rc_product_variations')) {
+      $form->insertAfter([
+        'type' => 'markup',
+        'label' => 'Accessories',
+        'icon' => 'plus',
+        'value' => 'TBD',
+        'collapsed' => Inputfield::collapsedBlank,
+      ], $f);
+    }
   }
 
   public function productOptionsString(): string
