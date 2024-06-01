@@ -53,6 +53,14 @@ document.addEventListener("RockGrid:init", (e) => {
         } else if (col.field == "comment") {
           col.title = "";
           col.headerSort = false;
+        } else if (col.field == "gprice") {
+          col.width = 120;
+          col.formatter = "money";
+          col.formatterParams = {
+            decimal: ",",
+            thousand: ".",
+          };
+          col.hozAlign = "right";
         }
       });
 
@@ -61,7 +69,7 @@ document.addEventListener("RockGrid:init", (e) => {
 
     // pagination
     pagination: true,
-    paginationSize: 10,
+    paginationSize: 20,
     // selectableRows: true,
   });
 

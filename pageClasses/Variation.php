@@ -15,6 +15,7 @@ class Variation extends Page
 
   const field_options = self::prefix . "options";
   const field_comment = self::prefix . "comment";
+  const field_price   = self::prefix . "price";
 
   private $optionsArray;
 
@@ -53,19 +54,27 @@ class Variation extends Page
     $rm->deleteField("rockcommerce_variation_id", true);
     $rm->migrate([
       'fields' => [
+        self::field_price => [
+          'type' => 'RockMoney',
+          'label' => 'Price',
+          'icon' => 'money',
+        ],
         self::field_options => [
           'label' => 'Options',
           'type' => 'FieldtypeRepeater',
           'fields' => [
             'title' => [
-              'label' => '',
+              'label' => 'Option Name',
               'notes' => '',
               'required' => true,
-              'columnWidth' => 100,
-              'rpb-nolabel' => true, // hide label in backend
+              'columnWidth' => 70,
+              'rpb-nolabel' => false, // hide label in backend
+            ],
+            self::field_price => [
+              'columnWidth' => 30,
             ],
           ],
-          'repeaterTitle' => '{title}',
+          'repeaterTitle' => '{title} - {' . self::field_price . '}',
           'familyFriendly' => 1,
           'repeaterDepth' => 0,
           'tags' => 'RockCommerce',

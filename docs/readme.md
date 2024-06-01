@@ -4,6 +4,6 @@
 
 - Fully translated to german
 
-## Restrictions
+## Limitations
 
 - One global currency

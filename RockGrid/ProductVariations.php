@@ -33,12 +33,12 @@ class ProductVariations extends Grid
       'tooltip' => 'Remove all filters',
       'hidden' => true,
     ]);
-    $this->buttonsRight->add([
-      'name' => 'selectFiltered',
-      'label' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.18 20.274L9 21v-8.5L4.52 7.572A2 2 0 0 1 4 6.227V4h16v2.172a2 2 0 0 1-.586 1.414L15 12v3m0 4l2 2l4-4"/></svg>',
-      'tooltip' => 'Select filtered rows',
-      'hidden' => true,
-    ]);
+    // $this->buttonsRight->add([
+    //   'name' => 'selectFiltered',
+    //   'label' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.18 20.274L9 21v-8.5L4.52 7.572A2 2 0 0 1 4 6.227V4h16v2.172a2 2 0 0 1-.586 1.414L15 12v3m0 4l2 2l4-4"/></svg>',
+    //   'tooltip' => 'Select filtered rows',
+    //   'hidden' => true,
+    // ]);
     // $this->buttonsRight->add([
     //   'name' => 'unselectFiltered',
     //   'label' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m12 20l-3 1v-8.5L4.52 7.572A2 2 0 0 1 4 6.227V4h16v2.172a2 2 0 0 1-.586 1.414L15 12v1.5m1 5.5a3 3 0 1 0 6 0a3 3 0 1 0-6 0m1 2l4-4"/></svg>',
@@ -63,6 +63,7 @@ class ProductVariations extends Grid
   {
     // find repeater items
     $options = Variation::field_options . '.title';
+    $price = Variation::field_options . '.' . Variation::field_price;
     $raw = wire()->pages->findRaw(
       [
         'parent' => rockcommerce()->variationsPage(),
@@ -75,6 +76,7 @@ class ProductVariations extends Grid
         'title',
         Variation::field_comment => 'comment',
         $options, // options.title
+        $price,
       ],
       [
         'flat' => true,
@@ -86,14 +88,16 @@ class ProductVariations extends Grid
     $data = [];
     foreach ($raw as $varID => $variation) {
       $opts = $variation[$options];
+      $prices = $variation[$price];
       if (!is_array($opts)) $opts = [];
       foreach ($opts as $optID => $opt) {
         $data[] = [
           'id' => $optID,
+          'varID' => $varID,
           'variation' => $variation['title'],
           'option' => $opt,
           'comment' => $variation['comment'],
-          'varID' => $varID,
+          'gprice' => $prices[$optID],
         ];
       }
     }
