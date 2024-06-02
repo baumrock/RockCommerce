@@ -21,14 +21,10 @@ trait Product
 
   const field_rctab                 = self::_prefix . "rctab";
   const field_canbebought           = self::_prefix . "canbebought";
-  const field_variations            = self::_prefix . "variations";
   const field_variation             = self::_prefix . "variation";
+  const field_variations            = self::_prefix . "variations";
+  const field_maxoptions            = self::_prefix . "maxoptions";
   const field_variationcomment      = self::_prefix . "variationcomment";
-  const field_variationchangesprice = self::_prefix . "variationchangesprice";
-  const field_pricing               = self::_prefix . "pricing";
-  const field_pricingset            = self::_prefix . "pricingset";
-  const field_discounts             = self::_prefix . "discounts";
-  const field_pricingvars           = self::_prefix . "pricingvars";
   const field_price                 = self::_prefix . "price";
 
   public function _init(): void
@@ -74,26 +70,6 @@ trait Product
   {
     $rm = rockmigrations();
 
-    // $rm->removeFieldFromTemplate(self::field_variation, $this);
-
-    $f = wire()->fields->get(self::field_variation);
-    if ($f && !$f->type instanceof FieldtypeRockGrid) {
-      $rm->deleteField($f);
-    }
-    $rm->deleteField(self::field_variationchangesprice);
-    $rm->deleteField(self::field_discounts);
-    $f = wire()->fields->get(self::field_pricing);
-    if ($f && $f->type instanceof FieldtypeFieldsetOpen) {
-      $rm->deleteField(self::field_pricing);
-      $rm->deleteField(self::field_pricing . '_END');
-      $rm->deleteField(self::_prefix . 'items');
-    }
-
-    $rm->deleteField(self::field_pricingvars);
-    $rm->deleteField(self::field_pricing);
-    $rm->deleteField(self::field_pricingset);
-    $rm->deleteField('rc_product_baseprice');
-
     // product fields
     $fields = [
       self::field_rctab => [
@@ -126,6 +102,12 @@ trait Product
         'icon' => 'comment-o',
         'collapsed' => Inputfield::collapsedBlank,
       ],
+      self::field_maxoptions => [
+        'type' => 'integer',
+        'label' => 'Maximum number of selectable options',
+        'icon' => 'list-ol',
+        'collapsed' => Inputfield::collapsedBlank,
+      ],
       self::field_variations => [
         'label' => 'Variations',
         'icon' => 'cubes',
@@ -133,6 +115,7 @@ trait Product
         'fields' => [
           self::field_variationcomment,
           self::field_variation,
+          self::field_maxoptions,
         ],
         'repeaterTitle' => '{variationRepeaterLabel}',
         'familyFriendly' => 1,
@@ -150,6 +133,7 @@ trait Product
       // don't add some fields to the template
       if ($k == self::field_variation) continue;
       if ($k == self::field_variationcomment) continue;
+      if ($k == self::field_maxoptions) continue;
 
       $rm->addFieldToTemplate($k, $this);
       $fieldnames[] = $k;
