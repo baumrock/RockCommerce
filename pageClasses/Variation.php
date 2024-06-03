@@ -51,7 +51,6 @@ class Variation extends Page
   public function migrate()
   {
     $rm = $this->rockmigrations();
-    $rm->deleteField("rockcommerce_variation_id", true);
     $rm->migrate([
       'fields' => [
         self::field_price => [

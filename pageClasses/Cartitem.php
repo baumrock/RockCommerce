@@ -20,7 +20,6 @@ class Cartitem extends Page
   const tpl = "rockcommerce_cartitem";
   const prefix = "rockcommerce_cartitem_";
 
-  const field_page = self::prefix . "page";
   const field_product = self::prefix . "product";
   const field_amount = self::prefix . "amount";
   const field_variation = self::prefix . "variation";
@@ -129,7 +128,6 @@ class Cartitem extends Page
   public function migrate()
   {
     $rm = rockmigrations();
-    $rm->deleteField(self::field_page, true);
     $rm->migrate([
       'fields' => [
         self::field_product => [

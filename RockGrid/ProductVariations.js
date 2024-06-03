@@ -19,7 +19,7 @@ document.addEventListener("RockGrid:init", (e) => {
     layout: "fitData",
     autoColumns: true, //create columns from data field names
     autoColumnsDefinitions: function (defs) {
-      defs.push({
+      defs = grid.addAfter(defs, "gprice", {
         field: "price",
         title: "price",
         editor: "calc",

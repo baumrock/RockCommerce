@@ -151,6 +151,7 @@ trait Product
   {
     $f = $event->object;
     if ($f->name !== self::field_variations) return;
+    bd($f->name, 'preload rockgrid');
     foreach ($f->hasField->fields as $fname) {
       $field = wire()->fields->get($fname);
       $inputfield = $field->getInputfield($event->process->getPage());

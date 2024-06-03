@@ -32,10 +32,6 @@ class RootPage extends Page
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
-
-    // cleanup
-    $rm->deleteField(self::prefix . "pagetitle", true);
-
     $rm->migrate([
       'fields' => [
         self::field_logo => [

@@ -20,7 +20,6 @@ class Cart extends Page
   const tpl = "rockcommerce_cart";
   const prefix = "rockcommerce_cart_";
 
-  const field_items = self::prefix . "items";
   const field_order = self::prefix . "order";
 
   /** magic */
@@ -31,23 +30,23 @@ class Cart extends Page
     $rm = rockmigrations();
 
     // modify items field
-    $f = $form->get(self::field_items);
-    if ($f) {
-      if ($this->items()->count()) {
-        if ($this->wire->user->isSuperuser()) {
-          $f->notes = "<a href='/rc/show-cart?id={$this->name}'>Show this cart on the frontend</a>";
-          $f->entityEncodeText = false;
-        }
-      } else {
-        $form->insertBefore($rm->inputfield([
-          'type' => 'markup',
-          'label' => $f->label,
-          'icon' => $f->icon,
-          'value' => "<div class='uk-alert uk-alert-primary uk-margin-remove uk-text-center'>This cart is empty.</div>",
-        ]), $f);
-        $form->remove($f);
-      }
-    }
+    // $f = $form->get(self::field_items);
+    // if ($f) {
+    //   if ($this->items()->count()) {
+    //     if ($this->wire->user->isSuperuser()) {
+    //       $f->notes = "<a href='/rc/show-cart?id={$this->name}'>Show this cart on the frontend</a>";
+    //       $f->entityEncodeText = false;
+    //     }
+    //   } else {
+    //     $form->insertBefore($rm->inputfield([
+    //       'type' => 'markup',
+    //       'label' => $f->label,
+    //       'icon' => $f->icon,
+    //       'value' => "<div class='uk-alert uk-alert-primary uk-margin-remove uk-text-center'>This cart is empty.</div>",
+    //     ]), $f);
+    //     $form->remove($f);
+    //   }
+    // }
 
     // add info field
     if ($f = $form->get(self::field_order)) {
@@ -153,7 +152,6 @@ class Cart extends Page
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
-    $rm->deleteField(self::field_items, true);
     $rm->migrate([
       'fields' => [
         // self::field_items => [

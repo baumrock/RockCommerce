@@ -40,7 +40,6 @@ class Carts extends Page
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
-    $rm->deleteField(self::prefix . "removeafter", true);
     $rm->migrate([
       'fields' => [
         self::field_removeempty => [

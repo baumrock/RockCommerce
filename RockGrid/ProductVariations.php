@@ -96,8 +96,8 @@ class ProductVariations extends Grid
           'varID' => $varID,
           'variation' => $variation['title'],
           'option' => $opt,
-          'comment' => $variation['comment'],
           'gprice' => $prices[$optID],
+          'comment' => $variation['comment'],
         ];
       }
     }
