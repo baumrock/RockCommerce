@@ -461,6 +461,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $urls = [];
     $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerce.min.js', true);
     $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerceFrontend.min.js', true);
+
+    // note: alpinejs must be loaded AFTER RockCommerce so that all
+    // alpine:init events will be attached to the document
+    if ($alpine) $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
+
     $json = json_encode(['type' => $type]);
     $markup = "<script>var RockCommerceConfig = $json</script>";
     foreach ($urls as $url) {
