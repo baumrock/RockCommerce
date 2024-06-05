@@ -78,11 +78,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $this->maintenance();
     });
 
-    // create assets
-    $rm->minify(__DIR__ . "/RockCommerceBackend.js");
-    $rm->minify(__DIR__ . "/RockCommerceFrontend.js");
-    $rm->minify(__DIR__ . "/RockCommerceSite.js");
-    $rm->minify(__DIR__ . "/Cart.js");
+    // minify all js files during development
+    $rm->minify(__DIR__ . "/js");
 
     // HTMX+AJAX
     $this->addHTMX(); // frontend endpoints
@@ -90,24 +87,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // hooks
     wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
-    wire()->addHookAfter("Page::render",   $this, "initRockCommerceSite");
 
     if (!$this->showRootPageInTree) $rm->hidePageFromTree($this->rootPage());
 
     // now that the module is ready we init the productpage
     // to attach hooks from the product trait
     (new ProductPage())->_init();
-  }
-
-  public function maintenance(): void
-  {
-    // remove unused variations
-    $oldVariations = $this->wire->pages->find([
-      'parent' => $this->variationsPage(),
-      'title' => '',
-      'created<' => time() - 60 * 60, // older than 1h
-    ]);
-    foreach ($oldVariations as $p) $p->delete();
   }
 
   public function ready()
@@ -118,7 +103,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $ajax = $this->wire->config->ajax;
     if ($admin and !$ajax) {
       $rm->addStyles(__DIR__ . "/less/backend.less");
-      $rm->addScripts(__DIR__ . "/RockCommerceBackend.min.js");
+      $rm->addScripts(__DIR__ . "/js/RockCommerceBackend.min.js");
     }
   }
 
@@ -469,24 +454,47 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return true;
   }
 
+  public function head(
+    $type = 'frontend',
+    $alpine = true,
+  ) {
+    $urls = [];
+    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerce.min.js', true);
+    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerceFrontend.min.js', true);
+    $json = json_encode(['type' => $type]);
+    $markup = "<script>var RockCommerceConfig = $json</script>";
+    foreach ($urls as $url) {
+      if (strpos($url, '.js?')) {
+        $markup .= "<script src='$url' defer></script>\n";
+      } else {
+        $markup .= "<link rel='stylesheet' href='$url'>\n";
+      }
+    }
+    try {
+      return rockfrontend()->html($markup);
+    } catch (\Throwable $th) {
+      return $markup;
+    }
+  }
+
   /**
    * Add JS tag on frontend to init RCSite object
    */
-  public function initRockCommerceSite(HookEvent $event): void
-  {
-    /** @var Page $page */
-    $page = $event->object;
-    if ($page->template == 'admin') return;
-    if ($this->wire->config->ajax) return;
-    if (!$page->viewable()) return;
-    $event->return = str_replace(
-      "</body>",
-      "<script>document.addEventListener('DOMContentLoaded', function() {
-        RockCommerceSite.init({$this->getJsConfig(true)});
-      });</script></body>",
-      $event->return
-    );
-  }
+  // public function initRockCommerceSite(HookEvent $event): void
+  // {
+  //   /** @var Page $page */
+  //   $page = $event->object;
+  //   if ($page->template == 'admin') return;
+  //   if ($this->wire->config->ajax) return;
+  //   if (!$page->viewable()) return;
+  //   $event->return = str_replace(
+  //     "</body>",
+  //     "<script>document.addEventListener('DOMContentLoaded', function() {
+  //       RockCommerceSite.init({$this->getJsConfig(true)});
+  //     });</script></body>",
+  //     $event->return
+  //   );
+  // }
 
   public function invoicesPage(): Invoices
   {
@@ -537,6 +545,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function mailfromName(): string
   {
     return $this->mailfromName ?: "RockCommerce";
+  }
+
+  public function maintenance(): void
+  {
+    // remove unused variations
+    $oldVariations = $this->wire->pages->find([
+      'parent' => $this->variationsPage(),
+      'title' => '',
+      'created<' => time() - 60 * 60, // older than 1h
+    ]);
+    foreach ($oldVariations as $p) $p->delete();
   }
 
   public function migrate()
@@ -668,39 +687,27 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
   }
 
+  public function rockfrontend(): RockFrontend
+  {
+    return $this->wire->modules->get('RockFrontend');
+  }
+
+  public function rockmollie(): RockMollie
+  {
+    return $this->wire->modules->get('RockMollie');
+  }
+
+  public function rootPage(): RootPage
+  {
+    return $this->wire->pages->get([
+      'parent' => 1,
+      'template' => RootPage::tpl,
+    ]);
+  }
+
   public function setCart(Cart $cart): void
   {
     $this->wire->session->set(self::session_cart, $cart->name);
-  }
-
-  public function ___taxrate($product): float
-  {
-    return (float)$this->wire->config->rockcommerceTaxrate;
-  }
-
-  public function ___view(
-    string $file,
-    array|Page $vars = [],
-    Page $page = null,
-  ): \Latte\Runtime\Html|string {
-    // make some defaults available in all frontend files:
-    $defaults = [
-      'rc' => $this,
-      'rf' => rockfrontend(),
-    ];
-
-    // if custom vars are specified merge them
-    $vars = array_merge($defaults, $vars);
-
-    // on the first request we need to tell rockfrontend
-    // which view folders to look into
-    if (!$this->viewFoldersSet) {
-      rockfrontend()->setViewFolders($this->viewFolders());
-      $this->viewFoldersSet = true;
-    }
-
-    // use rockfrontend to render the file
-    return rockfrontend()->view($file, $vars, $page);
   }
 
   /**
@@ -726,6 +733,76 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     $out .= "</div>";
     return $out;
+  }
+
+  public function ___taxrate($product): float
+  {
+    return (float)$this->wire->config->rockcommerceTaxrate;
+  }
+
+  /**
+   * Convert path to url
+   * @return string
+   */
+  public function toUrl(string $path, $cachebuster = false): string
+  {
+    $url = str_replace(
+      $this->wire->config->paths->root,
+      $this->wire->config->urls->root,
+      $path
+    );
+    if ($cachebuster) {
+      $url = $this->wire->config->versionUrl(
+        $url,
+        !$this->coreversion,
+      );
+    }
+    return $url;
+  }
+
+  /**
+   * Return a rockcommerce url in form /rc/whatever
+   *
+   * Usage:
+   * $rc->url("/foo/bar") --> /rc/foo/bar
+   * $rc->url("/foo/bar", true) --> https://example.com/rc/foo/bar
+   */
+  public function url($str, $http = false): string
+  {
+    return $this->rootPage()->url($http) . ltrim($str, "/");
+  }
+
+  public function variationsPage(): Variations
+  {
+    return $this->wire->pages->get([
+      'parent' => $this->rootPage(),
+      'name' => 'variations',
+    ]);
+  }
+
+  public function ___view(
+    string $file,
+    array|Page $vars = [],
+    Page $page = null,
+  ): \Latte\Runtime\Html|string {
+    // make some defaults available in all frontend files:
+    $defaults = [
+      'rc' => $this,
+      'rf' => rockfrontend(),
+    ];
+
+    // if custom vars are specified merge them
+    $vars = array_merge($defaults, $vars);
+
+    // on the first request we need to tell rockfrontend
+    // which view folders to look into
+    if (!$this->viewFoldersSet) {
+      rockfrontend()->setViewFolders($this->viewFolders());
+      $this->viewFoldersSet = true;
+    }
+
+    // use rockfrontend to render the file
+    return rockfrontend()->view($file, $vars, $page);
   }
 
   /**
@@ -757,36 +834,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }, self::viewFolders);
     if ($reverse) return array_reverse($folders);
     return $folders;
-  }
-
-  public function rockfrontend(): RockFrontend
-  {
-    return $this->wire->modules->get('RockFrontend');
-  }
-
-  public function rockmollie(): RockMollie
-  {
-    return $this->wire->modules->get('RockMollie');
-  }
-
-  public function rootPage(): RootPage
-  {
-    return $this->wire->pages->get([
-      'parent' => 1,
-      'template' => RootPage::tpl,
-    ]);
-  }
-
-  /**
-   * Return a rockcommerce url in form /rc/whatever
-   *
-   * Usage:
-   * $rc->url("/foo/bar") --> /rc/foo/bar
-   * $rc->url("/foo/bar", true) --> https://example.com/rc/foo/bar
-   */
-  public function url($str, $http = false): string
-  {
-    return $this->rootPage()->url($http) . ltrim($str, "/");
   }
 
   public function webhooksPage(): Webhooks
@@ -961,13 +1008,5 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
 
     return $inputfields;
-  }
-
-  public function variationsPage(): Variations
-  {
-    return $this->wire->pages->get([
-      'parent' => $this->rootPage(),
-      'name' => 'variations',
-    ]);
   }
 }
