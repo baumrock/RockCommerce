@@ -10,6 +10,24 @@ _RockCommerce.prototype.addProductInfo = function (info) {
 };
 
 /**
+ * Get ProductInfo instance from dom element
+ * @param info
+ */
+_RockCommerce.prototype.getProductInfo = function (el) {
+  let root = el.closest("[x-data=rcproductinfo]");
+  if (!root) return false;
+  let infos = this.productinfos || [];
+  let foundInfo = false;
+  infos.forEach((info) => {
+    if (info.$el === el) {
+      foundInfo = info;
+      return;
+    }
+  });
+  return foundInfo;
+};
+
+/**
  * Product Info Component
  */
 document.addEventListener("alpine:init", () => {
