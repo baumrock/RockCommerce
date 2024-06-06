@@ -317,6 +317,38 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $result;
   }
 
+  public function frontendAssets(
+    $type = 'frontend',
+    $alpine = true,
+    $dinero = true,
+  ) {
+    $urls = [];
+    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerce.min.js', true);
+    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerceFrontend.min.js', true);
+
+    // load dinero for money calculations
+    if ($dinero) $urls[] = $this->toUrl(__DIR__ . '/lib/dinero.min.js', true);
+
+    // note: alpinejs must be loaded AFTER RockCommerce so that all
+    // alpine:init events will be attached to the document
+    if ($alpine) $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
+
+    $json = json_encode(['type' => $type]);
+    $markup = "<script>var RockCommerceConfig = $json</script>";
+    foreach ($urls as $url) {
+      if (strpos($url, '.js?')) {
+        $markup .= "<script src='$url' defer></script>\n";
+      } else {
+        $markup .= "<link rel='stylesheet' href='$url'>\n";
+      }
+    }
+    try {
+      return rockfrontend()->html($markup);
+    } catch (\Throwable $th) {
+      return $markup;
+    }
+  }
+
   /**
    * Get Cart
    *
@@ -452,34 +484,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // dont render any html
     echo $output;
     return true;
-  }
-
-  public function head(
-    $type = 'frontend',
-    $alpine = true,
-  ) {
-    $urls = [];
-    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerce.min.js', true);
-    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerceFrontend.min.js', true);
-
-    // note: alpinejs must be loaded AFTER RockCommerce so that all
-    // alpine:init events will be attached to the document
-    if ($alpine) $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
-
-    $json = json_encode(['type' => $type]);
-    $markup = "<script>var RockCommerceConfig = $json</script>";
-    foreach ($urls as $url) {
-      if (strpos($url, '.js?')) {
-        $markup .= "<script src='$url' defer></script>\n";
-      } else {
-        $markup .= "<link rel='stylesheet' href='$url'>\n";
-      }
-    }
-    try {
-      return rockfrontend()->html($markup);
-    } catch (\Throwable $th) {
-      return $markup;
-    }
   }
 
   /**
