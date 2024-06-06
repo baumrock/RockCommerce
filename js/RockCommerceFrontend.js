@@ -34,11 +34,22 @@ document.addEventListener("alpine:init", () => {
   Alpine.data("rcproductinfo", () => ({
     count: 0,
     min: 1,
+    price: 0,
 
     init() {
+      this.priceEL = this.$el.querySelector("[rc-price]");
+
       this.setMin();
       this.setCount();
       this.initUpdateUrl();
+      this.updatePrice();
+
+      // watch properties
+      this.$watch("count", this.updatePrice.bind(this));
+
+      // watch elements
+      this.watchVariations();
+
       RockCommerce.addProductInfo(this);
     },
 
@@ -74,6 +85,23 @@ document.addEventListener("alpine:init", () => {
       let el = this.$el.querySelector("input[x-model=count]");
       if (!el) return;
       this.min = el.getAttribute("min") || this.min;
+    },
+
+    updatePrice() {
+      if (!this.price) {
+        this.price = RockCommerce.money(this.$el.getAttribute("data-rc-price"));
+      }
+      if (!this.priceEL) return;
+      this.priceEL.innerText = this.price.multiply(this.count).toFormat();
+    },
+
+    watchVariations() {
+      document.addEventListener("click", (e) => {
+        let option = e.target.closest("[rc-variation-option]");
+        if (!option) return;
+        option.classList.toggle("rc-active");
+        e.preventDefault();
+      });
     },
   }));
 });

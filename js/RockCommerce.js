@@ -5,6 +5,10 @@ class _RockCommerce {
       this[key] = config[key];
     }
   }
+
+  money(amount, currency) {
+    return Dinero({ amount: amount * 100, currency: currency || "EUR" });
+  }
 }
 
 var RockCommerce = new _RockCommerce(RockCommerceConfig);
