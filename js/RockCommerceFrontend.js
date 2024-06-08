@@ -106,7 +106,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     unselectAll() {
-      this.options().forEach((option) => option.unselect());
+      this.options().forEach((option) => (option.selected = false));
     },
   }));
 
@@ -149,6 +149,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     unselect() {
+      if (this.variation.selected - 1 < this.variation.min) return;
       this.selected = false;
     },
 
