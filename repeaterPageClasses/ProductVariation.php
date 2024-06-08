@@ -12,6 +12,30 @@ class ProductVariation extends RepeaterPage
 {
   const field = 'rc_product_variations';
 
+  /**
+   * AlpineJS data attributes
+   * @return string
+   */
+  public function attrs(): string
+  {
+    return "
+      x-data='rcvariation'
+      rc-id={$this}
+      rc-min={$this->min()}
+      rc-max={$this->max()}
+    ";
+  }
+
+  public function min(): int
+  {
+    return (int)$this->getFormatted(ProductPage::field_minoptions);
+  }
+
+  public function max(): int
+  {
+    return (int)$this->getFormatted(ProductPage::field_maxoptions);
+  }
+
   public function options()
   {
     $grid = $this->getFormatted(ProductPage::field_variation);

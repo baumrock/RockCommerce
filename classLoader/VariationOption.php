@@ -20,6 +20,19 @@ class VariationOption extends WireData
 
   public $title;
 
+  /**
+   * AlpineJS Attributes
+   * @return string
+   */
+  public function attrs(): string
+  {
+    return "
+      x-data='rcvariationoption'
+      rc-id='{$this->option}'
+      rc-price='{$this->price->getFloat()}'
+    ";
+  }
+
   public function setPrice($id, $prices): void
   {
     if (!is_array($prices)) $prices = [];

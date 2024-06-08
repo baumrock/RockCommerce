@@ -24,6 +24,7 @@ trait Product
   const field_variation             = self::_prefix . "variation";
   const field_variations            = self::_prefix . "variations";
   const field_maxoptions            = self::_prefix . "maxoptions";
+  const field_minoptions            = self::_prefix . "minoptions";
   const field_variationcomment      = self::_prefix . "variationcomment";
   const field_price                 = self::_prefix . "price";
 
@@ -102,11 +103,19 @@ trait Product
         'icon' => 'comment-o',
         'collapsed' => Inputfield::collapsedBlank,
       ],
+      self::field_minoptions => [
+        'type' => 'integer',
+        'label' => 'Minimum number of selected options',
+        'icon' => 'list-ol',
+        'collapsed' => Inputfield::collapsedBlank,
+        'columnWidth' => 50,
+      ],
       self::field_maxoptions => [
         'type' => 'integer',
         'label' => 'Maximum number of selectable options',
         'icon' => 'list-ol',
         'collapsed' => Inputfield::collapsedBlank,
+        'columnWidth' => 50,
       ],
       self::field_variations => [
         'label' => 'Variations',
@@ -115,6 +124,7 @@ trait Product
         'fields' => [
           self::field_variationcomment,
           self::field_variation,
+          self::field_minoptions,
           self::field_maxoptions,
         ],
         'repeaterTitle' => '{variationRepeaterLabel}',
@@ -132,8 +142,9 @@ trait Product
     foreach ($fields as $k => $v) {
       // don't add some fields to the template
       if ($k == self::field_variation) continue;
-      if ($k == self::field_variationcomment) continue;
       if ($k == self::field_maxoptions) continue;
+      if ($k == self::field_minoptions) continue;
+      if ($k == self::field_variationcomment) continue;
 
       $rm->addFieldToTemplate($k, $this);
       $fieldnames[] = $k;
