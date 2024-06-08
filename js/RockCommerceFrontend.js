@@ -95,9 +95,11 @@ document.addEventListener("alpine:init", () => {
     },
 
     updatePrice() {
-      if (this.amount < this.min) this.setAmount(this.min);
-      if (!this.priceEL) return;
-      this.priceEL.innerText = this.getPrice().format();
+      RockCommerce.throttle(() => {
+        if (this.amount < this.min) this.setAmount(this.min);
+        if (!this.priceEL) return;
+        this.priceEL.innerText = this.getPrice().format();
+      }, 20);
     },
 
     /**
