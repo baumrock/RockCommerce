@@ -24,10 +24,9 @@ document.addEventListener("alpine:init", () => {
    */
   Alpine.data("rcproductinfo", () => ({
     amount: 0,
-    min: 1,
+    min: 0,
     price: 0,
     priceEl: false,
-    _variations: null,
 
     init() {
       this.price = new RockMoney(this.$el.getAttribute("rc-price"));
@@ -45,14 +44,22 @@ document.addEventListener("alpine:init", () => {
       // calculate the total price
       let price = this.price;
 
-      // multiply price with amount
-      price = price.times(this.amount);
+      // add prices of variations
+      this.variations().forEach((variation) => {
+        if (typeof variation == "undefined") return;
+        variation.options(true).forEach((option) => {
+          price = price.plus(option.price.float());
+        });
+      });
 
       // support hooks for price calculations (see pricing docs)
       // RockCommerce.on('getPrice', (price) => {
       //   return price.times(2);
       // });
       price = RockCommerce.trigger("getPrice", price);
+
+      // multiply price with amount
+      price = price.times(this.amount);
 
       return price;
     },
@@ -75,7 +82,6 @@ document.addEventListener("alpine:init", () => {
     },
 
     setMin() {
-      this.min = 1;
       let el = this.$el.querySelector("input[x-model=amount]");
       if (!el) return;
       this.min = el.getAttribute("min") || this.min;
@@ -87,13 +93,16 @@ document.addEventListener("alpine:init", () => {
       this.priceEL.innerText = this.getPrice().format();
     },
 
+    /**
+     * Get all variations of this info object
+     * We don't cache the result to make sure we always get the latest elements
+     * @returns
+     */
     variations() {
-      if (this._variations) return this._variations;
       let variations = this.$el.querySelectorAll("[x-data=rcvariation]");
-      this._variations = Array.from(variations).map((variation) => {
+      return Array.from(variations).map((variation) => {
         return RockCommerce.component(variation);
       });
-      return this._variations;
     },
   }));
 
@@ -106,7 +115,6 @@ document.addEventListener("alpine:init", () => {
     min: 0,
     max: 0,
     selected: 0,
-    _options: null,
 
     init() {
       this.min = parseInt(this.$el.getAttribute("rc-min"));
@@ -116,13 +124,16 @@ document.addEventListener("alpine:init", () => {
       RockCommerce.addComponent(this);
     },
 
-    options() {
-      if (this._options) return this._options;
+    options(onlySelected = false) {
       let options = this.$el.querySelectorAll("[x-data=rcvariationoption]");
-      this._options = Array.from(options).map((option) => {
-        return RockCommerce.component(option);
-      });
-      return this._options;
+      return Array.from(options)
+        .map((option) => {
+          let c = RockCommerce.component(option);
+          if (typeof c == "undefined") return;
+          if (onlySelected && !c.selected) return;
+          return c;
+        })
+        .filter((option) => option !== undefined);
     },
 
     unselectAll() {
@@ -134,7 +145,7 @@ document.addEventListener("alpine:init", () => {
    * Product Info Variation Option
    */
   Alpine.data("rcvariationoption", () => ({
-    price: 0,
+    price: null,
     selected: false,
     variation: null,
     variationEl: null,
@@ -145,6 +156,7 @@ document.addEventListener("alpine:init", () => {
       this.variationEl = this.$el.closest("[x-data=rcvariation]");
       this.variation = RockCommerce.component(this.variationEl);
       this.selected = this.$el.classList.contains("rc-active");
+      if (this.selected) this.variation.selected++;
 
       // react
       this.$el.addEventListener("click", this.toggle.bind(this));
@@ -152,6 +164,7 @@ document.addEventListener("alpine:init", () => {
 
       // add component
       RockCommerce.addComponent(this);
+      this.variation.info.updatePrice();
     },
 
     select() {
@@ -169,6 +182,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     unselect() {
+      console.log(this.variation.min, this.variation.selected - 1);
       if (this.variation.selected - 1 < this.variation.min) return;
       this.selected = false;
     },
@@ -181,6 +195,7 @@ document.addEventListener("alpine:init", () => {
         this.$el.classList.remove("rc-active");
         this.variation.selected--;
       }
+      this.variation.info.updatePrice();
     },
   }));
 });
