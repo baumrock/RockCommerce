@@ -320,17 +320,18 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function frontendAssets(
     $type = 'frontend',
     $alpine = true,
-    $dinero = true,
+    $currencyjs = true,
   ) {
     $urls = [];
+    $modules = $this->wire->config->paths->siteModules;
     $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerce.min.js', true);
     $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerceFrontend.min.js', true);
 
-    // load dinero for money calculations
-    if ($dinero) $urls[] = $this->toUrl(
-      $this->wire->config->paths->siteModules . 'RockMoney/lib/dinero.min.js',
-      true
-    );
+    // load rockmoney/dinero for money calculations
+    if ($currencyjs) {
+      $urls[] = $this->toUrl($modules . 'RockMoney/RockMoney.min.js', true);
+      $urls[] = $this->toUrl($modules . 'RockMoney/lib/currency.min.js', true);
+    }
 
     // note: alpinejs must be loaded AFTER RockCommerce so that all
     // alpine:init events will be attached to the document

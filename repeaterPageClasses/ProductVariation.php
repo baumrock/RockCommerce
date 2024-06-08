@@ -2,21 +2,33 @@
 
 namespace RockCommerce;
 
+use ProcessWire\PageArray;
 use ProcessWire\RepeaterPage;
-use ProcessWire\RepeaterPageArray;
+use ProcessWire\WireArray;
+use ProcessWire\WireData;
 use RockGrid\RockGridField;
 
 class ProductVariation extends RepeaterPage
 {
   const field = 'rc_product_variations';
 
-  public $variationTitle = 'foo bar';
-
   public function options()
   {
     $grid = $this->getFormatted(ProductPage::field_variation);
     if (!$grid instanceof RockGridField) return;
-    return $grid->getSelectedPages();
+    $options = $this->wire(new WireArray());
+    $json = $grid->json ?: new WireData();
+    $prices = $json->prices;
+    if (!is_array($prices)) $prices = [];
+    foreach ($json->selected as $id) {
+      $p = new VariationOption();
+      $p->product = $this;
+      $p->option = $this->wire->pages->get($id);
+      $p->title = $p->option->title;
+      $p->setPrice($id, $prices);
+      $options->add($p);
+    }
+    return $options;
   }
 
   public function title()

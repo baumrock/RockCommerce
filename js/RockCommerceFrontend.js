@@ -53,16 +53,6 @@ document.addEventListener("alpine:init", () => {
       RockCommerce.addProductInfo(this);
     },
 
-    decrement() {
-      if (this.count > this.min) this.count--;
-      else this.count = this.min;
-    },
-
-    increment() {
-      if (this.count < this.min) this.count = this.min;
-      else this.count++;
-    },
-
     initUpdateUrl() {
       this.updateUrl = !!this.$el.getAttribute("data-rc-updateurl");
     },
@@ -88,11 +78,12 @@ document.addEventListener("alpine:init", () => {
     },
 
     updatePrice() {
+      if (this.count < this.min) this.setCount(this.min);
       if (!this.price) {
-        this.price = RockCommerce.money(this.$el.getAttribute("data-rc-price"));
+        this.price = new RockMoney(this.$el.getAttribute("data-price"));
       }
       if (!this.priceEL) return;
-      this.priceEL.innerText = this.price.multiply(this.count).toFormat();
+      this.priceEL.innerText = this.price.times(this.count).toLocale();
     },
 
     watchVariations() {
