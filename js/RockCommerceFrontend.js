@@ -35,9 +35,16 @@ document.addEventListener("alpine:init", () => {
       this.setAmount();
       this.initUpdateUrl();
       this.updatePrice();
+      this.$watch("amount", (amount) => {
+        RockCommerce.trigger("setAmount", parseInt(amount));
+      });
       this.$watch("amount", this.updatePrice.bind(this));
 
       RockCommerce.addComponent(this);
+    },
+
+    addToCart() {
+      RockCommerce.trigger("addToCart", this);
     },
 
     getPrice() {
