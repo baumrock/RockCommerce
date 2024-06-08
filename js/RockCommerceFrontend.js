@@ -27,6 +27,7 @@ document.addEventListener("alpine:init", () => {
     min: 1,
     price: 0,
     priceEl: false,
+    _variations: null,
 
     init() {
       this.price = new RockMoney(this.$el.getAttribute("rc-price"));
@@ -85,12 +86,23 @@ document.addEventListener("alpine:init", () => {
       if (!this.priceEL) return;
       this.priceEL.innerText = this.getPrice().format();
     },
+
+    variations() {
+      if (this._variations) return this._variations;
+      let variations = this.$el.querySelectorAll("[x-data=rcvariation]");
+      this._variations = Array.from(variations).map((variation) => {
+        return RockCommerce.component(variation);
+      });
+      return this._variations;
+    },
   }));
 
   /**
    * Product Info Variation
    */
   Alpine.data("rcvariation", () => ({
+    info: null,
+    infoEl: null,
     min: 0,
     max: 0,
     selected: 0,
@@ -99,6 +111,8 @@ document.addEventListener("alpine:init", () => {
     init() {
       this.min = parseInt(this.$el.getAttribute("rc-min"));
       this.max = parseInt(this.$el.getAttribute("rc-max"));
+      this.infoEl = this.$el.closest("[x-data=rcproductinfo]");
+      this.info = RockCommerce.component(this.infoEl);
       RockCommerce.addComponent(this);
     },
 

@@ -9,6 +9,11 @@ class _RockCommerce {
   }
 }
 
+/**
+ * Method to attach hooks to RockCommerce
+ * @param event
+ * @param handler
+ */
 _RockCommerce.prototype.on = function (event, handler) {
   if (!this.events[event]) {
     this.events[event] = [];
@@ -16,6 +21,12 @@ _RockCommerce.prototype.on = function (event, handler) {
   this.events[event].push(handler);
 };
 
+/**
+ * Method that executes all attached hooks and returns the final value
+ * @param event
+ * @param args
+ * @returns
+ */
 _RockCommerce.prototype.trigger = function (event, ...args) {
   if (this.events[event]) {
     return this.events[event].reduce((result, handler) => {
