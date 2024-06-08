@@ -4,22 +4,7 @@ RockCommerce provides a JavaScript file that enables you to integrate E-Commerce
 
 ## Setup
 
-When using RockFrontend just add the file to your site scripts:
-
-```php
-// example usage in _init.php
-$rf = rockfrontend();
-$rf->scripts()
-  // example project using uikit
-  ->add('/site/templates/uikit/dist/js/uikit.min.js')
-
-  // example project loading the site's main.js file
-  ->add('/site/templates/scripts/main.js', 'defer')
-
-  // add this line to load RockCommerceSite magic :)
-  ->add('/site/modules/RockCommerce/RockCommerceSite.min.js', 'defer')
-  ->minify(!$config->debug);
-```
+TBD
 
 ## Cart-Count
 

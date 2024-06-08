@@ -377,17 +377,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $cart;
   }
 
-  public function getJsConfig($json = false): array|string
-  {
-    $config = [
-      'debug' => $this->wire->config->debug,
-      'currency' => rockmoney()->currencyStr ?: 'EUR',
-      'locale' => $this->frontendLocale ?: 'de-DE',
-      'priceType' => $this->priceType() ?: 'net',
-    ];
-    if ($json) return json_encode($config);
-    return $config;
-  }
+  // public function getJsConfig($json = false): array|string
+  // {
+  //   $config = [
+  //     'debug' => $this->wire->config->debug,
+  //     'currency' => rockmoney()->currencyStr ?: 'EUR',
+  //     'locale' => $this->frontendLocale ?: 'de-DE',
+  //     'priceType' => $this->priceType() ?: 'net',
+  //   ];
+  //   if ($json) return json_encode($config);
+  //   return $config;
+  // }
 
   public function getOrder(string $orderid = null): Order|false
   {
