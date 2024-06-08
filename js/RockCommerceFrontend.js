@@ -182,7 +182,6 @@ document.addEventListener("alpine:init", () => {
     },
 
     unselect() {
-      console.log(this.variation.min, this.variation.selected - 1);
       if (this.variation.selected - 1 < this.variation.min) return;
       this.selected = false;
     },
