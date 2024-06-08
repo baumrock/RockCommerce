@@ -83,7 +83,7 @@ document.addEventListener("alpine:init", () => {
         this.price = new RockMoney(this.$el.getAttribute("data-price"));
       }
       if (!this.priceEL) return;
-      this.priceEL.innerText = this.price.times(this.count).toLocale();
+      this.priceEL.innerText = this.price.times(this.count).format();
     },
 
     watchVariations() {
