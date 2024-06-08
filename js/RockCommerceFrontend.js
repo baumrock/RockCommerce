@@ -26,10 +26,11 @@ document.addEventListener("alpine:init", () => {
     amount: 0,
     min: 1,
     price: 0,
+    priceEl: false,
 
     init() {
+      this.price = new RockMoney(this.$el.getAttribute("rc-price"));
       this.priceEL = this.$el.querySelector("[rc-price]");
-
       this.setMin();
       this.setAmount();
       this.initUpdateUrl();
@@ -37,6 +38,22 @@ document.addEventListener("alpine:init", () => {
       this.$watch("amount", this.updatePrice.bind(this));
 
       RockCommerce.addComponent(this);
+    },
+
+    getPrice() {
+      // calculate the total price
+      let price = this.price;
+
+      // multiply price with amount
+      price = price.times(this.amount);
+
+      // support hooks for price calculations (see pricing docs)
+      // RockCommerce.on('getPrice', (price) => {
+      //   return price.times(2);
+      // });
+      price = RockCommerce.trigger("getPrice", price);
+
+      return price;
     },
 
     initUpdateUrl() {
@@ -65,19 +82,8 @@ document.addEventListener("alpine:init", () => {
 
     updatePrice() {
       if (this.amount < this.min) this.setAmount(this.min);
-      if (!this.price) {
-        this.price = new RockMoney(this.$el.getAttribute("rc-price"));
-      }
       if (!this.priceEL) return;
-
-      // calculate the total price
-      let price = this.price;
-
-      // multiply price with amount
-      price = price.times(this.amount);
-
-      // write final price to dom
-      this.priceEL.innerText = price.format();
+      this.priceEL.innerText = this.getPrice().format();
     },
   }));
 

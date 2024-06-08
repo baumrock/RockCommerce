@@ -1,10 +1,28 @@
 // RockCommerce JS Base Class
 class _RockCommerce {
+  events = {};
+
   constructor(config) {
     for (let key in config) {
       this[key] = config[key];
     }
   }
 }
+
+_RockCommerce.prototype.on = function (event, handler) {
+  if (!this.events[event]) {
+    this.events[event] = [];
+  }
+  this.events[event].push(handler);
+};
+
+_RockCommerce.prototype.trigger = function (event, ...args) {
+  if (this.events[event]) {
+    return this.events[event].reduce((result, handler) => {
+      return handler(result);
+    }, ...args);
+  }
+  return args[0];
+};
 
 var RockCommerce = new _RockCommerce(RockCommerceConfig);
