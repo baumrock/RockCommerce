@@ -82,8 +82,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rm->minify(__DIR__ . "/js");
 
     // HTMX+AJAX
-    $this->addHTMX(); // frontend endpoints
-    $this->addAJAX(); // backend endpoints
+    rockfrontend()->addAjaxFolder('rc-ajax', __DIR__ . '/ajax');
 
     // hooks
     wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
@@ -108,72 +107,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /** regular methods */
-
-  /**
-   * Add ajax endpoints for the RockCommerce backend (eg Price Editor)
-   * Endpoints are located in /site/modules/RockCommerce/ajax.
-   * Results will sent be returned as json encoded string.
-   */
-  public function addAJAX(): void
-  {
-    // attach hooks only for ajax requests or superusers
-    $sudo = $this->wire->user->isSuperuser();
-    $ajax = $this->wire->config->ajax;
-    if (!($ajax or $sudo)) return;
-
-    $files = $this->wire->files->find(__DIR__ . "/ajax", ['extensions' => 'php']);
-    foreach ($files as $file) {
-      $name = substr(basename($file), 0, -4);
-      $this->wire->addHook("/rockcommerce/$name", function (HookEvent $event) use ($file, $name) {
-        try {
-          return json_encode($this->wire->files->render($file));
-        } catch (\Throwable $th) {
-          return json_encode([
-            'error' => $th->getMessage(),
-          ]);
-        }
-      });
-    }
-  }
-
-  /**
-   * Scan /htmx folder for endpoints and add them via hook
-   */
-  public function addHTMX(): void
-  {
-    return;
-    // MOVED TO ROCKFRONTEND!!!
-    foreach ($this->viewFolders(absolute: true, reverse: true) as $folder) {
-      $endpoints = $this->wire->files->find(
-        "$folder/htmx",
-        ['extensions' => ['php']]
-      );
-      foreach ($endpoints as $endpoint) {
-        $base = substr(basename($endpoint), 0, -4);
-        $this->wire->addHook("/$base", function (HookEvent $event) use ($base) {
-          // make htmx endpoints only available via ajax
-          // superusers are allowed to access them directly (for debugging)
-          $sudo = $this->wire->user->isSuperuser();
-          $ajax = $this->wire->config->ajax;
-          if (!$ajax && !$sudo) throw new WireException("No direct access");
-
-          // render endpoint
-          try {
-            $view = $this->view("htmx/$base");
-          } catch (\Throwable $th) {
-            $msg = $th->getMessage();
-            $view = "<div class='uk-alert uk-alert-danger'>$msg</div>";
-          }
-
-          $swap = $this->wire->input->post('swap', 'string');
-          if ($swap) $view .= $this->swap(explode(",", $swap));
-
-          // return response
-          return $view;
-        });
-      }
-    }
-  }
 
   public function addVariationsUrl(): string
   {

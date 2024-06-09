@@ -2,7 +2,6 @@
 
 namespace RockCommerce;
 
-use ProcessWire\PageArray;
 use ProcessWire\RepeaterPage;
 use ProcessWire\WireArray;
 use ProcessWire\WireData;
