@@ -39,19 +39,26 @@ class ProductVariation extends RepeaterPage
   {
     $grid = $this->getFormatted(ProductPage::field_variation);
     if (!$grid instanceof RockGridField) return;
-    $options = $this->wire(new WireArray());
+    $options = [];
     $json = $grid->json ?: new WireData();
     $prices = $json->prices;
     if (!is_array($prices)) $prices = [];
+
+    $sorted = false;
     foreach ($json->selected as $id) {
-      $p = new VariationOption();
+      $p = new VariationOption($id);
       $p->product = $this;
-      $p->option = $this->wire->pages->get($id);
       $p->title = $p->option->title;
       $p->setPrice($id, $prices);
-      $options->add($p);
+
+      // get sort order from variation repeater options
+      if (!$sorted) $sorted = $p->variation->options()->each('id');
+
+      $key = array_search($id, $sorted);
+      $options[$key] = $p;
     }
-    return $options;
+    ksort($options);
+    return $this->wire(new WireArray())->import($options);
   }
 
   public function title()
