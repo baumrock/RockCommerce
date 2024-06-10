@@ -30,6 +30,18 @@ var RockCommerce = {
     return this.components[cid];
   },
 
+  loadConfig(component) {
+    const json = component.$el.getAttribute("data-config");
+    try {
+      const config = JSON.parse(json);
+      for (const [prop, val] of Object.entries(config)) {
+        component[prop] = val;
+      }
+    } catch (error) {
+      console.error("Invalid JSON config", component.$el);
+    }
+  },
+
   /**
    * Attach hook event to RockCommerce
    * Usage: RockCommerce.on('event', callback);
@@ -78,6 +90,10 @@ document.addEventListener("alpine:init", () => {
       init() {
         // expose RockCommerce globally
         RockCommerce = this;
+        RockCommerce.loadConfig(this);
+
+        // finally trigger rockcommerce ready event
+        RockCommerce.trigger("RockCommerceReady");
       },
 
       // ##### regular methods #####
@@ -310,6 +326,18 @@ document.addEventListener("alpine:init", () => {
         this.variation.selected--;
       }
       this.product.update();
+    },
+  }));
+});
+
+// Cart Component
+document.addEventListener("alpine:init", () => {
+  /**
+   * Product Info Variation Option
+   */
+  Alpine.data("rccart", () => ({
+    init() {
+      RockCommerce.cart = this;
     },
   }));
 });

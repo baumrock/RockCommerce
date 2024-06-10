@@ -48,6 +48,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   /** @var array */
   public $findRawVariationOptions;
 
+  private $jsConfig;
+
   public $noComplexPricing = false;
 
   public $priceType = self::pricetype_net;
@@ -62,6 +64,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // initialize module and api
     $this->loadConfig();
     $this->wire('rockcommerce', $this);
+    $this->jsConfig = new WireData();
     $this->loadProductTemplates();
 
     /** @var RockMigrations $rm */
@@ -114,18 +117,19 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $config = $this->wire->config;
     if ($config->ajax) return;
     if ($config->external) return;
+    if (!strpos($event->return, '</body>')) return;
 
     $page = $event->object;
     if ($selector = $config->rockcommerceTagSelector) {
       if (!$page->matches($selector)) return;
     }
 
-    $tag = '<div x-data="rockcommerce"></div>';
-    $event->return = str_replace(
-      '</body>',
-      $tag . '</body>',
-      $event->return
-    );
+    $conf = json_encode($this->jsConfig->getArray());
+    $conf = $this->wire->sanitizer->entities($conf);
+    $tag = '';
+    $tag .= "<div x-data=rccart hidden></div>";
+    $tag .= "<div x-data=rockcommerce data-config='$conf' hidden></div>";
+    $event->return = str_replace('</body>', "$tag</body>", $event->return);
   }
 
   public function addVariationsUrl(): string
@@ -465,6 +469,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'template' => Invoices::tpl,
       'parent' => $this->rootPage(),
     ]);
+  }
+
+  /**
+   * Set JS config value
+   */
+  public function js(string $prop, mixed $val): void
+  {
+    $this->jsConfig->set($prop, $val);
   }
 
   /**
