@@ -276,7 +276,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   ) {
     $urls = [];
     $modules = $this->wire->config->paths->siteModules;
-    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerceFrontend.min.js', true);
+    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerce.min.js', true);
 
     // load rockmoney/dinero for money calculations
     if ($currencyjs) {
