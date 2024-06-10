@@ -49,6 +49,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public $findRawVariationOptions;
 
   private $jsConfig;
+  private $jsFiles = [];
 
   public $noComplexPricing = false;
 
@@ -83,13 +84,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // minify all js files during development
     $rm->minify(__DIR__ . "/js");
+    $hookFile = $this->wire->config->paths->templates . "scripts/RCHooks.js";
+    if (is_file($hookFile)) $rm->minify($hookFile);
 
     // HTMX+AJAX
     rockfrontend()->addAjaxFolder('rc-ajax', __DIR__ . '/ajax');
 
     // hooks
     wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
-    wire()->addHookAfter('Page::render', $this, 'addRockCommerceTag');
+    wire()->addHookAfter('Page::render', $this, 'addMarkup');
 
     if (!$this->showRootPageInTree) $rm->hidePageFromTree($this->rootPage());
 
@@ -112,24 +115,66 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   /** regular methods */
 
-  protected function addRockCommerceTag(HookEvent $event): void
+  protected function addMarkup(HookEvent $event): void
   {
     $config = $this->wire->config;
     if ($config->ajax) return;
     if ($config->external) return;
-    if (!strpos($event->return, '</body>')) return;
+    if (!strpos($event->return, '</head>')) return;
+    // todo: add feature to prevent adding of markup
+    // usage: rockcommerce()->noMarkup('template=foo')
+    $this->load('RockCommerce');
+    $this->addMarkupHead($event);
+    $this->addMarkupBody($event);
+  }
 
-    $page = $event->object;
-    if ($selector = $config->rockcommerceTagSelector) {
-      if (!$page->matches($selector)) return;
-    }
-
+  public function addMarkupBody($event): void
+  {
     $conf = json_encode($this->jsConfig->getArray());
     $conf = $this->wire->sanitizer->entities($conf);
     $tag = '';
     $tag .= "<div x-data=rccart hidden></div>";
     $tag .= "<div x-data=rockcommerce data-config='$conf' hidden></div>";
     $event->return = str_replace('</body>', "$tag</body>", $event->return);
+  }
+
+  public function addMarkupHead($event): void
+  {
+    // Debug::startTimer();
+    $urls = [];
+
+    // add RockCommerce Components
+    foreach (glob(__DIR__ . '/js/*.min.js') as $file) {
+      $name = substr(basename($file), 0, -7);
+      if (!array_key_exists($name, $this->jsFiles)) continue;
+      $urls[] = $this->toUrl($file, true);
+    }
+
+    // load rockmoney/currency for money calculations
+    $modules = $this->wire->config->paths->siteModules;
+    $urls[] = $this->toUrl($modules . 'RockMoney/RockMoney.min.js', true);
+    $urls[] = $this->toUrl($modules . 'RockMoney/lib/currency.min.js', true);
+
+    // add RockCommerce hooks provided by the user
+    $path = $this->wire->config->paths->templates . 'scripts';
+    if (is_file($f = "$path/RCHooks.min.js")) $urls[] = $this->toUrl($f, true);
+    elseif (is_file($f = "$path/RCHooks.js")) $urls[] = $this->toUrl($f, true);
+
+    // note: alpinejs must be loaded AFTER RockCommerce so that all
+    // alpine:init events will be attached to the document
+    $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
+
+    $markup = "";
+    foreach ($urls as $url) {
+      if (strpos($url, '.js?')) {
+        $markup .= "<script src='$url' defer></script>\n";
+      } else {
+        $markup .= "<link rel='stylesheet' href='$url'>\n";
+      }
+    }
+
+    $event->return = str_replace('</head>', "$markup</head>", $event->return);
+    // bd((Debug::stopTimer() * 1000) . 'ms');
   }
 
   public function addVariationsUrl(): string
@@ -272,39 +317,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       }
     }
     return $result;
-  }
-
-  public function frontendAssets(
-    $alpine = true,
-    $currencyjs = true,
-  ) {
-    $urls = [];
-    $modules = $this->wire->config->paths->siteModules;
-    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerce.min.js', true);
-
-    // load rockmoney/dinero for money calculations
-    if ($currencyjs) {
-      $urls[] = $this->toUrl($modules . 'RockMoney/RockMoney.min.js', true);
-      $urls[] = $this->toUrl($modules . 'RockMoney/lib/currency.min.js', true);
-    }
-
-    // note: alpinejs must be loaded AFTER RockCommerce so that all
-    // alpine:init events will be attached to the document
-    if ($alpine) $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
-
-    $markup = "";
-    foreach ($urls as $url) {
-      if (strpos($url, '.js?')) {
-        $markup .= "<script src='$url' defer></script>\n";
-      } else {
-        $markup .= "<link rel='stylesheet' href='$url'>\n";
-      }
-    }
-    try {
-      return rockfrontend()->html($markup);
-    } catch (\Throwable $th) {
-      return $markup;
-    }
   }
 
   /**
@@ -477,6 +489,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function js(string $prop, mixed $val): void
   {
     $this->jsConfig->set($prop, $val);
+  }
+
+  public function load($jsfile): void
+  {
+    $load = $this->jsFiles;
+    $load[$jsfile] = true;
+    $this->jsFiles = $load;
   }
 
   /**

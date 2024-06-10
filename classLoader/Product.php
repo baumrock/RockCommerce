@@ -41,6 +41,16 @@ trait Product
     return '#';
   }
 
+  public function attrs(): string
+  {
+    rockcommerce()->load('Product');
+    return "
+      x-data='rcproduct'
+      rc-pid=$this
+      rc-price='{$this->price()->getFloat()}'
+    ";
+  }
+
   protected function _hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;

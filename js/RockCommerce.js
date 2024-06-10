@@ -1,4 +1,5 @@
 // RockCommerce Frontend JS
+console.log("RockCommerce.js");
 
 // RockCommerce Base Component
 // This is immediately available so that we can attach hooks before alpine fires
@@ -114,133 +115,18 @@ var RockCommerce = {
 
 // RockCommerce Alpine Magic
 document.addEventListener("alpine:init", () => {
-  Alpine.data("rockcommerce", () =>
-    Object.assign(RockCommerce, {
-      init() {
-        // expose RockCommerce globally
-        RockCommerce = this;
-        RockCommerce.loadConfig(this);
-
-        // finally trigger rockcommerce ready event
-        RockCommerce.trigger("RockCommerceReady");
-      },
-
-      // ##### regular methods #####
-    })
-  );
-});
-
-// Product Component
-document.addEventListener("alpine:init", () => {
-  Alpine.data("rcproduct", () => ({
-    addToCartUrl: "",
-    amount: 0,
-    min: 0,
-    price: 0,
-    priceFormatted: "",
-    variationString: "",
-
+  Alpine.data("rockcommerce", () => ({
+    ...RockCommerce,
     init() {
-      RockCommerce.addComponent(this);
-      this.price = new RockMoney(this.$el.getAttribute("rc-price"));
-      this.updateUrl = !!this.$el.getAttribute("data-rc-updateurl");
-      this.setMin();
-      this.setAmount();
-      this.update();
-      this.$watch("amount", (amount) => {
-        RockCommerce.trigger("setAmount", parseInt(amount));
-      });
-      this.$watch("amount", this.update.bind(this));
-    },
+      console.log("init RC");
 
-    addToCart() {
-      RockCommerce.trigger("addToCart", this);
-    },
+      // expose RockCommerce globally
+      RockCommerce = this;
+      RockCommerce.loadConfig(this);
 
-    getAddToCartUrl() {
-      return "/tbd/cart/" + this.variationString;
-    },
-
-    getPrice() {
-      // calculate the total price
-      let price = RockCommerce.trigger("ProductPriceInit", null, () => {
-        return this.price;
-      });
-
-      // add prices of variations
-      this.variations().forEach((variation) => {
-        if (typeof variation == "undefined") return;
-        variation.options(true).forEach((option) => {
-          price = price.plus(option.price.float());
-        });
-      });
-
-      // add amount
-      price = RockCommerce.trigger("ProductPriceTotal", price, (price) => {
-        return price.times(this.amount);
-      });
-
-      // update formatted price
-      this.priceFormatted = price.format();
-
-      return price;
-    },
-
-    getVariationString() {
-      let str = "?amount=" + this.amount;
-
-      this.variations().forEach((variation) => {
-        if (typeof variation == "undefined") return;
-        str += variation.urlString();
-      });
-
-      return str;
-    },
-
-    setAmount(amount) {
-      if (!amount) {
-        let el = this.$el.querySelector("input[x-model=amount]");
-        el.addEventListener("focus", el.select);
-        if (!el) return;
-        amount = el.value;
-      }
-      if (!amount) return;
-      // we dont check for correct min setting to avoid hard to find
-      // bugs in ajax returns
-      this.amount = amount;
-    },
-
-    setMin() {
-      let el = this.$el.querySelector("input[x-model=amount]");
-      if (!el) return;
-      this.min = el.getAttribute("min") || this.min;
-    },
-
-    update() {
-      RockCommerce.throttle(() => {
-        // update min amount
-        if (this.amount < this.min) this.setAmount(this.min);
-        this.getPrice();
-
-        // update properties
-        this.variationString = this.getVariationString();
-        this.addToCartUrl = this.getAddToCartUrl();
-
-        // trigger event
-        RockCommerce.trigger("infoUpdate", this);
-      }, 20);
-    },
-
-    /**
-     * Get all variations of this info object
-     * We don't cache the result to make sure we always get the latest elements
-     * @returns
-     */
-    variations() {
-      let variations = this.$el.querySelectorAll("[x-data=rcvariation]");
-      return Array.from(variations).map((variation) => {
-        return RockCommerce.getComponent(variation);
-      });
+      // finally trigger rockcommerce ready event
+      console.log("trigger listener");
+      RockCommerce.trigger("rockcommerce:ready");
     },
   }));
 });
@@ -296,9 +182,7 @@ document.addEventListener("alpine:init", () => {
 
 // Product Variation Option Component
 document.addEventListener("alpine:init", () => {
-  /**
-   * Product Info Variation Option
-   */
+  // Product Info Variation Option
   Alpine.data("rcvariationoption", () => ({
     pid: 0,
     price: null,
@@ -359,12 +243,36 @@ document.addEventListener("alpine:init", () => {
 
 // Cart Component
 document.addEventListener("alpine:init", () => {
-  /**
-   * Product Info Variation Option
-   */
+  // Cart Component
   Alpine.data("rccart", () => ({
+    items: [],
+
     init() {
       RockCommerce.cart = this;
     },
+
+    // add item to the list of items
+    // we add all items as single item and later build sums for rows
+    addItem(product) {
+      while (product.amount > 0) {
+        this.items.push(
+          new CartItem(product.pid, 1, product.getVariationString(true))
+        );
+        product.amount--;
+      }
+    },
+
+    get count() {
+      return this.items.length;
+    },
   }));
+
+  // Cart Item Class
+  class CartItem {
+    constructor(pid, amount, variation) {
+      this.pid = pid;
+      this.amount = amount;
+      this.variation = variation;
+    }
+  }
 });
