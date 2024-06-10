@@ -100,7 +100,6 @@ var RockCommerce = {
 
     // execute callback
     if (typeof callback === "function") {
-      console.log("callbackresult", callback(hookEvent.return).format());
       hookEvent.return = callback(hookEvent.return);
     }
 
@@ -178,11 +177,6 @@ document.addEventListener("alpine:init", () => {
 
       // add amount
       price = RockCommerce.trigger("ProductPriceTotal", price, (price) => {
-        console.log(
-          price.float(),
-          this.amount,
-          price.times(this.amount).float()
-        );
         return price.times(this.amount);
       });
 
