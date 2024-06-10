@@ -7,7 +7,8 @@
 var RockCommerce = {
   cid: 0,
   components: {},
-  events: {},
+  hooksAfter: {},
+  hooksBefore: {},
 
   /**
    * Add alpine component to list of components
@@ -16,6 +17,26 @@ var RockCommerce = {
     const cid = ++this.cid;
     this.components[cid] = c;
     c.$el.setAttribute("rc-cid", cid);
+  },
+
+  /**
+   * Add AFTER hook, eg RockCommerce.after('event', callback);
+   */
+  after(event, handler) {
+    if (!this.hooksAfter[event]) {
+      this.hooksAfter[event] = [];
+    }
+    this.hooksAfter[event].push(handler);
+  },
+
+  /**
+   * Add BEFORE hook, eg RockCommerce.before('event', callback);
+   */
+  before(event, handler) {
+    if (!this.hooksBefore[event]) {
+      this.hooksBefore[event] = [];
+    }
+    this.hooksBefore[event].push(handler);
   },
 
   /**
@@ -43,17 +64,6 @@ var RockCommerce = {
   },
 
   /**
-   * Attach hook event to RockCommerce
-   * Usage: RockCommerce.on('event', callback);
-   */
-  on(event, handler) {
-    if (!this.events[event]) {
-      this.events[event] = [];
-    }
-    this.events[event].push(handler);
-  },
-
-  /**
    * Get raw object for better logging/debugging
    */
   raw(data) {
@@ -73,13 +83,33 @@ var RockCommerce = {
   /**
    * Trigger hook
    */
-  trigger(event, ...args) {
-    if (this.events[event]) {
-      return this.events[event].reduce((result, handler) => {
-        return handler(result);
-      }, ...args);
+  trigger(event, data, callback) {
+    let hookEvent = {
+      return: data,
+      replace: false,
+    };
+
+    // call before hook
+    if (this.hooksBefore[event]) {
+      this.hooksBefore[event].forEach((hook) => hook(hookEvent));
     }
-    return args[0];
+
+    // if any of the before hooks set "event.replace = true"
+    // we don't execute the callback and all after hooks
+    if (hookEvent.replace) return;
+
+    // execute callback
+    if (typeof callback === "function") {
+      console.log("callbackresult", callback(hookEvent.return).format());
+      hookEvent.return = callback(hookEvent.return);
+    }
+
+    // call after hook
+    if (this.hooksAfter[event]) {
+      this.hooksAfter[event].forEach((hook) => hook(hookEvent));
+    }
+
+    return hookEvent.return;
   },
 };
 
@@ -134,28 +164,31 @@ document.addEventListener("alpine:init", () => {
 
     getPrice() {
       // calculate the total price
-      let price = this.price;
-      price = RockCommerce.trigger("infoPriceBase", price);
+      let price = RockCommerce.trigger("ProductPriceInit", null, () => {
+        return this.price;
+      });
 
       // add prices of variations
-      price = RockCommerce.trigger("infoPriceBeforeVariations", price);
       this.variations().forEach((variation) => {
         if (typeof variation == "undefined") return;
         variation.options(true).forEach((option) => {
           price = price.plus(option.price.float());
         });
       });
-      price = RockCommerce.trigger("infoPriceAfterVariations", price);
 
-      // calculate price and trigger events for hooks
-      price = RockCommerce.trigger("infoPriceBeforeAmount", price);
-      price = price.times(this.amount);
-      price = RockCommerce.trigger("infoPriceAfterAmount", price);
+      // add amount
+      price = RockCommerce.trigger("ProductPriceTotal", price, (price) => {
+        console.log(
+          price.float(),
+          this.amount,
+          price.times(this.amount).float()
+        );
+        return price.times(this.amount);
+      });
 
-      price = RockCommerce.trigger("infoPriceTotal", price);
-      // console.log(price.format());
-
+      // update formatted price
       this.priceFormatted = price.format();
+
       return price;
     },
 
