@@ -48,4 +48,17 @@ _RockCommerce.prototype.trigger = function (event, ...args) {
   return args[0];
 };
 
+_RockCommerce.prototype.raw = function (data) {
+  return JSON.parse(JSON.stringify(data));
+};
+
 var RockCommerce = new _RockCommerce(RockCommerceConfig);
+
+document.addEventListener("alpine:init", () => {
+  /**
+   * Product Info Component
+   */
+  Alpine.data("rockcommerce", () => ({
+    foo: "bar",
+  }));
+});

@@ -23,22 +23,23 @@ document.addEventListener("alpine:init", () => {
    * Product Info Component
    */
   Alpine.data("rcproductinfo", () => ({
+    addToCartUrl: "",
     amount: 0,
     min: 0,
     price: 0,
-    priceEl: false,
+    priceFormatted: "",
+    variationString: "",
 
     init() {
       this.price = new RockMoney(this.$el.getAttribute("rc-price"));
-      this.priceEL = this.$el.querySelector("[rc-price]");
+      this.updateUrl = !!this.$el.getAttribute("data-rc-updateurl");
       this.setMin();
       this.setAmount();
-      this.initUpdateUrl();
-      this.updatePrice();
+      this.update();
       this.$watch("amount", (amount) => {
         RockCommerce.trigger("setAmount", parseInt(amount));
       });
-      this.$watch("amount", this.updatePrice.bind(this));
+      this.$watch("amount", this.update.bind(this));
 
       RockCommerce.addComponent(this);
     },
@@ -47,32 +48,46 @@ document.addEventListener("alpine:init", () => {
       RockCommerce.trigger("addToCart", this);
     },
 
+    getAddToCartUrl() {
+      return "/tbd/cart/" + this.variationString;
+    },
+
     getPrice() {
       // calculate the total price
       let price = this.price;
+      price = RockCommerce.trigger("infoPriceBase", price);
 
       // add prices of variations
+      price = RockCommerce.trigger("infoPriceBeforeVariations", price);
       this.variations().forEach((variation) => {
         if (typeof variation == "undefined") return;
         variation.options(true).forEach((option) => {
           price = price.plus(option.price.float());
         });
       });
+      price = RockCommerce.trigger("infoPriceAfterVariations", price);
 
-      // support hooks for price calculations (see pricing docs)
-      // RockCommerce.on('getPrice', (price) => {
-      //   return price.times(2);
-      // });
-      price = RockCommerce.trigger("getPrice", price);
-
-      // multiply price with amount
+      // calculate price and trigger events for hooks
+      price = RockCommerce.trigger("infoPriceBeforeAmount", price);
       price = price.times(this.amount);
+      price = RockCommerce.trigger("infoPriceAfterAmount", price);
 
+      price = RockCommerce.trigger("infoPriceTotal", price);
+      // console.log(price.format());
+
+      this.priceFormatted = price.format();
       return price;
     },
 
-    initUpdateUrl() {
-      this.updateUrl = !!this.$el.getAttribute("data-rc-updateurl");
+    getVariationString() {
+      let str = "?amount=" + this.amount;
+
+      this.variations().forEach((variation) => {
+        if (typeof variation == "undefined") return;
+        str += variation.urlString();
+      });
+
+      return str;
     },
 
     setAmount(amount) {
@@ -94,11 +109,18 @@ document.addEventListener("alpine:init", () => {
       this.min = el.getAttribute("min") || this.min;
     },
 
-    updatePrice() {
+    update() {
       RockCommerce.throttle(() => {
+        // update min amount
         if (this.amount < this.min) this.setAmount(this.min);
-        if (!this.priceEL) return;
-        this.priceEL.innerText = this.getPrice().format();
+        this.getPrice();
+
+        // update properties
+        this.variationString = this.getVariationString();
+        this.addToCartUrl = this.getAddToCartUrl();
+
+        // trigger event
+        RockCommerce.trigger("infoUpdate", this);
       }, 20);
     },
 
@@ -119,6 +141,7 @@ document.addEventListener("alpine:init", () => {
    * Product Info Variation
    */
   Alpine.data("rcvariation", () => ({
+    id: 0,
     info: null,
     infoEl: null,
     min: 0,
@@ -126,6 +149,7 @@ document.addEventListener("alpine:init", () => {
     selected: 0,
 
     init() {
+      this.id = parseInt(this.$el.getAttribute("rc-id"));
       this.min = parseInt(this.$el.getAttribute("rc-min"));
       this.max = parseInt(this.$el.getAttribute("rc-max"));
       this.infoEl = this.$el.closest("[x-data=rcproductinfo]");
@@ -148,12 +172,24 @@ document.addEventListener("alpine:init", () => {
     unselectAll() {
       this.options().forEach((option) => (option.selected = false));
     },
+
+    urlString() {
+      return (
+        "&" +
+        this.id +
+        "=" +
+        this.options(true)
+          .map((option) => option.id)
+          .join(",")
+      );
+    },
   }));
 
   /**
    * Product Info Variation Option
    */
   Alpine.data("rcvariationoption", () => ({
+    id: 0,
     price: null,
     selected: false,
     variation: null,
@@ -161,6 +197,7 @@ document.addEventListener("alpine:init", () => {
 
     init() {
       // setup properties
+      this.id = parseInt(this.$el.getAttribute("rc-id"));
       this.price = new RockMoney(this.$el.getAttribute("rc-price"));
       this.variationEl = this.$el.closest("[x-data=rcvariation]");
       this.variation = RockCommerce.component(this.variationEl);
@@ -173,7 +210,7 @@ document.addEventListener("alpine:init", () => {
 
       // add component
       RockCommerce.addComponent(this);
-      this.variation.info.updatePrice();
+      this.variation.info.update();
     },
 
     select() {
@@ -203,7 +240,7 @@ document.addEventListener("alpine:init", () => {
         this.$el.classList.remove("rc-active");
         this.variation.selected--;
       }
-      this.variation.info.updatePrice();
+      this.variation.info.update();
     },
   }));
 });
