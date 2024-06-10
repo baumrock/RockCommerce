@@ -1,28 +1,93 @@
-/**
- * Frontend-specific extensions for RockCommerce
- */
-RockCommerce.cid = 0;
-RockCommerce.components = {};
+// RockCommerce Frontend JS
 
-_RockCommerce.prototype.addComponent = function (c) {
-  const cid = ++RockCommerce.cid;
-  RockCommerce.components[cid] = c;
-  c.$el.setAttribute("rc-cid", cid);
-};
+// RockCommerce Base Component
+// This is immediately available so that we can attach hooks before alpine fires
+// and all other components can be added to the list even before RC itself calls
+// init.
+var RockCommerce = {
+  cid: 0,
+  components: {},
+  events: {},
 
-_RockCommerce.prototype.component = function (el) {
-  const cid = el.getAttribute("rc-cid");
-  return RockCommerce.components[cid];
-};
-
-/**
- * AlpineJS Components for RockCommerce
- */
-document.addEventListener("alpine:init", () => {
   /**
-   * Product Info Component
+   * Add alpine component to list of components
    */
-  Alpine.data("rcproductinfo", () => ({
+  addComponent(c) {
+    const cid = ++this.cid;
+    this.components[cid] = c;
+    c.$el.setAttribute("rc-cid", cid);
+  },
+
+  /**
+   * Find alpine component from DOM element
+   * Find closest component: RockCommerce.getComponent(myEl);
+   * Find closest with type: RockCommerce.getComponent(myEl, 'rcproduct');
+   */
+  getComponent(el, type) {
+    if (type) el = el.closest(`[x-data=${type}]`);
+    if (!el) return false;
+    const cid = el.closest("[rc-cid]").getAttribute("rc-cid");
+    return this.components[cid];
+  },
+
+  /**
+   * Attach hook event to RockCommerce
+   * Usage: RockCommerce.on('event', callback);
+   */
+  on(event, handler) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event].push(handler);
+  },
+
+  /**
+   * Get raw object for better logging/debugging
+   */
+  raw(data) {
+    return JSON.parse(JSON.stringify(data || this));
+  },
+
+  /**
+   * Throttle function to limit the rate at which a function can fire.
+   */
+  throttle(func, delay = 50) {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      func();
+    }, delay);
+  },
+
+  /**
+   * Trigger hook
+   */
+  trigger(event, ...args) {
+    if (this.events[event]) {
+      return this.events[event].reduce((result, handler) => {
+        return handler(result);
+      }, ...args);
+    }
+    return args[0];
+  },
+};
+
+// RockCommerce Alpine Magic
+document.addEventListener("alpine:init", () => {
+  Alpine.data("rockcommerce", () =>
+    Object.assign(RockCommerce, {
+      init() {
+        // expose RockCommerce globally
+        RockCommerce = this;
+      },
+
+      // ##### regular methods #####
+    })
+  );
+});
+
+// Product Component
+document.addEventListener("alpine:init", () => {
+  Alpine.data("rcproduct", () => ({
     addToCartUrl: "",
     amount: 0,
     min: 0,
@@ -31,6 +96,7 @@ document.addEventListener("alpine:init", () => {
     variationString: "",
 
     init() {
+      RockCommerce.addComponent(this);
       this.price = new RockMoney(this.$el.getAttribute("rc-price"));
       this.updateUrl = !!this.$el.getAttribute("data-rc-updateurl");
       this.setMin();
@@ -40,8 +106,6 @@ document.addEventListener("alpine:init", () => {
         RockCommerce.trigger("setAmount", parseInt(amount));
       });
       this.$watch("amount", this.update.bind(this));
-
-      RockCommerce.addComponent(this);
     },
 
     addToCart() {
@@ -132,36 +196,37 @@ document.addEventListener("alpine:init", () => {
     variations() {
       let variations = this.$el.querySelectorAll("[x-data=rcvariation]");
       return Array.from(variations).map((variation) => {
-        return RockCommerce.component(variation);
+        return RockCommerce.getComponent(variation);
       });
     },
   }));
+});
 
+// Product Variation Component
+document.addEventListener("alpine:init", () => {
   /**
    * Product Info Variation
    */
   Alpine.data("rcvariation", () => ({
     id: 0,
-    info: null,
-    infoEl: null,
+    product: null,
     min: 0,
     max: 0,
     selected: 0,
 
     init() {
+      RockCommerce.addComponent(this);
       this.id = parseInt(this.$el.getAttribute("rc-id"));
       this.min = parseInt(this.$el.getAttribute("rc-min"));
       this.max = parseInt(this.$el.getAttribute("rc-max"));
-      this.infoEl = this.$el.closest("[x-data=rcproductinfo]");
-      this.info = RockCommerce.component(this.infoEl);
-      RockCommerce.addComponent(this);
+      this.product = RockCommerce.getComponent(this.$el, "product");
     },
 
     options(onlySelected = false) {
       let options = this.$el.querySelectorAll("[x-data=rcvariationoption]");
       return Array.from(options)
         .map((option) => {
-          let c = RockCommerce.component(option);
+          let c = RockCommerce.getComponent(option);
           if (typeof c == "undefined") return;
           if (onlySelected && !c.selected) return;
           return c;
@@ -184,23 +249,28 @@ document.addEventListener("alpine:init", () => {
       );
     },
   }));
+});
 
+// Product Variation Option Component
+document.addEventListener("alpine:init", () => {
   /**
    * Product Info Variation Option
    */
   Alpine.data("rcvariationoption", () => ({
     id: 0,
     price: null,
+    product: null,
     selected: false,
     variation: null,
-    variationEl: null,
 
     init() {
+      RockCommerce.addComponent(this);
+
       // setup properties
       this.id = parseInt(this.$el.getAttribute("rc-id"));
       this.price = new RockMoney(this.$el.getAttribute("rc-price"));
-      this.variationEl = this.$el.closest("[x-data=rcvariation]");
-      this.variation = RockCommerce.component(this.variationEl);
+      this.variation = RockCommerce.getComponent(this.$el, "rcvariation");
+      this.product = RockCommerce.getComponent(this.$el, "rcproduct");
       this.selected = this.$el.classList.contains("rc-active");
       if (this.selected) this.variation.selected++;
 
@@ -208,9 +278,8 @@ document.addEventListener("alpine:init", () => {
       this.$el.addEventListener("click", this.toggle.bind(this));
       this.$watch("selected", this.watchSelect.bind(this));
 
-      // add component
-      RockCommerce.addComponent(this);
-      this.variation.info.update();
+      // trigger product update
+      this.product.update();
     },
 
     select() {
@@ -240,7 +309,7 @@ document.addEventListener("alpine:init", () => {
         this.$el.classList.remove("rc-active");
         this.variation.selected--;
       }
-      this.variation.info.update();
+      this.product.update();
     },
   }));
 });

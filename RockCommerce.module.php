@@ -86,6 +86,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // hooks
     wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
+    wire()->addHookAfter('Page::render', $this, 'addRockCommerceTag');
 
     if (!$this->showRootPageInTree) $rm->hidePageFromTree($this->rootPage());
 
@@ -107,6 +108,25 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /** regular methods */
+
+  protected function addRockCommerceTag(HookEvent $event): void
+  {
+    $config = $this->wire->config;
+    if ($config->ajax) return;
+    if ($config->external) return;
+
+    $page = $event->object;
+    if ($selector = $config->rockcommerceTagSelector) {
+      if (!$page->matches($selector)) return;
+    }
+
+    $tag = '<div x-data="rockcommerce"></div>';
+    $event->return = str_replace(
+      '</body>',
+      $tag . '</body>',
+      $event->return
+    );
+  }
 
   public function addVariationsUrl(): string
   {
@@ -251,13 +271,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   public function frontendAssets(
-    $type = 'frontend',
     $alpine = true,
     $currencyjs = true,
   ) {
     $urls = [];
     $modules = $this->wire->config->paths->siteModules;
-    $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerce.min.js', true);
     $urls[] = $this->toUrl(__DIR__ . '/js/RockCommerceFrontend.min.js', true);
 
     // load rockmoney/dinero for money calculations
@@ -270,8 +288,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // alpine:init events will be attached to the document
     if ($alpine) $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
 
-    $json = json_encode(['type' => $type]);
-    $markup = "<script>var RockCommerceConfig = $json</script>";
+    $markup = "";
     foreach ($urls as $url) {
       if (strpos($url, '.js?')) {
         $markup .= "<script src='$url' defer></script>\n";
