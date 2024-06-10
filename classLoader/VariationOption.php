@@ -42,7 +42,7 @@ class VariationOption extends WireData
   {
     return "
       x-data='rcvariationoption'
-      rc-id='{$this->option}'
+      rc-pid='{$this->option}'
       rc-price='{$this->price->getFloat()}'
     ";
   }

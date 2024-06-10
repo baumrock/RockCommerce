@@ -208,7 +208,7 @@ document.addEventListener("alpine:init", () => {
    * Product Info Variation
    */
   Alpine.data("rcvariation", () => ({
-    id: 0,
+    pid: 0,
     product: null,
     min: 0,
     max: 0,
@@ -216,7 +216,7 @@ document.addEventListener("alpine:init", () => {
 
     init() {
       RockCommerce.addComponent(this);
-      this.id = parseInt(this.$el.getAttribute("rc-id"));
+      this.pid = parseInt(this.$el.getAttribute("rc-pid"));
       this.min = parseInt(this.$el.getAttribute("rc-min"));
       this.max = parseInt(this.$el.getAttribute("rc-max"));
       this.product = RockCommerce.getComponent(this.$el, "product");
@@ -241,10 +241,10 @@ document.addEventListener("alpine:init", () => {
     urlString() {
       return (
         "&" +
-        this.id +
+        this.pid +
         "=" +
         this.options(true)
-          .map((option) => option.id)
+          .map((option) => option.pid)
           .join(",")
       );
     },
@@ -257,7 +257,7 @@ document.addEventListener("alpine:init", () => {
    * Product Info Variation Option
    */
   Alpine.data("rcvariationoption", () => ({
-    id: 0,
+    pid: 0,
     price: null,
     product: null,
     selected: false,
@@ -267,7 +267,7 @@ document.addEventListener("alpine:init", () => {
       RockCommerce.addComponent(this);
 
       // setup properties
-      this.id = parseInt(this.$el.getAttribute("rc-id"));
+      this.pid = parseInt(this.$el.getAttribute("rc-pid"));
       this.price = new RockMoney(this.$el.getAttribute("rc-price"));
       this.variation = RockCommerce.getComponent(this.$el, "rcvariation");
       this.product = RockCommerce.getComponent(this.$el, "rcproduct");

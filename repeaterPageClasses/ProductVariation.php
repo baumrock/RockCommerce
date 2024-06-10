@@ -19,7 +19,7 @@ class ProductVariation extends RepeaterPage
   {
     return "
       x-data='rcvariation'
-      rc-id={$this}
+      rc-pid={$this}
       rc-min={$this->min()}
       rc-max={$this->max()}
     ";
