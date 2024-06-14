@@ -7,6 +7,7 @@ use ProcessWire\RockMoney;
 use ProcessWire\WireData;
 use ProcessWire\WireException;
 
+use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmoney;
 
 class VariationOption extends WireData
@@ -38,13 +39,12 @@ class VariationOption extends WireData
    * AlpineJS Attributes
    * @return string
    */
-  public function attrs(): string
+  public function rcAttributes(): string
   {
-    return "
-      x-data='rcvariationoption'
+    return rockcommerce()->attrs('rcvariationoption', "
       rc-pid='{$this->option}'
       rc-price='{$this->price->getFloat()}'
-    ";
+    ");
   }
 
   public function setPrice($id, $prices): void

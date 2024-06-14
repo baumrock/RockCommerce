@@ -51,6 +51,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   private $jsConfig;
   private $jsFiles = [];
 
+  public $maxamount;
+  public $minamount;
   public $noComplexPricing = false;
 
   public $priceType = self::pricetype_net;
@@ -62,11 +64,19 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function init()
   {
+    // set default values
+    if ($this->minamount === null) $this->minamount = 1;
+    if ($this->maxamount === null) $this->maxamount = 10;
+
     // initialize module and api
     $this->loadConfig();
     $this->wire('rockcommerce', $this);
-    $this->jsConfig = new WireData();
     $this->loadProductTemplates();
+
+    // js config
+    $this->jsConfig = new WireData();
+    $this->js('minamount', $this->minamount);
+    $this->js('maxamount', $this->maxamount);
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
@@ -83,7 +93,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     });
 
     // minify all js files during development
-    $rm->minify(__DIR__ . "/js");
+    $rm->minify(__DIR__ . "/RockCommerce.js");
+    $rm->minify(__DIR__ . "/alpine");
     $hookFile = $this->wire->config->paths->templates . "scripts/RCHooks.js";
     if (is_file($hookFile)) $rm->minify($hookFile);
 
@@ -92,7 +103,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // hooks
     wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
-    wire()->addHookAfter('Page::render', $this, 'addMarkup');
+    wire()->addHookAfter(
+      'Page::render',
+      $this,
+      'addMarkup',
+      // priority 200 means RC assets are loaded after RF assets which have 100
+      ['priority' => 200]
+    );
 
     if (!$this->showRootPageInTree) $rm->hidePageFromTree($this->rootPage());
 
@@ -123,9 +140,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if (!strpos($event->return, '</head>')) return;
     // todo: add feature to prevent adding of markup
     // usage: rockcommerce()->noMarkup('template=foo')
-    $this->load('RockCommerce');
-    $this->addMarkupHead($event);
     $this->addMarkupBody($event);
+    // load head after body so that $this->loadJS() works!
+    $this->addMarkupHead($event);
   }
 
   public function addMarkupBody($event): void
@@ -133,7 +150,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $conf = json_encode($this->jsConfig->getArray());
     $conf = $this->wire->sanitizer->entities($conf);
     $tag = '';
+    $this->loadJS('rccart');
     $tag .= "<div x-data=rccart hidden></div>";
+
+    // rockcommerce has to be the last alpine element
+    // this is to ensure that all other components are ready at this point
+    $this->loadJS('rockcommerce');
     $tag .= "<div x-data=rockcommerce data-config='$conf' hidden></div>";
     $event->return = str_replace('</body>', "$tag</body>", $event->return);
   }
@@ -143,8 +165,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // Debug::startTimer();
     $urls = [];
 
-    // add RockCommerce Components
-    foreach (glob(__DIR__ . '/js/*.min.js') as $file) {
+    // we always load RockCommerce.js at very first!
+    $urls[] = $this->toUrl(__DIR__ . '/RockCommerce.min.js', true);
+
+    // add RockCommerce Alpine Components
+    foreach (glob(__DIR__ . '/alpine/*.min.js') as $file) {
       $name = substr(basename($file), 0, -7);
       if (!array_key_exists($name, $this->jsFiles)) continue;
       $urls[] = $this->toUrl($file, true);
@@ -154,11 +179,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $modules = $this->wire->config->paths->siteModules;
     $urls[] = $this->toUrl($modules . 'RockMoney/RockMoney.min.js', true);
     $urls[] = $this->toUrl($modules . 'RockMoney/lib/currency.min.js', true);
-
-    // add RockCommerce hooks provided by the user
-    $path = $this->wire->config->paths->templates . 'scripts';
-    if (is_file($f = "$path/RCHooks.min.js")) $urls[] = $this->toUrl($f, true);
-    elseif (is_file($f = "$path/RCHooks.js")) $urls[] = $this->toUrl($f, true);
 
     // note: alpinejs must be loaded AFTER RockCommerce so that all
     // alpine:init events will be attached to the document
@@ -182,6 +202,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $this->wire->pages->get(2)->url
       . 'page/add/?parent_id='
       . $this->variationsPage();
+  }
+
+  public function attrs($name, $attrs): string
+  {
+    $this->loadJS($name);
+    return "
+      x-data=$name
+      $attrs
+    ";
   }
 
   public function badge($str, $cls = '')
@@ -491,13 +520,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->jsConfig->set($prop, $val);
   }
 
-  public function load($jsfile): void
-  {
-    $load = $this->jsFiles;
-    $load[$jsfile] = true;
-    $this->jsFiles = $load;
-  }
-
   /**
    * Load config settings from $config->rockcommerce
    * This makes it possible to have settings in the module's config, but you can
@@ -508,6 +530,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $overrides = $this->wire->config->rockcommerce;
     if (!is_array($overrides)) return;
     foreach ($overrides as $k => $v) $this->set($k, $v);
+  }
+
+  public function loadJS($jsfile): void
+  {
+    $load = $this->jsFiles;
+    $load[$jsfile] = true;
+    $this->jsFiles = $load;
   }
 
   /**
@@ -915,6 +944,29 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'icon' => 'user-o',
       'value' => $this->mailfromName,
       'columnWidth' => 33,
+    ]);
+
+    // Product
+    $fs = new InputfieldFieldset();
+    $fs->label = 'Product Settings';
+    $fs->icon = 'cubes';
+    $inputfields->add($fs);
+
+    $fs->add([
+      'type' => 'integer',
+      'name' => 'minamount',
+      'label' => 'Minimum Amount',
+      'value' => $this->minamount,
+      'columnWidth' => 50,
+      'notes' => 'Defaults to 1 if empty.',
+    ]);
+    $fs->add([
+      'type' => 'integer',
+      'name' => 'maxamount',
+      'label' => 'Maximum Amount',
+      'value' => $this->maxamount,
+      'columnWidth' => 50,
+      'notes' => 'Defaults to 10 if empty.',
     ]);
 
     // Pricing

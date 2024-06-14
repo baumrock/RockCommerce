@@ -7,30 +7,18 @@ use ProcessWire\WireArray;
 use ProcessWire\WireData;
 use RockGrid\RockGridField;
 
+use function ProcessWire\rockcommerce;
+
 class ProductVariation extends RepeaterPage
 {
   const field = 'rc_product_variations';
 
-  /**
-   * AlpineJS data attributes
-   * @return string
-   */
-  public function attrs(): string
-  {
-    return "
-      x-data='rcvariation'
-      rc-pid={$this}
-      rc-min={$this->min()}
-      rc-max={$this->max()}
-    ";
-  }
-
-  public function min(): int
+  public function minoptions(): int
   {
     return (int)$this->getFormatted(ProductPage::field_minoptions);
   }
 
-  public function max(): int
+  public function maxoptions(): int
   {
     return (int)$this->getFormatted(ProductPage::field_maxoptions);
   }
@@ -59,6 +47,19 @@ class ProductVariation extends RepeaterPage
     }
     ksort($options);
     return $this->wire(new WireArray())->import($options);
+  }
+
+  /**
+   * AlpineJS data attributes
+   * @return string
+   */
+  public function rcAttributes(): string
+  {
+    return rockcommerce()->attrs('rcvariation', "
+      rc-pid={$this}
+      rc-minoptions={$this->minoptions()}
+      rc-maxoptions={$this->maxoptions()}
+    ");
   }
 
   public function title()

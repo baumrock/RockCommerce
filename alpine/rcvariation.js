@@ -1,0 +1,12 @@
+// Product Variation Component
+document.addEventListener("alpine:init", () => {
+  Alpine.data("rcvariation", () => ({
+    minoptions: 0,
+    maxoptions: 1,
+    init() {
+      RockCommerce.addComponent(this);
+      this.minoptions = this.$rcattr("rc-minoptions");
+      this.maxoptions = this.$rcattr("rc-maxoptions");
+    },
+  }));
+});

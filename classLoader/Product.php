@@ -41,16 +41,6 @@ trait Product
     return '#';
   }
 
-  public function attrs(): string
-  {
-    rockcommerce()->load('Product');
-    return "
-      x-data='rcproduct'
-      rc-pid=$this
-      rc-price='{$this->price()->getFloat()}'
-    ";
-  }
-
   protected function _hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
@@ -59,28 +49,20 @@ trait Product
     $p = $event->process->getPage();
     if (!$p->isProduct) return;
 
-    if ($f = $form->get('rc_product_variations')) {
-      $form->insertAfter([
-        'type' => 'markup',
-        'label' => 'Accessories',
-        'icon' => 'plus',
-        'value' => 'TBD',
-        'collapsed' => Inputfield::collapsedBlank,
-      ], $f);
-    }
+    // if ($f = $form->get('rc_product_variations')) {
+    //   $form->insertAfter([
+    //     'type' => 'markup',
+    //     'label' => 'Accessories',
+    //     'icon' => 'plus',
+    //     'value' => 'TBD',
+    //     'collapsed' => Inputfield::collapsedBlank,
+    //   ], $f);
+    // }
   }
 
-  public function productOptionsString(): string
+  public function maxamount(): int
   {
-    $arr = [];
-    foreach ($this->variations(true) as $variation) {
-      if (!$variation instanceof ProductVariation) continue;
-      $str = $variation->id;
-      $options = $variation->getFormatted(self::field_variation);
-      // $str .= ':' . trim(json_encode($options->selected), "[]");
-      $arr[] = $str;
-    }
-    return implode("|", $arr);
+    return rockcommerce()->maxamount;
   }
 
   public function _migrate(): void
@@ -168,6 +150,11 @@ trait Product
     $rm->setFieldOrder($fieldnames, $this);
   }
 
+  public function minamount(): int
+  {
+    return rockcommerce()->minamount;
+  }
+
   /**
    * // TODO Replace this with a proper solution
    * See https://processwire.com/talk/topic/30045-inputfieldrenderready/
@@ -184,6 +171,30 @@ trait Product
       $inputfield = $field->getInputfield($event->process->getPage());
       $inputfield->renderReady();
     }
+  }
+
+  public function productOptionsString(): string
+  {
+    $arr = [];
+    foreach ($this->variations(true) as $variation) {
+      if (!$variation instanceof ProductVariation) continue;
+      $str = $variation->id;
+      $options = $variation->getFormatted(self::field_variation);
+      // $str .= ':' . trim(json_encode($options->selected), "[]");
+      $arr[] = $str;
+    }
+    return implode("|", $arr);
+  }
+
+  public function rcAttributes(): string
+  {
+    return rockcommerce()->attrs('rcproduct', "
+      x-data='rcproduct'
+      rc-pid=$this
+      rc-price='{$this->price()->getFloat()}'
+      rc-minamount='{$this->minamount()}'
+      rc-maxamount='{$this->maxamount()}'
+    ");
   }
 
   public function taxrate(): float
