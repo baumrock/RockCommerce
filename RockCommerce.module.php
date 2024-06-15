@@ -10,6 +10,7 @@ use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\ProductPage;
 use RockCommerce\RootPage;
+use RockCommerce\Taxrates;
 use RockCommerce\Variation;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
@@ -635,6 +636,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: 'Variations',
       name: 'variations',
     );
+    $rm->createPage(
+      template: Taxrates::tpl,
+      parent: $rootPage,
+      title: 'Taxrates',
+      name: 'taxrates',
+    );
 
     // set tags for all fields
     foreach ($this->wire->fields as $field) {
@@ -761,6 +768,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function ___taxrate($product): float
   {
     return (float)$this->wire->config->rockcommerceTaxrate;
+  }
+
+  public function taxrates(): PageArray
+  {
+    return $this->wire->pages->find([
+      'parent' => $this->rootPage()->path . 'taxrates',
+    ]);
   }
 
   /**

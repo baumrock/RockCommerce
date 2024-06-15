@@ -1,0 +1,56 @@
+<?php
+
+namespace RockCommerce;
+
+use ProcessWire\Page;
+use RockMigrations\MagicPage;
+
+class Taxrate extends Page
+{
+  use MagicPage;
+
+  const tpl = 'rockcommerce_taxrate';
+  const prefix = 'rockcommerce_taxrate_';
+
+  const field_taxrate = self::prefix . 'taxrate';
+
+  public function taxrate(): float
+  {
+    return $this->getFormatted(self::field_taxrate);
+  }
+
+  public function migrate()
+  {
+    $rm = $this->rockmigrations();
+    $taxfield = self::field_taxrate;
+    $rm->migrate([
+      'fields' => [
+        self::field_taxrate => [
+          'type' => 'decimal',
+          'label' => 'Taxrate',
+          'icon' => 'percent',
+          'notes' => 'Example: For 20% VAT enter 20',
+        ],
+      ],
+      'templates' => [
+        self::tpl => [
+          'fields' => [
+            self::field_taxrate => [
+              'columnWidth' => 30,
+            ],
+            'title' => [
+              'label' => 'Description',
+              'required' => false,
+              'columnWidth' => 70,
+            ],
+          ],
+          'parentTemplates' => [
+            Taxrates::tpl,
+          ],
+          'noUnpublish' => '1', // Don't allow unpublished pages
+          'pageLabelField' => "{{$taxfield}}% ({title})",
+        ],
+      ],
+    ]);
+  }
+}
