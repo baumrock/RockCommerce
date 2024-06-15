@@ -5,7 +5,9 @@ document.addEventListener("alpine:init", () => {
     amountInput: false,
     maxamount: 1,
     minamount: 1,
-    price: "",
+
+    // dont use empty string to avoid FOUC on init
+    price: 0,
 
     // this is the base price money object
     money: null,
