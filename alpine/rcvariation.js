@@ -2,6 +2,7 @@
 RockCommerce.component("rcvariation", {
   minoptions: 0,
   maxoptions: 1,
+
   init() {
     RockCommerce.addComponent(this);
     this.minoptions = parseInt(this.$rcattr("rc-minoptions"));

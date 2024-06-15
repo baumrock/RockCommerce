@@ -25,6 +25,8 @@ RockCommerce.component("rcvariationoption", {
       this.$el.classList.add("rc-active");
     } else if (selected < this.variation.maxoptions) {
       this.$el.classList.add("rc-active");
+    } else {
+      RockCommerce.trigger("rcvariationoption:maxoptions", this);
     }
   },
 

@@ -13,6 +13,11 @@ class ProductVariation extends RepeaterPage
 {
   const field = 'rc_product_variations';
 
+  public function comment(): string
+  {
+    return $this->getFormatted(ProductPage::field_variationcomment);
+  }
+
   public function minoptions(): int
   {
     return (int)$this->getFormatted(ProductPage::field_minoptions);
