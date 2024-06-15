@@ -5,6 +5,7 @@ document.addEventListener("alpine:init", () => {
     amountInput: false,
     maxamount: 1,
     minamount: 1,
+    price: "",
 
     // this is the base price money object
     money: null,
@@ -16,10 +17,12 @@ document.addEventListener("alpine:init", () => {
         this.$rcattr("rc-minamount") || RockCommerce.config.minamount
       );
       this.initAmountInput();
+      this.$watch("amount", this.updatePrice.bind(this));
       this.amount = parseInt(this.amountInput.value || this.minamount);
       this.maxamount = parseInt(
         this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
       );
+      this.updatePrice();
     },
 
     get addToCartUrl() {
@@ -50,33 +53,40 @@ document.addEventListener("alpine:init", () => {
       this.amount++;
     },
 
-    /**
-     * Get the calculated dynamic price
-     * This is dependent on the amount and on tax etc.;
-     */
-    get price() {
-      let money = this.money;
-      if (money === null) return;
+    updatePrice() {
+      RockCommerce.throttle(() => {
+        let money = this.money;
 
-      // calculate the total price
-      // let price = RockCommerce.trigger("ProductPriceInit", null, () => {
-      //   return this.price;
-      // });
+        // add prices of variations
+        money = RockCommerce.trigger(
+          "rcproduct:priceAddVariations",
+          money,
+          (money) => {
+            this.variations.forEach((variation) => {
+              if (typeof variation == "undefined") return;
+              variation.options(true).forEach((option) => {
+                money = money.plus(option.money.float());
+              });
+            });
+            return money;
+          }
+        );
 
-      // add prices of variations
-      // this.variations().forEach((variation) => {
-      //   if (typeof variation == "undefined") return;
-      //   variation.options(true).forEach((option) => {
-      //     price = price.plus(option.price.float());
-      //   });
-      // });
+        // add amount
+        money = RockCommerce.trigger("rcproduct:priceTotal", money, (money) => {
+          return money.times(this.amount);
+        });
 
-      // add amount
-      money = RockCommerce.trigger("rcproduct:priceTotal", money, (money) => {
-        return money.times(this.amount);
+        this.price = money.format();
+      }, 0);
+    },
+
+    get variations() {
+      return Array.from(
+        this.$root.querySelectorAll("[x-data=rcvariation]")
+      ).map((el) => {
+        return RockCommerce.getComponent(el);
       });
-
-      return money.format();
     },
 
     get variationString() {

@@ -70,6 +70,16 @@ var RockCommerce = {
     return this.components[cid];
   },
 
+  /**
+   * Throttle function to limit the rate at which a function can fire.
+   */
+  throttle(func, delay = 50) {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      func();
+    }, delay);
+  },
+
   raw(data) {
     return JSON.parse(JSON.stringify(data || this));
   },

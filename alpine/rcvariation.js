@@ -10,15 +10,18 @@ RockCommerce.component("rcvariation", {
   },
 
   disableAll() {
-    this.options.forEach((option) => {
+    this.options(true).forEach((option) => {
       option.disable(true);
     });
   },
 
-  get options() {
-    return Array.from(
-      this.$el.querySelectorAll("[x-data=rcvariationoption]")
-    ).map((el) => RockCommerce.getComponent(el));
+  options(onlySelected) {
+    let selector = onlySelected
+      ? "[x-data=rcvariationoption].rc-active"
+      : "[x-data=rcvariationoption]";
+    return Array.from(this.$el.querySelectorAll(selector)).map((el) =>
+      RockCommerce.getComponent(el)
+    );
   },
 
   numSelected() {
