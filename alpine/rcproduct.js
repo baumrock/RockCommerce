@@ -77,6 +77,8 @@ document.addEventListener("alpine:init", () => {
           return money.times(this.amount);
         });
 
+        // write formatted price to price property
+        // so that the frontend can subscribe via x-text=price
         this.price = money.format();
       }, 0);
     },
