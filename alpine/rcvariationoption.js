@@ -12,13 +12,29 @@ RockCommerce.component("rcvariationoption", {
     return this.$el.classList.contains("rc-active");
   },
 
+  disable(force) {
+    let selected = this.variation.numSelected();
+    if (!force && selected - 1 < this.variation.minoptions) return;
+    this.$el.classList.remove("rc-active");
+  },
+
+  enable() {
+    let selected = this.variation.numSelected();
+    if (this.variation.maxoptions === 1) {
+      this.variation.disableAll();
+      this.$el.classList.add("rc-active");
+    } else if (selected < this.variation.maxoptions) {
+      this.$el.classList.add("rc-active");
+    }
+  },
+
   handleClick(event) {
     event.preventDefault();
     this.toggle();
-    console.log(this.variation.minoptions);
   },
 
   toggle() {
-    this.$el.classList.toggle("rc-active");
+    if (this.active) this.disable();
+    else this.enable();
   },
 });
