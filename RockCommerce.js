@@ -8,6 +8,7 @@ var RockCommerce = {
   config: {},
   hooksAfter: {},
   hooksBefore: {},
+  taxrate: 0,
 
   /**
    * Add alpine component to list of components

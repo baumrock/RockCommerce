@@ -11,6 +11,7 @@ use RockCommerce\Orders;
 use RockCommerce\ProductPage;
 use RockCommerce\RootPage;
 use RockCommerce\Taxrates;
+use RockCommerce\TaxSelect;
 use RockCommerce\Variation;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
@@ -63,6 +64,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   private $taxrates = false;
 
+  // submodules
+  public $taxselect;
+
   public function init()
   {
     // set default values
@@ -73,6 +77,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->loadConfig();
     $this->wire('rockcommerce', $this);
     $this->loadProductTemplates();
+
+    // load submodules
+    $this->taxselect = new TaxSelect();
 
     // js config
     $this->jsConfig = new WireData();

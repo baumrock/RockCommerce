@@ -19,7 +19,7 @@ RockCommerce.component("rcvariationoption", {
     let selected = this.variation.numSelected();
     if (!force && selected - 1 < this.variation.minoptions) return;
     this.$el.classList.remove("rc-active");
-    this.product.updatePrice();
+    this.product.update();
   },
 
   enable() {
@@ -27,10 +27,10 @@ RockCommerce.component("rcvariationoption", {
     if (this.variation.maxoptions === 1) {
       this.variation.disableAll();
       this.$el.classList.add("rc-active");
-      this.product.updatePrice();
+      this.product.update();
     } else if (selected < this.variation.maxoptions) {
       this.$el.classList.add("rc-active");
-      this.product.updatePrice();
+      this.product.update();
     } else {
       RockCommerce.trigger("rcvariationoption:maxoptions", this);
     }

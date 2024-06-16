@@ -1,101 +1,95 @@
 // Product Component
-document.addEventListener("alpine:init", () => {
-  Alpine.data("rcproduct", () => ({
-    amount: 1,
-    amountInput: false,
-    maxamount: 1,
-    minamount: 1,
+RockCommerce.component("rcproduct", {
+  amount: 1,
+  amountInput: false,
+  maxamount: 1,
+  minamount: 1,
 
-    // dont use empty string to avoid FOUC on init
-    price: 0,
+  // dont use empty string to avoid FOUC on init
+  price: 0,
 
-    // this is the base price money object
-    money: null,
+  // this is the base price money object
+  money: null,
 
-    init() {
-      RockCommerce.addComponent(this);
-      this.money = new RockMoney(this.$el.getAttribute("rc-price"));
-      this.minamount = parseInt(
-        this.$rcattr("rc-minamount") || RockCommerce.config.minamount
-      );
-      this.initAmountInput();
-      this.$watch("amount", this.updatePrice.bind(this));
-      this.amount = parseInt(this.amountInput.value || this.minamount);
-      this.maxamount = parseInt(
-        this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
-      );
-      this.updatePrice();
-    },
+  init() {
+    RockCommerce.addComponent(this);
+    this.money = new RockMoney(this.$el.getAttribute("rc-price"));
+    this.minamount = parseInt(
+      this.$rcattr("rc-minamount") || RockCommerce.config.minamount
+    );
+    this.initAmountInput();
+    this.$watch("amount", this.update.bind(this));
+    this.amount = parseInt(this.amountInput.value || this.minamount);
+    this.maxamount = parseInt(
+      this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
+    );
+    this.update();
+  },
 
-    get addToCartUrl() {
-      return "tbd";
-    },
+  get addToCartUrl() {
+    return "tbd";
+  },
 
-    initAmountInput() {
-      this.amountInput = this.$el.querySelector("[x-model=amount]");
-      if (!this.amountInput) return;
-      this.amountInput.addEventListener("focus", (e) => {
-        e.target.select();
-      });
-    },
+  initAmountInput() {
+    this.amountInput = this.$el.querySelector("[x-model=amount]");
+    if (!this.amountInput) return;
+    this.amountInput.addEventListener("focus", (e) => {
+      e.target.select();
+    });
+  },
 
-    minus() {
-      if (this.amount - 1 < this.minamount)
-        return (this.amount = this.minamount);
-      if (this.amount - 1 > this.maxamount)
-        return (this.amount = this.maxamount);
-      this.amount--;
-    },
+  minus() {
+    if (this.amount - 1 < this.minamount) return (this.amount = this.minamount);
+    if (this.amount - 1 > this.maxamount) return (this.amount = this.maxamount);
+    this.amount--;
+  },
 
-    plus() {
-      if (this.amount + 1 > this.maxamount)
-        return (this.amount = this.maxamount);
-      if (this.amount + 1 < this.minamount)
-        return (this.amount = this.minamount);
-      this.amount++;
-    },
+  plus() {
+    if (this.amount + 1 > this.maxamount) return (this.amount = this.maxamount);
+    if (this.amount + 1 < this.minamount) return (this.amount = this.minamount);
+    this.amount++;
+  },
 
-    updatePrice() {
-      RockCommerce.throttle(() => {
-        let money = this.money;
+  update() {
+    RockCommerce.throttle(() => {
+      let money = this.money;
 
-        // add prices of variations
-        money = RockCommerce.trigger(
-          "rcproduct:priceAddVariations",
-          money,
-          (money) => {
-            this.variations.forEach((variation) => {
-              if (typeof variation == "undefined") return;
-              variation.options(true).forEach((option) => {
-                money = money.plus(option.money.float());
-              });
+      // add prices of variations
+      money = RockCommerce.trigger(
+        "rcproduct:priceAddVariations",
+        money,
+        (money) => {
+          this.variations.forEach((variation) => {
+            if (typeof variation == "undefined") return;
+            variation.options(true).forEach((option) => {
+              money = money.plus(option.money.float());
             });
-            return money;
-          }
-        );
+          });
+          return money;
+        }
+      );
 
-        // add amount
-        money = RockCommerce.trigger("rcproduct:priceTotal", money, (money) => {
-          return money.times(this.amount);
-        });
-
-        // write formatted price to price property
-        // so that the frontend can subscribe via x-text=price
-        this.price = money.format();
-      }, 0);
-    },
-
-    get variations() {
-      return Array.from(
-        this.$root.querySelectorAll("[x-data=rcvariation]")
-      ).map((el) => {
-        return RockCommerce.getComponent(el);
+      // add amount
+      money = RockCommerce.trigger("rcproduct:priceTotal", money, (money) => {
+        return money.times(this.amount);
       });
-    },
 
-    get variationString() {
-      return this.$rctype + "-" + this.$root.getAttribute("rc-cid");
-      // return "varStr " + this.$component.$type;
-    },
-  }));
+      // write formatted price to price property
+      // so that the frontend can subscribe via x-text=price
+      this.price = money.format();
+    }, 0);
+  },
+
+  get variations() {
+    return Array.from(this.$root.querySelectorAll("[x-data=rcvariation]")).map(
+      (el) => {
+        return RockCommerce.getComponent(el);
+      }
+    );
+  },
+
+  get variationString() {
+    return this.$rctype + "-" + this.$root.getAttribute("rc-cid");
+    // return "varStr " + this.$component.$type;
+  },
 });
