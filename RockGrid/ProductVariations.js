@@ -36,6 +36,18 @@ document.addEventListener("RockGrid:init", (e) => {
         },
         hozAlign: "right",
       });
+      defs = grid.addAfter(defs, "price", {
+        field: "total",
+        title: "total",
+        editor: "calc",
+        width: 120,
+        formatter: "money",
+        formatterParams: {
+          decimal: ",",
+          thousand: ".",
+        },
+        hozAlign: "right",
+      });
 
       defs.forEach((col, i) => {
         if (col.field == "id" || col.field == "varID") {
@@ -70,6 +82,7 @@ document.addEventListener("RockGrid:init", (e) => {
             thousand: ".",
           };
           col.hozAlign = "right";
+          col.visible = false;
         }
       });
 
@@ -82,7 +95,7 @@ document.addEventListener("RockGrid:init", (e) => {
     // selectableRows: true,
   });
 
-  // ##### custom events #####
+  // ### custom events ###
 
   // add filter to show only one single variation
   table.on("rowSelected", (row) => {
@@ -114,22 +127,51 @@ document.addEventListener("RockGrid:init", (e) => {
     }
   });
 
-  // ##### price input
-  table.on("cellEdited", (cell) => {
-    if (cell.getField() !== "price") return;
-
+  let updatePrices = (row) => {
+    let cell = row.getCell("price");
     let val = cell.getValue();
     if (typeof val === "undefined") return;
-
     let prices = grid.sleepValue.prices || {};
     if (val !== "") prices[cell.getRow().getData().id] = val;
     grid.sleep("prices", prices);
-  });
+  };
+
+  // ### price input
   table.on("dataProcessed", () => {
     let prices = grid.sleepValue.prices || {};
+    let basePrice = currency(
+      document.getElementById("Inputfield_rc_product_price").value
+    );
     for (let [id, price] of Object.entries(prices)) {
-      table.updateRow(id, { price: price });
+      table.updateRow(id, {
+        price: price,
+        total: basePrice.add(price),
+      });
     }
   });
-  // ##### END price input
+  // ### END price input
+
+  // ### calc/watch total input
+  table.on("cellEdited", (cell) => {
+    let basePrice = currency(
+      document.getElementById("Inputfield_rc_product_price").value
+    );
+    let val = cell.getValue();
+    let data = cell.getRow().getData();
+    if (cell.getField() === "price") {
+      // price has been updated --> calc total
+      let total = basePrice.add(val);
+      table.updateRow(data.id, { total: total.value });
+    } else if (cell.getField() === "total") {
+      // total has been updated --> calc price
+      let price = currency(val).subtract(basePrice);
+      table.updateRow(data.id, { price: price.value });
+      updatePrices(cell.getRow());
+    }
+  });
+  // ### END calc/watch total input
+
+  table.on("cellEdited", (cell) => {
+    updatePrices(cell.getRow());
+  });
 });
