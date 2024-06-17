@@ -11,6 +11,7 @@ var RockCommerce = {
   pidcid: {},
   products: [],
   taxrate: 0,
+  timers: {},
 
   /**
    * Add alpine component to list of components
@@ -69,6 +70,16 @@ var RockCommerce = {
   },
 
   /**
+   * Debounce callback for specified time
+   * See rcproduct.js update() for how to use
+   */
+  debounce(name, func, wait) {
+    if (typeof wait === "undefined") wait = 10;
+    clearTimeout(this.timers[name]);
+    this.timers[name] = setTimeout(func, wait);
+  },
+
+  /**
    * Find alpine component from DOM element
    * Find closest component: RockCommerce.getComponent(myEl);
    * Find closest with type: RockCommerce.getComponent(myEl, 'rcproduct');
@@ -87,16 +98,6 @@ var RockCommerce = {
   getComponentFromPid(pid) {
     const cid = this.pidcid[pid];
     if (cid) return this.components[cid];
-  },
-
-  /**
-   * Throttle function to limit the rate at which a function can fire.
-   */
-  throttle(func, delay = 50) {
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => {
-      func();
-    }, delay);
   },
 
   raw(data) {
