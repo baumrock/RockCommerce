@@ -10,7 +10,8 @@ document.addEventListener("alpine:init", () => {
       const product = RockCommerce.products[0];
       if (!product) return;
 
-      const urlParams = new URLSearchParams(window.location.hash.substring(1));
+      let hash = window.location.hash.substring(1).replace(/-/g, "&");
+      const urlParams = new URLSearchParams(hash);
 
       // load amount
       if (urlParams.has("amount")) {

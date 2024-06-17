@@ -4,7 +4,6 @@ RockCommerce.component("rcproduct", {
   amountInput: false,
   maxamount: 1,
   minamount: 1,
-  variationString: "",
 
   // dont use empty string to avoid FOUC on init
   price: 0,
@@ -26,6 +25,18 @@ RockCommerce.component("rcproduct", {
     this.update();
   },
 
+  addToCart() {
+    RockCommerce.trigger("addToCart", this, (scope) => {
+      const product = RockCommerce.getComponent(scope.$root);
+      const cart = RockCommerce.cart;
+      cart.addItem(
+        product.$rcpid,
+        product.amount,
+        product.variationStringCart()
+      );
+    });
+  },
+
   get addToCartUrl() {
     return "tbd";
   },
@@ -34,36 +45,6 @@ RockCommerce.component("rcproduct", {
     const selector = `[x-data=rcvariation][rc-pid="${id}"]`;
     const varEl = this.$root.querySelector(selector);
     return RockCommerce.getComponent(varEl);
-  },
-
-  getVariationString(withAmount) {
-    // we create an object with properties
-    // this will make sure that variations will be sorted alphabetically
-    let obj = {};
-
-    // add amount?
-    if (withAmount !== false) obj["amount"] = this.amount;
-
-    // add querystring for all variations
-    this.variations.forEach((variation) => {
-      obj[variation.$rcpid] = variation.optionsString;
-    });
-
-    // convert to string
-    let str = "#";
-    Object.keys(obj).forEach((key) => {
-      str += `&${key}=${obj[key]}`;
-    });
-
-    // update url?
-    if (this.$rcattr("rc-updateUrl")) {
-      let url = new URL(window.location);
-      url.hash = str;
-      history.replaceState(null, "", url);
-    }
-
-    this.variationString = str;
-    return str;
   },
 
   initAmount() {
@@ -122,7 +103,7 @@ RockCommerce.component("rcproduct", {
       // write formatted price to price property
       // so that the frontend can subscribe via x-text=price
       this.price = money.format();
-      this.getVariationString();
+      this.variationStringUrl();
     }, 0);
   },
 
@@ -132,5 +113,52 @@ RockCommerce.component("rcproduct", {
         return RockCommerce.getComponent(el);
       }
     );
+  },
+
+  variationStringCart() {
+    // we create an object with properties
+    // this will make sure that variations will be sorted alphabetically
+    let obj = {};
+
+    // add querystring for all variations
+    this.variations.forEach((variation) => {
+      obj[variation.$rcpid] = variation.optionsString;
+    });
+
+    // convert to string
+    let str = "";
+    Object.keys(obj).forEach((key) => {
+      str += `-${key}=${obj[key]}`;
+    });
+    return str.substring(1);
+  },
+
+  variationStringUrl() {
+    // we create an object with properties
+    // this will make sure that variations will be sorted alphabetically
+    let obj = {};
+
+    // add amount?
+    obj["amount"] = this.amount;
+
+    // add querystring for all variations
+    this.variations.forEach((variation) => {
+      obj[variation.$rcpid] = variation.optionsString;
+    });
+
+    // convert to string
+    let str = "";
+    Object.keys(obj).forEach((key) => {
+      str += `-${key}=${obj[key]}`;
+    });
+    str = "#" + str.substring(1);
+
+    // update url?
+    if (this.$rcattr("rc-updateUrl")) {
+      let url = new URL(window.location);
+      url.hash = str;
+      history.replaceState(null, "", url);
+    }
+    return str;
   },
 });
