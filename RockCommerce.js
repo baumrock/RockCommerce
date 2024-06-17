@@ -76,7 +76,7 @@ var RockCommerce = {
   getComponent(el, type) {
     if (type) el = el.closest(`[x-data=${type}]`);
     if (!el) return false;
-    const cid = el.getAttribute("rc-cid");
+    const cid = el.closest("[x-data]").getAttribute("rc-cid");
     if (!cid) console.error("Component is not initialized");
     return this.components[cid];
   },
