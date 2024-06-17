@@ -1,23 +1,35 @@
 // Cart Component
 document.addEventListener("alpine:init", () => {
+  // Cart Item Class
+  class CartItem {
+    constructor(data) {
+      this.pid = parseInt(data.pid);
+      this.variation = data.variation;
+    }
+  }
+
+  // Alpine component
   Alpine.data("rccart", () => ({
     items: [],
 
     init() {
+      if (RockCommerce.cart) return;
+      console.log("init cart");
       RockCommerce.addComponent(this);
       RockCommerce.cart = this;
+      this.wakeup();
       this.$watch("items", this.update.bind(this));
       this.update();
     },
 
-    // add item to the list of items
-    // we add all items as single item and later build sums for rows
-    addItem(pid, amount, variation) {
-      const item = new CartItem(pid, variation);
-      while (amount > 0) {
-        this.items.push(item);
-        amount--;
-      }
+    add(data) {
+      RockCommerce.trigger("addToCart", data, (data) => {
+        const item = new CartItem(data);
+        while (data.amount > 0) {
+          this.items.push(item);
+          data.amount--;
+        }
+      });
     },
 
     get count() {
@@ -25,16 +37,30 @@ document.addEventListener("alpine:init", () => {
     },
 
     /**
+     * Save data to localStorage
+     */
+    sleep() {
+      const data = {
+        items: this.items,
+      };
+      localStorage.setItem("rc-cart", JSON.stringify(data));
+      // TODO: Save to database
+    },
+
+    /**
      * General update method
      */
     update() {
-      this.updateCartCount();
+      RockCommerce.debounce("rc-cart-update", () => {
+        this.updateCartCountElements();
+        this.sleep();
+      });
     },
 
     /**
      * Update cart count on crontend
      */
-    updateCartCount() {
+    updateCartCountElements() {
       let elements = document.querySelectorAll("[rc-cart-count]");
       elements.forEach((el) => {
         el.textContent = this.count;
@@ -42,13 +68,18 @@ document.addEventListener("alpine:init", () => {
         else el.setAttribute("hidden", true);
       });
     },
-  }));
 
-  // Cart Item Class
-  class CartItem {
-    constructor(pid, variation) {
-      this.pid = parseInt(pid);
-      this.variation = variation;
-    }
-  }
+    /**
+     * Load data from localstorage
+     */
+    wakeup() {
+      const data = localStorage.getItem("rc-cart") || "{}";
+      const parsedData = JSON.parse(data);
+      for (const key in parsedData) {
+        if (parsedData.hasOwnProperty(key)) {
+          this[key] = parsedData[key];
+        }
+      }
+    },
+  }));
 });

@@ -4,6 +4,7 @@ RockCommerce.component("rcproduct", {
   amountInput: false,
   maxamount: 1,
   minamount: 1,
+  updateTimer: false,
 
   // dont use empty string to avoid FOUC on init
   price: 0,
@@ -26,19 +27,12 @@ RockCommerce.component("rcproduct", {
   },
 
   addToCart() {
-    RockCommerce.trigger("addToCart", this, (scope) => {
-      const product = RockCommerce.getComponent(scope.$root);
-      const cart = RockCommerce.cart;
-      cart.addItem(
-        product.$rcpid,
-        product.amount,
-        product.variationStringCart()
-      );
+    console.log("add to cart!!!");
+    RockCommerce.cart.add({
+      pid: this.$rcpid,
+      amount: this.amount,
+      variation: this.variationStringCart(),
     });
-  },
-
-  get addToCartUrl() {
-    return "tbd";
   },
 
   getVariation(id) {
@@ -69,7 +63,7 @@ RockCommerce.component("rcproduct", {
   },
 
   update() {
-    RockCommerce.throttle(() => {
+    RockCommerce.debounce("rcproduct-update", () => {
       // make sure amount is correct
       // this is because we use x-bind on amount input and cant know the input
       let amount = this.amount;
@@ -104,7 +98,7 @@ RockCommerce.component("rcproduct", {
       // so that the frontend can subscribe via x-text=price
       this.price = money.format();
       this.variationStringUrl();
-    }, 0);
+    });
   },
 
   get variations() {

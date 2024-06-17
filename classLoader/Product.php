@@ -35,12 +35,6 @@ trait Product
     wire()->addHookAfter('Inputfield::render',              $this, 'preloadRockGrid');
   }
 
-  public function addToCartUrl(): string
-  {
-    bd('tbd');
-    return '#';
-  }
-
   protected function _hookBuildForm(HookEvent $event): void
   {
     $form = $event->return;
