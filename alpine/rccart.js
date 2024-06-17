@@ -13,8 +13,8 @@ document.addEventListener("alpine:init", () => {
     items: [],
 
     init() {
+      // we allow only one cart
       if (RockCommerce.cart) return;
-      console.log("init cart");
       RockCommerce.addComponent(this);
       RockCommerce.cart = this;
       this.wakeup();
