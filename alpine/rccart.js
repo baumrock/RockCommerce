@@ -12,9 +12,9 @@ document.addEventListener("alpine:init", () => {
     // we add all items as single item and later build sums for rows
     addItem(product) {
       while (product.amount > 0) {
-        this.items.push(
-          new CartItem(product.pid, 1, product.getVariationString(true))
-        );
+        // this.items.push(
+        //   new CartItem(product.pid, 1, product.getVariationString(true))
+        // );
         product.amount--;
       }
     },

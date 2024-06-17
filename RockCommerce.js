@@ -8,19 +8,28 @@ var RockCommerce = {
   config: {},
   hooksAfter: {},
   hooksBefore: {},
+  pidcid: {},
+  products: [],
   taxrate: 0,
 
   /**
    * Add alpine component to list of components
+   *
    * NOTE: Alpine components inherit methods and properties from parent
    * components! That means if you have nested components and a parent comp
    * implements foo() than this method will be available to all children
    * unless it is specified there as well.
+   *
+   * This also means that you must not set global component properties here,
+   * for example c.foo = 'foo' will mess up and set properties of parent comps.
    */
   addComponent(c) {
     const cid = ++this.cid;
     this.components[cid] = c;
     c.$el.setAttribute("rc-cid", cid);
+    if (c.$rctype === "rcproduct") this.products.push(c);
+    const pid = c.$rcattr("rc-pid");
+    if (pid) this.pidcid[pid] = cid;
     this.trigger("addComponent", c);
   },
 
@@ -67,8 +76,17 @@ var RockCommerce = {
   getComponent(el, type) {
     if (type) el = el.closest(`[x-data=${type}]`);
     if (!el) return false;
-    const cid = el.closest("[rc-cid]").getAttribute("rc-cid");
+    const cid = el.getAttribute("rc-cid");
+    if (!cid) console.error("Component is not initialized");
     return this.components[cid];
+  },
+
+  /**
+   * Find alpine component from pw page id (rc-pid attribute)
+   */
+  getComponentFromPid(pid) {
+    const cid = this.pidcid[pid];
+    if (cid) return this.components[cid];
   },
 
   /**
@@ -130,11 +148,20 @@ var RockCommerce = {
 document.addEventListener("alpine:init", () => {
   /**
    * Get attribute of alpine component element
-   * Usage c.$attr('foo')
+   * Usage c.$rcattr('foo')
+   */
+  Alpine.magic("rcpid", (el) => {
+    const c = RockCommerce.getComponent(el);
+    return c.$rcattr("rc-pid");
+  });
+
+  /**
+   * Get attribute of alpine component element
+   * Usage c.$rcattr('foo')
    */
   Alpine.magic("rcattr", (el) => {
     const c = RockCommerce.getComponent(el);
-    return (attr) => c.$el.getAttribute(attr);
+    return (attr) => c.$root.getAttribute(attr);
   });
 
   /**

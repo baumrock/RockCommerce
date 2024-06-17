@@ -4,6 +4,7 @@ RockCommerce.component("rcproduct", {
   amountInput: false,
   maxamount: 1,
   minamount: 1,
+  variationString: "",
 
   // dont use empty string to avoid FOUC on init
   price: 0,
@@ -17,9 +18,8 @@ RockCommerce.component("rcproduct", {
     this.minamount = parseInt(
       this.$rcattr("rc-minamount") || RockCommerce.config.minamount
     );
-    this.initAmountInput();
+    this.initAmount();
     this.$watch("amount", this.update.bind(this));
-    this.amount = parseInt(this.amountInput.value || this.minamount);
     this.maxamount = parseInt(
       this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
     );
@@ -30,8 +30,45 @@ RockCommerce.component("rcproduct", {
     return "tbd";
   },
 
-  initAmountInput() {
+  getVariation(id) {
+    const selector = `[x-data=rcvariation][rc-pid="${id}"]`;
+    const varEl = this.$root.querySelector(selector);
+    return RockCommerce.getComponent(varEl);
+  },
+
+  getVariationString(withAmount) {
+    // we create an object with properties
+    // this will make sure that variations will be sorted alphabetically
+    let obj = {};
+
+    // add amount?
+    if (withAmount !== false) obj["amount"] = this.amount;
+
+    // add querystring for all variations
+    this.variations.forEach((variation) => {
+      obj[variation.$rcpid] = variation.optionsString;
+    });
+
+    // convert to string
+    let str = "#";
+    Object.keys(obj).forEach((key) => {
+      str += `&${key}=${obj[key]}`;
+    });
+
+    // update url?
+    if (this.$rcattr("rc-updateUrl")) {
+      let url = new URL(window.location);
+      url.hash = str;
+      history.replaceState(null, "", url);
+    }
+
+    this.variationString = str;
+    return str;
+  },
+
+  initAmount() {
     this.amountInput = this.$el.querySelector("[x-model=amount]");
+    this.amount = parseInt(this.amountInput.value || this.minamount);
     if (!this.amountInput) return;
     this.amountInput.addEventListener("focus", (e) => {
       e.target.select();
@@ -52,6 +89,14 @@ RockCommerce.component("rcproduct", {
 
   update() {
     RockCommerce.throttle(() => {
+      // make sure amount is correct
+      // this is because we use x-bind on amount input and cant know the input
+      let amount = this.amount;
+      if (amount > this.maxamount) amount = this.maxamount;
+      else if (amount < this.minamount) amount = this.minamount;
+      this.amount = amount;
+
+      // calc price
       let money = this.money;
 
       // add prices of variations
@@ -77,6 +122,7 @@ RockCommerce.component("rcproduct", {
       // write formatted price to price property
       // so that the frontend can subscribe via x-text=price
       this.price = money.format();
+      this.getVariationString();
     }, 0);
   },
 
@@ -86,10 +132,5 @@ RockCommerce.component("rcproduct", {
         return RockCommerce.getComponent(el);
       }
     );
-  },
-
-  get variationString() {
-    return this.$rctype + "-" + this.$root.getAttribute("rc-cid");
-    // return "varStr " + this.$component.$type;
   },
 });

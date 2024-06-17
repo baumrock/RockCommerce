@@ -15,6 +15,10 @@ RockCommerce.component("rcvariation", {
     });
   },
 
+  getSelected() {
+    return this.$el.querySelectorAll("[x-data=rcvariationoption].rc-active");
+  },
+
   options(onlySelected) {
     let selector = onlySelected
       ? "[x-data=rcvariationoption].rc-active"
@@ -24,8 +28,13 @@ RockCommerce.component("rcvariation", {
     );
   },
 
+  get optionsString() {
+    return Array.from(this.getSelected())
+      .map((el) => el.getAttribute("rc-pid"))
+      .join(",");
+  },
+
   numSelected() {
-    return this.$el.querySelectorAll("[x-data=rcvariationoption].rc-active")
-      .length;
+    return this.getSelected().length;
   },
 });
