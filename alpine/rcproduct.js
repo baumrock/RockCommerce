@@ -27,12 +27,12 @@ RockCommerce.component("rcproduct", {
   },
 
   addToCart() {
-    console.log("add to cart!!!");
     RockCommerce.cart.add({
       pid: this.$rcpid,
       amount: this.amount,
       variation: this.variationStringCart(),
     });
+    // TODO: save to backend?
   },
 
   getVariation(id) {
