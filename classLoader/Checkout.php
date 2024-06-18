@@ -9,24 +9,12 @@ class Checkout extends Wire
 {
   public $activeStep;
 
-  /** @var FilenameArray */
-  private $folders;
-
   /** @var StepsArray */
   public $steps;
 
   public function __construct()
   {
     $this->steps = new StepsArray();
-    $this->folders = new FilenameArray();
-    $this->addFolder(__DIR__ . '/../frontend');
-  }
-
-  public function addFolder($folder): self
-  {
-    $filename = $this->getFilename($folder);
-    $this->folders->add($filename);
-    return $this;
   }
 
   public function addSteps(array $steps): self
@@ -43,11 +31,6 @@ class Checkout extends Wire
     }
     $this->activeStep->active = true;
     return $this;
-  }
-
-  public function getFilename($file): string
-  {
-    return 'tbd';
   }
 
   public function getStep(): Step|false

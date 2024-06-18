@@ -4,6 +4,8 @@ namespace RockCommerce;
 
 use ProcessWire\WireData;
 
+use function ProcessWire\rockcommerce;
+
 class Step extends WireData
 {
   public $active = false;
@@ -13,6 +15,10 @@ class Step extends WireData
 
   public $content = false;
   public $done = false;
+
+  /** @var Frontend */
+  public $frontend;
+
   public $headline;
   public $name;
   public $num;
@@ -21,11 +27,19 @@ class Step extends WireData
 
   public function __construct(string $name, array $data = [])
   {
+    $this->frontend = rockcommerce()->frontend;
     $this->name = $name;
     $this->url = "./?step=$name";
     $this->content = "partials/$name.latte";
     $this->sidebar = "partials/$name-sidebar.latte";
     foreach ($data as $k => $v) $this->$k = $v;
+    $this->content = $this->frontend->getFile($this->content);
+    $this->sidebar = $this->frontend->getFile($this->sidebar);
+  }
+
+  public function clickable(): bool
+  {
+    return $this->viewable() && !$this->active;
   }
 
   public function init(Checkout $checkout): void
@@ -65,11 +79,6 @@ class Step extends WireData
   public function viewable(): bool
   {
     return true;
-  }
-
-  public function clickable(): bool
-  {
-    return $this->viewable() && !$this->active;
   }
 
   public function __debugInfo()
