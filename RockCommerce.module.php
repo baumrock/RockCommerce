@@ -4,6 +4,7 @@ namespace ProcessWire;
 
 use RockCommerce\Cart;
 use RockCommerce\Carts;
+use RockCommerce\Checkout;
 use RockCommerce\InvoiceGroup;
 use RockCommerce\Invoices;
 use RockCommerce\Order;
@@ -47,6 +48,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   const pricetype_gross = 0;
   const pricetype_runtime = 2; // not yet implemented
 
+  /** @var Checkout */
+  public $checkout;
+
   /** @var array */
   public $findRawVariationOptions;
 
@@ -80,6 +84,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // load submodules
     $this->taxselect = new TaxSelect();
+    $this->checkout = new Checkout();
 
     // js config
     $this->jsConfig = new WireData();
