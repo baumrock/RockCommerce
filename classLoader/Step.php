@@ -8,6 +8,8 @@ use function ProcessWire\rockcommerce;
 
 class Step extends WireData
 {
+  const sessionName = 'rc-step-';
+
   public $active = false;
 
   /** @var Checkout */
@@ -22,7 +24,6 @@ class Step extends WireData
   public $headline;
   public $name;
   public $num;
-  public $sidebar = false;
   public $url;
 
   public function __construct(string $name, array $data = [])
@@ -31,15 +32,13 @@ class Step extends WireData
     $this->name = $name;
     $this->url = "./?step=$name";
     $this->content = "partials/$name.latte";
-    $this->sidebar = "partials/$name-sidebar.latte";
     foreach ($data as $k => $v) $this->$k = $v;
     $this->content = $this->frontend->getFile($this->content);
-    $this->sidebar = $this->frontend->getFile($this->sidebar);
-  }
 
-  public function clickable(): bool
-  {
-    return $this->viewable() && !$this->active;
+    // load data from session storage
+    foreach ($this->getData() as $k => $v) {
+      $this->$k = $v;
+    }
   }
 
   public function init(Checkout $checkout): void
@@ -55,14 +54,28 @@ class Step extends WireData
     }
   }
 
-  public function prev(): Step|false
+  // ##### regular methods #####
+
+  public function clickable(): bool
   {
-    return false;
+    return $this->viewable() && !$this->active;
   }
 
-  public function next(): Step|false
+  /**
+   * Get step-data from session storage
+   */
+  public function getData(): WireData
   {
-    return false;
+    $data = new WireData();
+    $raw = $this->wire->session->get(self::sessionName . $this->name);
+    if (!is_array($raw)) $raw = [];
+    $data->setArray($raw);
+    return $data;
+  }
+
+  public function next(): Step|null
+  {
+    return $this->checkout->steps->getNext($this);
   }
 
   public function nextViewable(): Step|false
@@ -74,6 +87,43 @@ class Step extends WireData
       $step = $s;
     }
     return $step;
+  }
+
+  public function prev(): Step|null
+  {
+    return $this->checkout->steps->getPrev($this);
+  }
+
+  /**
+   * Set properties and save data to session
+   *
+   * Usage:
+   * $step->save([
+   *   'done' => true,
+   *   'firstname' => 'John',
+   *   'lastname' => 'Doe',
+   * ]);
+   */
+  public function save(array $data): self
+  {
+    $_data = $this->getData();
+    foreach ($data as $k => $v) $_data->$k = $v;
+    $this->wire->session->set(
+      self::sessionName . $this->name,
+      $_data->getArray()
+    );
+    return $this;
+  }
+
+  /**
+   * Redirect to next step
+   * @return void
+   */
+  public function toNext(): void
+  {
+    $next = $this->next();
+    if ($next) $this->wire->session->redirect($next->url);
+    $this->wire->session->redirect('./');
   }
 
   public function viewable(): bool
@@ -89,7 +139,7 @@ class Step extends WireData
       'url' => $this->url,
       'headline' => $this->headline,
       'content' => $this->content,
-      'sidebar' => $this->sidebar,
+      'done' => $this->done,
     ];
   }
 }

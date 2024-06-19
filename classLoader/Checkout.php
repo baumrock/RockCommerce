@@ -2,7 +2,6 @@
 
 namespace RockCommerce;
 
-use ProcessWire\FilenameArray;
 use ProcessWire\Wire;
 
 class Checkout extends Wire
