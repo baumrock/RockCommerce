@@ -15,7 +15,8 @@ class Frontend extends Wire
   {
     $this->folders = new FilenameArray();
     $this->addFolder('/');
-    $this->addFolder(__DIR__ . '/../frontend');
+    $this->addFolder('/site/modules/RockCommerce/frontend');
+    $this->addFolder('/site/templates/RockCommerce/frontend');
   }
 
   /**
