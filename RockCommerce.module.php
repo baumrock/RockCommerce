@@ -18,6 +18,7 @@ use RockCommerce\Variation;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
+use RockForms\MultiStepForm;
 use RockMoney\Money;
 
 /**
@@ -49,7 +50,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   const pricetype_gross = 0;
   const pricetype_runtime = 2; // not yet implemented
 
-  /** @var Checkout */
+  /** @var MultiStepForm */
   public $checkout;
 
   /** @var array */
@@ -87,7 +88,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // load submodules
     $this->frontend = new Frontend();
-    $this->checkout = new Checkout();
+    $this->checkout = new MultiStepForm();
     $this->taxselect = new TaxSelect();
 
     // js config
