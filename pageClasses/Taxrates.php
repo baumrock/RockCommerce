@@ -24,6 +24,7 @@ class Taxrates extends Page
           'childTemplates' => [
             Taxrate::tpl,
           ],
+          'noParents' => 1,
         ],
       ],
     ]);

@@ -506,6 +506,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Host without trailing slash
+   */
+  public function host(): string
+  {
+    return rtrim('https://' . $_SERVER['HTTP_HOST'], '/');
+  }
+
+  /**
    * Add JS tag on frontend to init RCSite object
    */
   // public function initRockCommerceSite(HookEvent $event): void
@@ -611,7 +619,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
       parent: 1,
-      name: "rc",
+      name: "rockcommerce",
       title: "RockCommerce",
       status: ["hidden"],
     );
@@ -828,8 +836,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function url($str, $http = false): string
   {
-    if ($http) $http = 'https://' . $_SERVER['HTTP_HOST'];
-    return $http . $this->rootPage()->url . ltrim($str, "/");
+    if ($http) $http = $this->host();
+    return $http . '/' . ltrim($str, "/");
   }
 
   public function variationsPage(): Variations
@@ -906,7 +914,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function webhookUrl(): string
   {
-    return rtrim($this->webhook, "/") . self::webhookurl;
+    return $this->host() . self::webhookurl;
   }
 
   public function ___install(): void
@@ -1067,17 +1075,23 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'value' => "Note: PHP pricing settings are defined in the <a href=$link>RockMoney module</a>.",
     ]);
 
-    // webhook url
-    $inputfields->add([
-      'type' => 'URL',
-      'name' => 'webhook',
-      'label' => 'Webhook Base Url',
-      'icon' => 'link',
-      'value' => $this->webhook,
-      'notes' => "This is the base url that the payment provider triggers on status updates.
-        Usually this is your production domain but during development it could be a temporary ngrok domain.",
+    // Order
+    $fs = new InputfieldFieldset();
+    $fs->label = 'Order Settings';
+    $fs->icon = 'check-square-o';
+    $inputfields->add($fs);
+
+    $fs->add([
+      'type' => 'text',
+      'name' => 'publicOrderPageUrl',
+      'label' => 'Public Orderpage-Url',
+      'description' => 'The url of the page that you created for handling order updates, eg after payment to show the success message.',
+      'notes' => 'Make sure the url has a trailing slash or not depending on your site settings - otherwise it will redirect to the other version and lose query parameters!
+        Example: If the final url is https://example.com/order/?id=123 you have to enter /order/ in this field.',
+      'value' => $this->publicOrderPageUrl,
     ]);
 
+    // Backend
     $fs = new InputfieldFieldset();
     $fs->label = 'Backend';
     $fs->icon = 'cogs';

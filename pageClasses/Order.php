@@ -72,24 +72,24 @@ class Order extends Page
       'label' => 'Order ID',
       'value' => "<div class='uk-text-truncate'>{$this->name}</div>",
       'columnWidth' => 50,
-      'notes' => "API: \$order->name\n" .
-        'Order created at ' . date("d.m.Y H:i:s", $this->created),
+      'notes' => 'Order created at ' . date("d.m.Y H:i:s", $this->created)
+        . $this->apiNote('$order->name'),
     ]));
 
     $invoice = $this->invoice(1);
     $url = $invoice ? $invoice->editUrl() : '';
+    $mail = $this->email(1);
     $form->add($rm->inputfield([
       'type' => 'markup',
       'label' => 'Invoice',
       'value' => "<a href='$url'>$url</a>",
       'icon' => 'file-pdf-o',
       'entityEncodeText' => false,
-      'notes' => "API: \$order->createInvoice()
-        Usually the invoice is created when the webhook is triggered.
+      'notes' => "Usually the invoice is created when the webhook is triggered.
         Manual actions:
         <a href='./?id=$this&createinvoice=1'>Create invoice manually</a>
-        <a href='./?id=$this&sendinvoice=1'>Send invoice to client</a>
-        ",
+        <a href='./?id=$this&sendinvoice=1'>Send invoice to client $mail</a>"
+        . $this->apiNote('$order->createInvoice()'),
       'collapsed' => $url ? Inputfield::collapsedNo : Inputfield::collapsedYes,
     ]));
     $form->add($rm->inputfield([
@@ -100,14 +100,17 @@ class Order extends Page
       'value' => $rm->renderTable($this->details()),
       'collapsed' => Inputfield::collapsedNo,
       'notes' => 'Additional information for the order.'
-        . "\nAPI: \$order->details() or \$order->details('item')",
+        . $this->apiNote('$order->details() or $order->details("item")'),
     ]));
     if ($f = $form->get(self::field_paymentstatus)) {
-      $url = $rc->url("order?id=" . $this->name);
+      $url = rockcommerce()->url(
+        rockcommerce()->publicOrderPageUrl . "?id=" . $this->name
+      );
       $editlink = $rc->processUrl("edit-status/?id=$this");
       $f->entityEncodeText = false;
       $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
-        <a href=$editlink>Edit Status</a>";
+        <a href=$editlink>Edit Status</a>"
+        . $this->apiNote('$order->paymentStatus()');
     }
 
     // cost wrapper
@@ -140,19 +143,6 @@ class Order extends Page
       'icon' => 'money',
       'collapsed' => $this->paymentId() ? Inputfield::collapsedNo : Inputfield::collapsedYes,
     ]);
-
-    // debug
-    if ($this->wire->user->isSuperuser()) {
-      $form->add([
-        'type' => 'markup',
-        'label' => 'Debug',
-        'icon' => 'bug',
-        'value' => $rm->renderTable([
-          'redirectUrl' => $this->redirectUrl(),
-        ]),
-        'collapsed' => $this->wire->config->debug ? 0 : 1,
-      ]);
-    }
   }
 
   public function onCreate(): void
@@ -219,6 +209,12 @@ class Order extends Page
 
   /** backend */
 
+  public function apiNote($note, $nl = true): string
+  {
+    if (!$this->wire->user->isSuperuser()) return '';
+    return ($nl ? "\n" : "") . "API: $note";
+  }
+
   public function getPageListLabel()
   {
     $rc = rockcommerce();
@@ -280,8 +276,9 @@ class Order extends Page
     return $invoice;
   }
 
-  public function createPayment(): Payment|false
-  {
+  public function createPayment(
+    $redirectUrl,
+  ): Payment|false {
     if ($this->paymentId()) throw new WireException("A payment for this order has already been created.");
 
     // create mollie payment
@@ -291,16 +288,17 @@ class Order extends Page
     try {
       $total = $this->total(1);
       if (!$total instanceof Money) throw new WireException("Invalid Price");
-      $payment = $mollie->api()->payments->create([
+      $data = [
         "amount" => [
           "currency" => (string)$total->money->getCurrency(),
           "value" => $total->formatMollie(),
         ],
         "description" => (string)$this->title,
-        "redirectUrl" => $this->redirectUrl(),
+        "redirectUrl" => $this->redirectUrl($redirectUrl),
         "webhookUrl" => $rc->webhookUrl(),
         "metadata" => ["orderid" => $this->name],
-      ]);
+      ];
+      $payment = $mollie->api()->payments->create($data);
       $this->setPayment($payment);
       return $payment;
     } catch (\Throwable $th) {
@@ -509,9 +507,14 @@ class Order extends Page
     return $this->getFormatted(self::field_payment);
   }
 
-  public function redirectUrl(): string
+  public function paymentStatus(): string
   {
-    return rockcommerce()->url("order?id={$this->name}", true);
+    return $this->getFormatted(self::field_paymentstatus);
+  }
+
+  public function redirectUrl($url): string
+  {
+    return rockcommerce()->url($url . "?id={$this->name}", true);
   }
 
   /**

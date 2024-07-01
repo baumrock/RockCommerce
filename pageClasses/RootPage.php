@@ -32,6 +32,11 @@ class RootPage extends Page
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
+
+    // cleanup
+    $file = $this->wire->config->paths->templates . "rockcommerce_rootpage.php";
+    if (is_file($file)) $this->wire->files->unlink($file);
+
     $rm->migrate([
       'fields' => [
         self::field_logo => [
@@ -79,18 +84,11 @@ class RootPage extends Page
           ],
           'noChildren' => 1, // no children allowed
           'noLang' => 0,
-          'urlSegments' => true,
-          'noAppendTemplateFile' => true,
           'noSettings' => true,
           'icon' => 'shopping-cart',
           'noParents' => 1,
         ],
       ],
     ]);
-    $root = rtrim($this->wire->config->paths->root, "/");
-    $this->wire->files->copy(
-      "$root/site/modules/RockCommerce/stubs/rockcommerce_rootpage.php",
-      "$root/site/templates"
-    );
   }
 }
