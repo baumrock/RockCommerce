@@ -35,7 +35,7 @@ class Frontend extends Wire
     $root = $this->wire->config->paths->root;
     $inRoot = $this->wire->files->fileInPath($folder, $root);
 
-    if (is_dir($folder) && $inRoot) {
+    if ($inRoot && is_dir($folder)) {
       // we have an absolute path inside pw
       $this->folders->prepend(realpath($folder));
     } else {
