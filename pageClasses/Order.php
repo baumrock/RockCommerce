@@ -140,6 +140,19 @@ class Order extends Page
       'icon' => 'money',
       'collapsed' => $this->paymentId() ? Inputfield::collapsedNo : Inputfield::collapsedYes,
     ]);
+
+    // debug
+    if ($this->wire->user->isSuperuser()) {
+      $form->add([
+        'type' => 'markup',
+        'label' => 'Debug',
+        'icon' => 'bug',
+        'value' => $rm->renderTable([
+          'redirectUrl' => $this->redirectUrl(),
+        ]),
+        'collapsed' => $this->wire->config->debug ? 0 : 1,
+      ]);
+    }
   }
 
   public function onCreate(): void

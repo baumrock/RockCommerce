@@ -2,9 +2,9 @@
 
 namespace ProcessWire;
 
+use PDOException;
 use RockCommerce\Cart;
 use RockCommerce\Carts;
-use RockCommerce\Checkout;
 use RockCommerce\Frontend;
 use RockCommerce\InvoiceGroup;
 use RockCommerce\Invoices;
@@ -33,6 +33,8 @@ function rockcommerce(): RockCommerce
  * @author Bernhard Baumrock, 24.07.2023
  * @license COMMERCIAL PLEASE DO NOT DISTRIBUTE
  * @link https://www.baumrock.com
+ *
+ * @method Order createOrder(string $subject, Money|float $net, Money|float $vat, Money|float $total, string $email, array $pageProperties = [], array $meta = []) Hookable method to create an order
  */
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
@@ -817,13 +819,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   /**
    * Return a rockcommerce url in form /rc/whatever
    *
+   * If second param is true this will return the current host, which will
+   * be either example.com or example.com.ddev.site or 12345.ngrok.app etc.
+   *
    * Usage:
    * $rc->url("/foo/bar") --> /rc/foo/bar
    * $rc->url("/foo/bar", true) --> https://example.com/rc/foo/bar
    */
   public function url($str, $http = false): string
   {
-    return $this->rootPage()->url($http) . ltrim($str, "/");
+    if ($http) $http = 'https://' . $_SERVER['HTTP_HOST'];
+    return $http . $this->rootPage()->url . ltrim($str, "/");
   }
 
   public function variationsPage(): Variations
