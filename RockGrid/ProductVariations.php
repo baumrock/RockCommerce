@@ -2,6 +2,7 @@
 
 namespace RockCommerce;
 
+use ProcessWire\RockCommerce;
 use RockGrid\Grid;
 
 use function ProcessWire\rockcommerce;
@@ -102,5 +103,10 @@ class ProductVariations extends Grid
       }
     }
     return $data;
+  }
+
+  public function isViewable()
+  {
+    return wire()->user->hasPermission(RockCommerce::permission_variations);
   }
 }

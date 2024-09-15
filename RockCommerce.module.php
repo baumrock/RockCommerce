@@ -40,6 +40,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 {
   const prefix = 'rockcommerce_';
   const maintenance = 'rockcommerce_maintenance';
+  const permission_variations = 'rockcommerce-variations';
 
   const session_cart = 'rockcommerce_cart';
   const viewFolders = [
@@ -612,6 +613,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function migrate()
   {
     $rm = rockmigrations();
+
+    // add permissions
+    $rm->createPermission(
+      self::permission_variations,
+      'User can manage product variations'
+    );
+
     $rm->installModule("InputfieldRcPricing");
     $rm->installModule("FieldtypeRcVariations");
     $rm->installModule("InputfieldRcVariations");
