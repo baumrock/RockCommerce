@@ -70,18 +70,15 @@ trait Product
         'label' => 'Shop',
         'collapsed' => Inputfield::collapsedYesAjax,
       ],
-
       self::field_canbebought => [
         'type' => 'checkbox',
         'label' => 'Product can be bought',
       ],
-
       self::field_price => [
         'type' => 'RockMoney',
         'label' => 'Net Price',
         'icon' => 'money',
       ],
-
       self::field_variation => [
         'type' => 'RockGrid',
         'label' => 'Variations',
