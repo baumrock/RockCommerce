@@ -7,6 +7,8 @@ RockCommerce.component("rctaxselect", {
       const product = RockCommerce.getComponent(this.$el, "rcproduct");
       if (product) product.update();
     });
-    this.taxrate = localStorage.getItem("rc-taxrate") || 0;
+    this.taxrate =
+      localStorage.getItem("rc-taxrate") ||
+      this.$el.getAttribute("rc-default-taxrate");
   },
 });

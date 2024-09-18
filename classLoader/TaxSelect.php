@@ -12,6 +12,7 @@ class TaxSelect extends Wire
   public function attrs(): string
   {
     rockcommerce()->loadJS('rctaxselect');
-    return "x-data=rctaxselect";
+    $default = rockcommerce()->getDefaultTaxrate();
+    return "x-data=rctaxselect rc-default-taxrate='$default'";
   }
 }

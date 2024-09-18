@@ -2,6 +2,7 @@
 
 namespace RockCommerce;
 
+use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use RockMigrations\MagicPage;
@@ -66,14 +67,17 @@ class Variation extends Page
               'label' => 'Option Name',
               'notes' => '',
               'required' => true,
-              'columnWidth' => 70,
+              // 'columnWidth' => 70,
+              'columnWidth' => 100,
               'rpb-nolabel' => false, // hide label in backend
             ],
             self::field_price => [
               'columnWidth' => 30,
+              'collapsed' => Inputfield::collapsedHidden,
             ],
           ],
-          'repeaterTitle' => '{title} - {' . self::field_price . '}',
+          // 'repeaterTitle' => '{title} - {' . self::field_price . '}',
+          'repeaterTitle' => '{title}',
           'familyFriendly' => 1,
           'repeaterDepth' => 0,
           'tags' => 'RockCommerce',

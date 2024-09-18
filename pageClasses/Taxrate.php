@@ -13,6 +13,7 @@ class Taxrate extends Page
   const prefix = 'rockcommerce_taxrate_';
 
   const field_taxrate = self::prefix . 'taxrate';
+  const field_isdefault = self::prefix . 'isdefault';
 
   public function taxrate(): float
   {
@@ -31,6 +32,10 @@ class Taxrate extends Page
           'icon' => 'percent',
           'notes' => 'Example: For 20% VAT enter 20',
         ],
+        self::field_isdefault => [
+          'type' => 'checkbox',
+          'label' => 'Set as default for new website visitors',
+        ],
       ],
       'templates' => [
         self::tpl => [
@@ -43,6 +48,7 @@ class Taxrate extends Page
               'required' => false,
               'columnWidth' => 70,
             ],
+            self::field_isdefault,
           ],
           'parentTemplates' => [
             Taxrates::tpl,

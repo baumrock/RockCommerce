@@ -12,6 +12,7 @@ use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\ProductPage;
 use RockCommerce\RootPage;
+use RockCommerce\Taxrate;
 use RockCommerce\Taxrates;
 use RockCommerce\TaxSelect;
 use RockCommerce\Variation;
@@ -391,6 +392,18 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if (!$cart instanceof Cart) return false;
     if ($session) $this->setCart($cart);
     return $cart;
+  }
+
+  public function getDefaultTaxrate(): float
+  {
+    $taxrate = wire()->pages->get([
+      'template' => Taxrate::tpl,
+      Taxrate::field_isdefault => 1,
+    ]);
+    if ($taxrate->id) {
+      return $taxrate->getFormatted(Taxrate::field_taxrate);
+    }
+    return 0;
   }
 
   // public function getJsConfig($json = false): array|string
