@@ -6,7 +6,7 @@ RockCommerce.component("rcvariation", {
   init() {
     RockCommerce.addComponent(this);
     this.minoptions = parseInt(this.$rcattr("rc-minoptions"));
-    this.maxoptions = parseInt(this.$rcattr("rc-maxoptions"));
+    this.maxoptions = parseInt(this.$rcattr("rc-maxoptions")) || 1;
   },
 
   disableAll() {

@@ -98,6 +98,7 @@ trait Product
         'icon' => 'list-ol',
         'collapsed' => Inputfield::collapsedBlank,
         'columnWidth' => 50,
+        'notes' => 'Empty means no minimum',
       ],
       self::field_maxoptions => [
         'type' => 'integer',
@@ -105,6 +106,7 @@ trait Product
         'icon' => 'list-ol',
         'collapsed' => Inputfield::collapsedBlank,
         'columnWidth' => 50,
+        'notes' => 'Empty means 1',
       ],
       self::field_variations => [
         'label' => 'Variations',
