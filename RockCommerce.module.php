@@ -59,10 +59,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $grid = $this->wire->modules->get('RockGrid');
     $grid->addDir(__DIR__ . "/RockGrid");
 
-    // load page classes
-    require_once __DIR__ . "/RockCommercePage.php";
-    $rm->pageClassLoader($this);
-
     // hooks
     $this->wire->addHookAfter(self::webhookurl, $this, "handleWebhook");
   }
