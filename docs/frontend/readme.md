@@ -1,6 +1,6 @@
 # Frontend Rendering
 
-This section is about rendering RockCommerce pages like the cart or the checkout. For site-specific frontend helpers see the next section (links at the bottom of the page).
+This section is about rendering RockCommerce pages like the cart or the checkout. For site-specific frontend helpers see the <a href='../frontend-site/'>next section</a>.
 
 ## Concept
 
