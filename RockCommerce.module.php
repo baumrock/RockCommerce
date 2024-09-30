@@ -637,8 +637,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rm->installModule("FieldtypeRcVariations");
     $rm->installModule("InputfieldRcVariations");
 
-    $this->moveRootPage();
-
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
       parent: 2,
@@ -713,22 +711,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $fired = true;
       $p->_migrate();
     }
-  }
-
-  private function moveRootPage(): void
-  {
-    $p = wire()->pages->get('/rockcommerce');
-    if (!$p->id) return;
-
-    // rename processpage
-    $dash = wire()->pages->get([
-      'name' => 'rockcommerce',
-      'parent' => 2,
-    ]);
-
-    // rename and move
-    $dash->setAndSave('name', 'rc-dashboard');
-    $p->setAndSave('parent', 2);
   }
 
   /**
