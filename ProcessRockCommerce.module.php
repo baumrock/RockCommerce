@@ -31,7 +31,7 @@ class ProcessRockCommerce extends Process
 
       // page that you want created to execute this module
       'page' => [
-        'name' => 'rockcommerce',
+        'name' => 'rc-dashboard',
         'parent' => 2,
         'title' => 'Shop'
       ],

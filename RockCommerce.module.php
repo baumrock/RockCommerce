@@ -121,7 +121,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if (is_file($hookFile)) $rm->minify($hookFile);
 
     // HTMX+AJAX
-    rockfrontend()->addAjaxFolder('rc-ajax', __DIR__ . '/ajax');
+    rockfrontend()->addAjaxFolder('rockcommerce', __DIR__ . '/ajax');
 
     // hooks
     wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
@@ -637,9 +637,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rm->installModule("FieldtypeRcVariations");
     $rm->installModule("InputfieldRcVariations");
 
+    $this->moveRootPage();
+
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
-      parent: 1,
+      parent: 2,
       name: "rockcommerce",
       title: "RockCommerce",
       status: ["hidden"],
@@ -713,6 +715,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }
   }
 
+  private function moveRootPage(): void
+  {
+    $p = wire()->pages->get('/rockcommerce');
+    if (!$p->id) return;
+
+    // rename processpage
+    $dash = wire()->pages->get([
+      'name' => 'rockcommerce',
+      'parent' => 2,
+    ]);
+
+    // rename and move
+    $dash->setAndSave('name', 'rc-dashboard');
+    $p->setAndSave('parent', 2);
+  }
+
   /**
    * Create a new cart and save it to the database
    */
@@ -778,7 +796,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function rootPage(): RootPage
   {
     return $this->wire->pages->get([
-      'parent' => 1,
+      // 'parent' => 2,
       'template' => RootPage::tpl,
     ]);
   }

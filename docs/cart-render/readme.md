@@ -1,43 +1,9 @@
-# Carts
-
-## Get Cart
-
-```php
-// get the current user's cart or create a new one
-// this is the recommended version to be used on the frontend
-$cart = rockcommerce()->cart();
-
-// get specific cart by page id
-// returns false if not found!
-$cart = rockcommerce()->getCart(123);
-
-// get cart by page name
-// returns false if not found!
-$cart = rockcommerce()->getCart("0w4esdk");
-```
-
-## Creating new Carts
-
-```php
-// create a new cart and save it to the DB
-$cart = rockcommerce()->newCart();
-```
-
-## Adding Items
-
-```php
-$cart->addItem(
-  item: 123, // page id of item
-  amount: 2,
-);
-```
-
-## Modifying the Cart Frontend
+# Cart Rendering
 
 You have two options to customize the cart:
 
 1. Hooks
-2. Overwrite view-files
+2. Overwriting view-files
 
 ### Using hooks
 
