@@ -30,6 +30,7 @@ class ProcessRockCommerce extends Process
       'permissions' => [self::permission => 'May view RockCommerce GUI Endpoints'],
 
       // page that you want created to execute this module
+      // fix
       'page' => [
         'name' => 'rc-dashboard',
         'parent' => 2,
