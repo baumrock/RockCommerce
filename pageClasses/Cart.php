@@ -100,10 +100,10 @@ class Cart extends Page
     return $item;
   }
 
-  public function items(): CartItemsArray
+  public function items(): ItemsArray
   {
     if ($this->cachedItems) return $this->cachedItems;
-    $this->cachedItems = (new CartItemsArray())->import($this->children());
+    $this->cachedItems = (new ItemsArray())->import($this->children());
     return $this->cachedItems;
   }
 
@@ -197,10 +197,10 @@ class Cart extends Page
             Carts::tpl,
           ],
           'childTemplates' => [
-            Cartitem::tpl,
+            Item::tpl,
           ],
           'noLang' => 1, // single language
-          'noChildren' => 1,
+          'noChildren' => 0, // may have children
           'noMove' => 1,
           'noChangeTemplate' => 1,
           'noParents' => 1,

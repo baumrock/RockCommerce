@@ -461,6 +461,9 @@ class Order extends Page
           'parentTemplates' => [
             Orders::tpl,
           ],
+          'childTemplates' => [
+            Item::tpl,
+          ],
           'noParents' => 1,
           'noLang' => 1, // single language
         ],

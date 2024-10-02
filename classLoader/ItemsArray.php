@@ -4,13 +4,13 @@ namespace RockCommerce;
 
 use ProcessWire\PageArray;
 
-class CartItemsArray extends PageArray
+class ItemsArray extends PageArray
 {
   public function getJsonArray(): array
   {
     $arr = [];
     foreach ($this as $item) {
-      if (!$item instanceof Cartitem) continue;
+      if (!$item instanceof Item) continue;
       $arr[] = $item->getArray();
     }
     return $arr;

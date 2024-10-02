@@ -2,7 +2,7 @@
 
 Every cart in rockcommerce is a ProcessWire Page with a custom class `RockCommerce\Cart`. That means you can use the cart just like any other ProcessWire Page plus the methods defined in this API.
 
-Every cart is a collection of several CartItems, which are also ProcessWire Pages with a custom class `RockCommerce\Cartitem` and are direct children of the cart page.
+Cart items are also ProcessWire Pages with a custom class `RockCommerce\Item` and are direct children of the cart page.
 
 ## Get Cart
 

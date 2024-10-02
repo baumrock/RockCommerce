@@ -14,13 +14,17 @@ use function ProcessWire\rockfrontend;
 use function ProcessWire\rockmigrations;
 use function ProcessWire\rockmoney;
 
-class Cartitem extends Page
+/**
+ * RockCommerce Cart or Order Item
+ */
+
+class Item extends Page
 {
   use MagicPage;
   use FieldMethod;
 
-  const tpl = "rockcommerce_cartitem";
-  const prefix = "rockcommerce_cartitem_";
+  const tpl = "rockcommerce_item";
+  const prefix = "rockcommerce_item_";
 
   const field_product = self::prefix . "product";
   const field_amount = self::prefix . "amount";
@@ -174,6 +178,7 @@ class Cartitem extends Page
           ],
           'parentTemplates' => [
             Cart::tpl,
+            Order::tpl,
           ],
           'noLang' => 1, // single language
           'noChildren' => 1,
