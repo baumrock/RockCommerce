@@ -2,7 +2,6 @@
 
 namespace ProcessWire;
 
-use PDOException;
 use RockCommerce\Cart;
 use RockCommerce\Carts;
 use RockCommerce\Frontend;
@@ -78,7 +77,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   private $taxrates = false;
 
-  // submodules
   public $taxselect;
 
   public function init()
@@ -130,7 +128,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     wire()->addHookAfter(
       'Page::render',
       $this,
-      'addMarkup',
+      'addMarkupHook',
       // priority 200 means RC assets are loaded after RF assets which have 100
       ['priority' => 200]
     );
@@ -149,82 +147,47 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $admin = $this->wire->page->template == 'admin';
     $ajax = $this->wire->config->ajax;
     if ($admin and !$ajax) {
-      $rm->addStyles(__DIR__ . "/less/backend.less");
+      // $rm->addStyles(__DIR__ . "/less/backend.less");
       $rm->addScripts(__DIR__ . "/js/RockCommerceBackend.min.js");
     }
   }
 
-  /** regular methods */
-
-  protected function addMarkup(HookEvent $event): void
+  /**
+   * Add markup to frontend pages
+   */
+  public function ___addMarkup($page, $html)
   {
     $config = $this->wire->config;
     if ($config->ajax) return;
     if ($config->external) return;
-    if (!strpos($event->return, '</head>')) return;
-    // todo: add feature to prevent adding of markup
-    // usage: rockcommerce()->noMarkup('template=foo')
-    $this->addMarkupBody($event);
-    // load head after body so that $this->loadJS() works!
-    $this->addMarkupHead($event);
+    if (!$page->viewable()) return;
+    if ($page->template == 'admin') return;
+    if (!strpos($html, '</head>')) return;
+
+    // this is to support disabling rockcommerce markup via hook
+    if ($config->noRockCommerceMarkup) return;
+
+    // first we add the body, because there some scripts are added
+    $html = str_replace(
+      '</body>',
+      $this->markupBody($page) . '</body>',
+      $html
+    );
+    // now that the scripts are loaded we can add markup to the head
+    $html = str_replace(
+      '</head>',
+      $this->markupHead($page) . '</head>',
+      $html
+    );
+
+    return $html;
   }
 
-  public function addMarkupBody($event): void
+  protected function addMarkupHook(HookEvent $event): void
   {
-    $conf = json_encode($this->jsConfig->getArray());
-    $conf = $this->wire->sanitizer->entities($conf);
-    $tag = '';
-
-    // load cart component
-    // this hidden element makes sure that we load the component even
-    // if there is no cart element in the DOM. If there is one, the init()
-    // method will take care of loading the cart only once.
-    // data-ajax=false tells RockCommerce not to load items via ajax
-    $this->loadJS('rccart');
-    $tag .= "<div x-data=rccart data-noajax hidden></div>";
-
-    // rockcommerce has to be the last alpine element
-    // this is to ensure that all other components are ready at this point
-    $this->loadJS('rockcommerce');
-    $tag .= "<div x-data=rockcommerce data-config='$conf' hidden></div>";
-    $event->return = str_replace('</body>', "$tag</body>", $event->return);
-  }
-
-  public function addMarkupHead($event): void
-  {
-    // Debug::startTimer();
-    $urls = [];
-
-    // we always load RockCommerce.js at very first!
-    $urls[] = $this->toUrl(__DIR__ . '/RockCommerce.min.js', true);
-
-    // add RockCommerce Alpine Components
-    foreach (glob(__DIR__ . '/alpine/*.min.js') as $file) {
-      $name = substr(basename($file), 0, -7);
-      if (!array_key_exists($name, $this->jsFiles)) continue;
-      $urls[] = $this->toUrl($file, true);
-    }
-
-    // load rockmoney/currency for money calculations
-    $modules = $this->wire->config->paths->siteModules;
-    $urls[] = $this->toUrl($modules . 'RockMoney/RockMoney.min.js', true);
-    $urls[] = $this->toUrl($modules . 'RockMoney/lib/currency.min.js', true);
-
-    // note: alpinejs must be loaded AFTER RockCommerce so that all
-    // alpine:init events will be attached to the document
-    $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
-
-    $markup = "";
-    foreach ($urls as $url) {
-      if (strpos($url, '.js?')) {
-        $markup .= "<script src='$url' defer></script>\n";
-      } else {
-        $markup .= "<link rel='stylesheet' href='$url'>\n";
-      }
-    }
-
-    $event->return = str_replace('</head>', "$markup</head>", $event->return);
-    // bd((Debug::stopTimer() * 1000) . 'ms');
+    $newHtml = $this->addMarkup($event->object, $event->return);
+    if (!$newHtml) return;
+    $event->return = $newHtml;
   }
 
   public function addVariationsUrl(): string
@@ -412,6 +375,27 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       return $taxrate->getFormatted(Taxrate::field_taxrate);
     }
     return 0;
+  }
+
+  /**
+   * Get file either from templates/rockcommerce
+   * or from module frontend folder
+   */
+  public function getFile(string $file): string
+  {
+    $paths = [
+      wire()->config->paths->templates . 'RockCommerce/frontend',
+      __DIR__ . '/frontend',
+    ];
+
+    $file = Paths::normalizeSeparators($file);
+    foreach ($paths as $path) {
+      $path = Paths::normalizeSeparators($path);
+      $f = rtrim($path, '/') . '/' . ltrim($file, '/');
+      if (file_exists($f)) return $f;
+    }
+
+    return '';
   }
 
   // public function getJsConfig($json = false): array|string
@@ -631,6 +615,69 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     foreach ($oldVariations as $p) $p->delete();
   }
 
+  public function ___markupBody(): string
+  {
+    $conf = json_encode($this->jsConfig->getArray());
+    $conf = $this->wire->sanitizer->entities($conf);
+    $out = '<div id="rockcommerce">';
+
+    // load cart component
+    // this hidden element makes sure that we load the component even
+    // if there is no cart element in the DOM. If there is one, the init()
+    // method will take care of loading the cart only once.
+    // data-ajax=false tells RockCommerce not to load items via ajax
+    $this->loadJS('rccart');
+    $out .= "<div x-data=rccart data-noajax hidden></div>";
+
+    // rockcommerce has to be the last alpine element
+    // this is to ensure that all other components are ready at this point
+    $this->loadJS('rockcommerce');
+    $out .= "<div x-data=rockcommerce data-config='$conf' hidden></div>";
+
+    $out .= $this->view('loader.html');
+
+    $out .= "</div>";
+
+    return $out;
+  }
+
+  public function ___markupHead(): string
+  {
+    // Debug::startTimer();
+    $urls = [];
+
+    // we always load RockCommerce.js at very first!
+    $urls[] = $this->toUrl(__DIR__ . '/RockCommerce.min.js', true);
+
+    // add RockCommerce Alpine Components
+    foreach (glob(__DIR__ . '/alpine/*.min.js') as $file) {
+      $name = substr(basename($file), 0, -7);
+      if (!array_key_exists($name, $this->jsFiles)) continue;
+      $urls[] = $this->toUrl($file, true);
+    }
+
+    // load rockmoney/currency for money calculations
+    $modules = $this->wire->config->paths->siteModules;
+    $urls[] = $this->toUrl($modules . 'RockMoney/RockMoney.min.js', true);
+    $urls[] = $this->toUrl($modules . 'RockMoney/lib/currency.min.js', true);
+
+    // note: alpinejs must be loaded AFTER RockCommerce so that all
+    // alpine:init events will be attached to the document
+    $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
+
+    $out = "";
+    foreach ($urls as $url) {
+      if (strpos($url, '.js?')) {
+        $out .= "<script src='$url' defer></script>\n";
+      } else {
+        $out .= "<link rel='stylesheet' href='$url'>\n";
+      }
+    }
+
+    // bd((Debug::stopTimer() * 1000) . 'ms');
+    return $out;
+  }
+
   public function migrate()
   {
     $this->migrateCleanup();
@@ -765,21 +812,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $this->processPage()->url . $url;
   }
 
-  /**
-   * Method that renders the frontend folder when the rootpage is viewed
-   * The heavy lifting is done by RockFrontend so that other modules can use
-   * the same concept as well :)
-   */
-  public function renderFrontend(): string
-  {
-    return $this->rockfrontend()->viewFolders(
-      self::viewFolders,
-      [
-        'trailingSlash' => $this->rootPage()->trailingslash(),
-      ]
-    );
-  }
-
   public function rockfrontend(): RockFrontend
   {
     return $this->wire->modules->get('RockFrontend');
@@ -803,30 +835,30 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->wire->session->set(self::session_cart, $cart->name);
   }
 
-  /**
-   * Generate swap container for HTMX requests
-   *
-   * Usage example:
-   * echo $rc->swap([
-   *  'partials/cart-sidebar',
-   * ]);
-   */
-  public function swap(array $files): string
-  {
-    $out = "\n<div id='rc-swap' hidden>";
+  // /**
+  //  * Generate swap container for HTMX requests
+  //  *
+  //  * Usage example:
+  //  * echo $rc->swap([
+  //  *  'partials/cart-sidebar',
+  //  * ]);
+  //  */
+  // public function swap(array $files): string
+  // {
+  //   $out = "\n<div id='rc-swap' hidden>";
 
-    // before we render all views we make sure to call _init.php
-    $this->view('_init.php');
+  //   // before we render all views we make sure to call _init.php
+  //   $this->view('_init.php');
 
-    // then we render all requested views
-    foreach ($files as $file) {
-      // note: for security only partials can be swapped!
-      $out .= $this->view("partials/$file");
-    }
+  //   // then we render all requested views
+  //   foreach ($files as $file) {
+  //     // note: for security only partials can be swapped!
+  //     $out .= $this->view("partials/$file");
+  //   }
 
-    $out .= "</div>";
-    return $out;
-  }
+  //   $out .= "</div>";
+  //   return $out;
+  // }
 
   public function ___taxrate($product): float
   {
@@ -846,18 +878,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function toUrl(string $path, $cachebuster = false): string
   {
-    $url = str_replace(
-      $this->wire->config->paths->root,
-      $this->wire->config->urls->root,
-      $path
-    );
-    if ($cachebuster) {
-      $url = $this->wire->config->versionUrl(
-        $url,
-        !$this->coreversion,
-      );
-    }
-    return $url;
+    return rockfrontend()->toUrl($path, $cachebuster);
   }
 
   /**
@@ -889,24 +910,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     array|Page $vars = [],
     Page $page = null,
   ): \Latte\Runtime\Html|string {
-    // make some defaults available in all frontend files:
-    $defaults = [
+    $file = $this->getFile($file);
+    $vars = [
       'rc' => $this,
       'rf' => rockfrontend(),
     ];
-
-    // if custom vars are specified merge them
-    $vars = array_merge($defaults, $vars);
-
-    // on the first request we need to tell rockfrontend
-    // which view folders to look into
-    if (!$this->viewFoldersSet) {
-      rockfrontend()->setViewFolders($this->viewFolders());
-      $this->viewFoldersSet = true;
-    }
-
-    // use rockfrontend to render the file
-    return rockfrontend()->view($file, $vars, $page);
+    $out = rockfrontend()->render($file, $vars);
+    if ($out instanceof \Latte\Runtime\Html) return $out;
+    return (string)$out;
   }
 
   /**
@@ -992,8 +1003,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
 
     $fs = new InputfieldFieldset();
-    $fs->label = 'Mail Settings';
+    $fs->label = 'E-Mails';
     $fs->icon = 'cogs';
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     // admin email address
@@ -1029,8 +1041,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // Product
     $fs = new InputfieldFieldset();
-    $fs->label = 'Product Settings';
+    $fs->label = 'Products';
     $fs->icon = 'cubes';
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $fs->add([
@@ -1052,8 +1065,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // Pricing
     $fs = new InputfieldFieldset();
-    $fs->label = 'Pricing Settings';
+    $fs->label = 'Pricing';
     $fs->icon = 'money';
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     // taxrates
@@ -1113,8 +1127,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // Order
     $fs = new InputfieldFieldset();
-    $fs->label = 'Order Settings';
+    $fs->label = 'Orders';
     $fs->icon = 'check-square-o';
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $fs->add([
@@ -1131,6 +1146,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $fs = new InputfieldFieldset();
     $fs->label = 'Backend';
     $fs->icon = 'cogs';
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $fs->add([
