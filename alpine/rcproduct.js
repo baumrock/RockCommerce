@@ -30,7 +30,7 @@ RockCommerce.component("rcproduct", {
     RockCommerce.cart.add({
       pid: this.$rcpid,
       amount: this.amount,
-      variation: this.variationStringCart(),
+      variation: this.variationString(false, false),
     });
     // TODO: save to backend?
   },
@@ -97,8 +97,32 @@ RockCommerce.component("rcproduct", {
       // write formatted price to price property
       // so that the frontend can subscribe via x-text=price
       this.price = money.format();
-      this.variationStringUrl();
+      this.updateUrl();
     });
+  },
+
+  updateUrl() {
+    if (!this.$rcattr("rc-updateUrl")) return;
+    let str = this.variationString();
+    let url = new URL(window.location);
+    url.hash = str;
+    history.replaceState(null, "", url);
+  },
+
+  /**
+   * Get object with all variations and amounts
+   * JavaScript will automatically sort the object by key
+   */
+  variationObject() {
+    let obj = {};
+    obj["amount"] = this.amount;
+
+    // add querystring for all variations
+    this.variations.forEach((variation) => {
+      obj[variation.$rcpid] = variation.optionsString;
+    });
+
+    return obj;
   },
 
   get variations() {
@@ -109,50 +133,37 @@ RockCommerce.component("rcproduct", {
     );
   },
 
-  variationStringCart() {
+  /**
+   * Returns a string that represents the selected variations
+   * This is used for example to create a URL hash or to pass
+   * variation info to products added to the cart.
+   *
+   * Example string for the url:
+   * #1234567:6731,6732-amount:2
+   *
+   * Or for the cart:
+   * 1234567:6731,6732
+   *
+   * @returns {string}
+   */
+  variationString(includeAmount = true, includeHash = true) {
     // we create an object with properties
     // this will make sure that variations will be sorted alphabetically
-    let obj = {};
+    let obj = this.variationObject();
 
-    // add querystring for all variations
-    this.variations.forEach((variation) => {
-      obj[variation.$rcpid] = variation.optionsString;
-    });
-
-    // convert to string
-    let str = "";
-    Object.keys(obj).forEach((key) => {
-      str += `-${key}=${obj[key]}`;
-    });
-    return str.substring(1);
-  },
-
-  variationStringUrl() {
-    // we create an object with properties
-    // this will make sure that variations will be sorted alphabetically
-    let obj = {};
-
-    // add amount?
-    obj["amount"] = this.amount;
-
-    // add querystring for all variations
-    this.variations.forEach((variation) => {
-      obj[variation.$rcpid] = variation.optionsString;
-    });
-
-    // convert to string
-    let str = "";
-    Object.keys(obj).forEach((key) => {
-      str += `-${key}=${obj[key]}`;
-    });
-    str = "#" + str.substring(1);
-
-    // update url?
-    if (this.$rcattr("rc-updateUrl")) {
-      let url = new URL(window.location);
-      url.hash = str;
-      history.replaceState(null, "", url);
+    if (!includeAmount) {
+      delete obj.amount;
     }
+
+    // convert to string
+    let str = "";
+    Object.keys(obj).forEach((key) => {
+      str += `-${key}:${obj[key]}`;
+    });
+
+    // Add hash symbol if includeHash is true
+    str = includeHash ? "#" + str.substring(1) : str.substring(1);
+
     return str;
   },
 });

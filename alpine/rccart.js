@@ -4,6 +4,7 @@ document.addEventListener("alpine:init", () => {
   class CartItem {
     constructor(data) {
       this.pid = parseInt(data.pid);
+      this.amount = parseInt(data.amount) || 1;
       this.variation = data.variation;
     }
   }
@@ -22,29 +23,55 @@ document.addEventListener("alpine:init", () => {
       this.update();
     },
 
+    /**
+     * Add item to the JS cart
+     */
     add(data) {
       RockCommerce.trigger("addToCart", data, (data) => {
         const item = new CartItem(data);
-        while (data.amount > 0) {
+
+        // if cart already has an item with the same pid and variation
+        // then we increase the amount of that item
+        // otherwise we add the new item to the cart
+        const existingItem = this.items.find(
+          (i) => i.pid === item.pid && i.variation === item.variation
+        );
+        if (existingItem) {
+          existingItem.amount += item.amount;
+        } else {
           this.items.push(item);
-          data.amount--;
         }
+
+        this.update();
       });
     },
 
     get count() {
-      return this.items.length;
+      let count = 0;
+      this.items.forEach((item) => {
+        count += parseInt(item.amount || 1);
+      });
+      return count;
     },
 
     /**
-     * Save data to localStorage
+     * Save cart to the backend
+     */
+    save() {
+      let json = this.sleep();
+      console.log(json, "save to backend");
+    },
+
+    /**
+     * Get JSON representation of the cart and save it to localStorage
      */
     sleep() {
       const data = {
         items: this.items,
       };
-      localStorage.setItem("rc-cart", JSON.stringify(data));
-      // TODO: Save to database
+      let json = JSON.stringify(data);
+      localStorage.setItem("rc-cart", json);
+      return json;
     },
 
     /**
@@ -52,15 +79,19 @@ document.addEventListener("alpine:init", () => {
      */
     update() {
       RockCommerce.debounce("rc-cart-update", () => {
-        this.updateCartCountElements();
+        this.updateCartCount();
         this.sleep();
       });
     },
 
     /**
-     * Update cart count on crontend
+     * Update cart count on frontend
+     *
+     * This method populates all elements with rc-cart-count attribute
+     * so all you have to do to show the cart count is to add rc-cart-count="true" to an element
+     * Example: <div rc-cart-count>0</div>
      */
-    updateCartCountElements() {
+    updateCartCount() {
       let elements = document.querySelectorAll("[rc-cart-count]");
       elements.forEach((el) => {
         el.textContent = this.count;

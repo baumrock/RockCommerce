@@ -11,6 +11,7 @@ document.addEventListener("alpine:init", () => {
       if (!product) return;
 
       let hash = window.location.hash.substring(1).replace(/-/g, "&");
+      hash = hash.replace(/:/g, "=");
       const urlParams = new URLSearchParams(hash);
 
       // load amount

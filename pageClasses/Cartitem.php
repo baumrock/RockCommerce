@@ -64,6 +64,15 @@ class Cartitem extends Page
 
   /** frontend */
 
+  public function amount($type = null)
+  {
+    return rockfrontend()->field(
+      $this,
+      self::field_amount,
+      $type
+    );
+  }
+
   public function cart(): Cart
   {
     if ($this->isTrash()) {

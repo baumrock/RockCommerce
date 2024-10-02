@@ -1,5 +1,9 @@
 # Cart PHP API
 
+Every cart in rockcommerce is a ProcessWire Page with a custom class `RockCommerce\Cart`. That means you can use the cart just like any other ProcessWire Page plus the methods defined in this API.
+
+Every cart is a collection of several CartItems, which are also ProcessWire Pages with a custom class `RockCommerce\Cartitem` and are direct children of the cart page.
+
 ## Get Cart
 
 ```php
@@ -16,11 +20,14 @@ $cart = rockcommerce()->getCart(123);
 $cart = rockcommerce()->getCart("0w4esdk");
 ```
 
-## Create a new cart
+## Get cart items
 
 ```php
-// create a new cart and save it to the DB
-$cart = rockcommerce()->newCart();
+// get all items of the cart
+$items = $cart->getItems();
+
+// get item by id
+$item = $cart->getItem(123);
 ```
 
 ## Add item to cart

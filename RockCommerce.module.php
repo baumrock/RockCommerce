@@ -74,6 +74,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   /** @var WireArray */
   public $productTemplates = false;
 
+  public $showHelp = false;
+
   private $taxrates = false;
 
   // submodules
@@ -1123,6 +1125,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'name' => 'showRootPageInTree',
       'checked' => $this->showRootPageInTree ? 'checked' : '',
       'label' => 'Show rootpage in pagetree',
+    ]);
+
+    $fs->add([
+      'type' => 'checkbox',
+      'name' => 'showHelp',
+      'checked' => $this->showHelp ? 'checked' : '',
+      'label' => 'Show help notes to superusers',
     ]);
 
     return $inputfields;

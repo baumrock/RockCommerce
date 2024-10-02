@@ -133,7 +133,7 @@ class Cart extends Page
     if ($item) {
       // increase amount
       $item->of(false);
-      $item->set(Cartitem::field_amount, $item->amount(2) + $amount);
+      $item->set(Cartitem::field_amount, $item->amount() + $amount);
     } else {
       // create new item
       $item = new Cartitem($this);
