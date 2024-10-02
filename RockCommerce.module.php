@@ -725,10 +725,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function migrateCleanup(): void
   {
     $rm = rockmigrations();
-    $rm->deleteTemplate("rockcommerce_cartitem", true);
-    $rm->deleteField("rockcommerce_cartitem_amount", true);
-    $rm->deleteField("rockcommerce_cartitem_product", true);
-    $rm->deleteField("rockcommerce_cartitem_variation", true);
+    // nothing to do yet
   }
 
   /**
