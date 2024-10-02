@@ -64,6 +64,17 @@ document.addEventListener("alpine:init", () => {
       return count;
     },
 
+    getFromLocalStorage() {
+      return JSON.parse(localStorage.getItem("rc-cart") || "{}");
+    },
+
+    getSleepValue() {
+      const data = {
+        items: this.items,
+      };
+      return JSON.stringify(data);
+    },
+
     /**
      * Save cart to the backend
      */
@@ -76,10 +87,7 @@ document.addEventListener("alpine:init", () => {
      * Get JSON representation of the cart and save it to localStorage
      */
     sleep() {
-      const data = {
-        items: this.items,
-      };
-      let json = JSON.stringify(data);
+      json = this.getSleepValue();
       localStorage.setItem("rc-cart", json);
       return json;
     },
@@ -114,13 +122,8 @@ document.addEventListener("alpine:init", () => {
      * Wakeup: Read data from localstorage
      */
     wakeup() {
-      const data = localStorage.getItem("rc-cart") || "{}";
-      const parsedData = JSON.parse(data);
-      for (const key in parsedData) {
-        if (parsedData.hasOwnProperty(key)) {
-          this[key] = parsedData[key];
-        }
-      }
+      const data = this.getFromLocalStorage();
+      for (const key in data) this[key] = data[key];
     },
   }));
 });

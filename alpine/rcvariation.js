@@ -32,10 +32,13 @@ RockCommerce.component("rcvariation", {
    * Returns a string that represents the selected options
    * Usually this is one option, but if there are multiple options
    * then they are comma separated, eg "1010,1011,1012"
+   *
+   * Options are always sorted ASC for quick and easy comparisons as string.
    */
   get optionsString() {
     return Array.from(this.getSelected())
-      .map((el) => el.getAttribute("rc-pid"))
+      .map((el) => parseInt(el.getAttribute("rc-pid")))
+      .sort((a, b) => a - b)
       .join(",");
   },
 
