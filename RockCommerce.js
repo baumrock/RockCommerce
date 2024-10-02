@@ -101,6 +101,13 @@ var RockCommerce = {
   },
 
   /**
+   * Show loading indicator
+   */
+  loading() {
+    document.body.classList.add("rc-loading");
+  },
+
+  /**
    * Return a raw copy of data
    * This is useful to convert Alpine Proxy objects to a raw JS objects
    */

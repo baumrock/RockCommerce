@@ -52,7 +52,7 @@ document.addEventListener("alpine:init", () => {
           this.items.push(item);
         }
 
-        this.update();
+        this.save();
       });
     },
 
@@ -70,26 +70,25 @@ document.addEventListener("alpine:init", () => {
 
     getSleepValue() {
       const data = {
-        items: this.items,
+        _items: this.items,
       };
       return JSON.stringify(data);
     },
 
     /**
-     * Save cart to the backend
+     * Load cart from backend
      */
-    save() {
-      let json = this.sleep();
-      console.log(json, "save to backend");
+    loadFromBackend() {
+      RockCommerce.loading();
     },
 
     /**
-     * Get JSON representation of the cart and save it to localStorage
+     * Save cart
      */
-    sleep() {
+    save() {
+      this.update();
       json = this.getSleepValue();
       localStorage.setItem("rc-cart", json);
-      return json;
     },
 
     /**
@@ -98,7 +97,6 @@ document.addEventListener("alpine:init", () => {
     update() {
       RockCommerce.debounce("rc-cart-update", () => {
         this.updateCartCount();
-        this.sleep();
       });
     },
 
@@ -123,7 +121,13 @@ document.addEventListener("alpine:init", () => {
      */
     wakeup() {
       const data = this.getFromLocalStorage();
-      for (const key in data) this[key] = data[key];
+      // loop through all items from the localstorage
+      for (const key in data) {
+        if (key === "_items") {
+          if (this.ajax) this.loadFromBackend();
+          else this.items = data._items;
+        }
+      }
     },
   }));
 });

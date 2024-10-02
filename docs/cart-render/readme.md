@@ -45,7 +45,7 @@ The markup of the cart items is totally up to you. However, you have to apply so
 
 ```html
 <template x-for='item in items'>
-  <div>
+  <div><!-- x-for must have one root element! -->
     <h3 x-text='item.title'></h3>
     <div>Amount: <span x-text='item.amount'></span></div>
     <div>Variation: <span x-text='item.variation'></span></div>
