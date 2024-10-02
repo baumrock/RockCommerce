@@ -22,6 +22,8 @@ class Cart extends Page
 
   const field_order = self::prefix . "order";
 
+  private $cachedItems;
+
   /** magic */
 
   public function editForm(InputfieldWrapper $form): void
@@ -79,6 +81,15 @@ class Cart extends Page
 
   /** frontend */
 
+  public function getArray(): array
+  {
+    return [
+      'id' => $this->name,
+      'count' => $this->itemsCount(),
+      'items' => $this->items()->getJsonArray(),
+    ];
+  }
+
   public function item(string $variation = null): Page|false
   {
     // create selector as string
@@ -89,9 +100,11 @@ class Cart extends Page
     return $item;
   }
 
-  public function items(): PageArray
+  public function items(): CartItemsArray
   {
-    return $this->children();
+    if ($this->cachedItems) return $this->cachedItems;
+    $this->cachedItems = (new CartItemsArray())->import($this->children());
+    return $this->cachedItems;
   }
 
   /**
@@ -104,7 +117,7 @@ class Cart extends Page
   {
     $total = 0;
     foreach ($this->items() as $item) {
-      $total += $item->amount(1);
+      $total += $item->amount();
     }
     return $total;
   }

@@ -1,9 +1,21 @@
 # Cart Rendering
 
-You have two options to customize the cart:
+A basic cart can look like this:
 
-1. Hooks
-2. Overwriting view-files
+```html
+<div x-data=rccart>
+  <div>
+    <!-- cart items -->
+  </div>
+  <div>
+    <!-- cart summary -->
+  </div>
+</div>
+```
+
+Note the `x-data=rccart` attribute. This is necessary to initialize the `rccart` Alpine component.
+
+## Customizing the cart
 
 ### Using hooks
 

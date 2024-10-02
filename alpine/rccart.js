@@ -1,4 +1,9 @@
-// Cart Component
+/**
+ * RockCommerce Alpine Cart Component
+ * Access this component via RockCommerce.cart
+ * See docs for details.
+ */
+
 document.addEventListener("alpine:init", () => {
   // Cart Item Class
   class CartItem {
@@ -16,8 +21,13 @@ document.addEventListener("alpine:init", () => {
     init() {
       // we allow only one cart
       if (RockCommerce.cart) return;
+
       RockCommerce.addComponent(this);
       RockCommerce.cart = this;
+
+      // load items from localstorage or via ajax from the backend?
+      this.ajax = !this.$el.hasAttribute("data-noajax");
+
       this.wakeup();
       this.$watch("items", this.update.bind(this));
       this.update();
@@ -75,7 +85,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     /**
-     * General update method
+     * General update method triggered on every change
      */
     update() {
       RockCommerce.debounce("rc-cart-update", () => {
@@ -101,7 +111,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     /**
-     * Load data from localstorage
+     * Wakeup: Read data from localstorage
      */
     wakeup() {
       const data = localStorage.getItem("rc-cart") || "{}";

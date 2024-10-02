@@ -100,6 +100,10 @@ var RockCommerce = {
     if (cid) return this.components[cid];
   },
 
+  /**
+   * Return a raw copy of data
+   * This is useful to convert Alpine Proxy objects to a raw JS objects
+   */
   raw(data) {
     return JSON.parse(JSON.stringify(data || this));
   },

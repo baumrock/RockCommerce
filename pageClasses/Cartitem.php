@@ -6,6 +6,7 @@ use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use RockFrontend\FieldMethod;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
@@ -16,6 +17,7 @@ use function ProcessWire\rockmoney;
 class Cartitem extends Page
 {
   use MagicPage;
+  use FieldMethod;
 
   const tpl = "rockcommerce_cartitem";
   const prefix = "rockcommerce_cartitem_";
@@ -62,15 +64,11 @@ class Cartitem extends Page
     $this->meta('rockcommerce-cart', $this->parent->id);
   }
 
-  /** frontend */
+  /** end magic */
 
-  public function amount($type = null)
+  public function amount(): int
   {
-    return rockfrontend()->field(
-      $this,
-      self::field_amount,
-      $type
-    );
+    return $this->field('amount', 'int') ?: 1;
   }
 
   public function cart(): Cart
@@ -82,14 +80,43 @@ class Cartitem extends Page
     return $this->parent;
   }
 
+  /**
+   * Hookable method that returns the title of the cart item
+   * as shown in the cart. By default this will be the title of the
+   * linked product.
+   * @return string
+   */
   public function ___cartTitle(): string
   {
-    return $this->page()->title;
+    $product = $this->field('product', 'first');
+    if (!$product) return '';
+    return (string)$product->title;
   }
 
+  /**
+   * Hookable method that returns the description of the cart item
+   * as shown in the cart
+   * @return string
+   */
   public function ___cartDescription(): string
   {
     return "";
+  }
+
+  /**
+   * Returns the cart item as an array (eg for ajax endpoints)
+   * @return array
+   */
+  public function getArray(): array
+  {
+    return [
+      'pid' => $this->id,
+      'title' => $this->cartTitle(),
+      'description' => $this->cartDescription(),
+      'product' => $this->field('product', 'int'),
+      'amount' => $this->amount(),
+      'variation' => $this->variationString(),
+    ];
   }
 
   public function html($str)
@@ -111,28 +138,6 @@ class Cartitem extends Page
   {
     return rockmoney()->parse(0);
   }
-
-  public function product(): Page|false
-  {
-    return $this->getFormatted(self::field_product);
-  }
-
-  public function totalNet(): Money
-  {
-    return $this->itemNet()->times($this->amount(1));
-  }
-
-  public function totalVat(): Money
-  {
-    return $this->itemVat()->times($this->amount(1));
-  }
-
-  public function totalGross(): Money
-  {
-    return $this->itemGross()->times($this->amount(1));
-  }
-
-  /** backend */
 
   public function migrate()
   {
@@ -181,5 +186,25 @@ class Cartitem extends Page
         ],
       ],
     ]);
+  }
+
+  public function totalNet(): Money
+  {
+    return $this->itemNet()->times($this->amount());
+  }
+
+  public function totalVat(): Money
+  {
+    return $this->itemVat()->times($this->amount(1));
+  }
+
+  public function totalGross(): Money
+  {
+    return $this->itemGross()->times($this->amount(1));
+  }
+
+  public function variationString(): string
+  {
+    return $this->field('variation', 'string');
   }
 }
