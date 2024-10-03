@@ -23,7 +23,11 @@ RockCommerce.component("rcproduct", {
     this.maxamount = parseInt(
       this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
     );
-    this.update();
+
+    document.addEventListener("RockCommerce:ready", () => {
+      this.loadProductConfig();
+      this.update();
+    });
   },
 
   addToCart() {
@@ -57,6 +61,7 @@ RockCommerce.component("rcproduct", {
     const product = RockCommerce.products[0];
     if (!product) return;
 
+    // get hash from current url
     let hash = window.location.hash.substring(1).replace(/-/g, "&");
     hash = hash.replace(/:/g, "=");
     const urlParams = new URLSearchParams(hash);
