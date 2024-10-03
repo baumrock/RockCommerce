@@ -50,6 +50,39 @@ RockCommerce.component("rcproduct", {
     });
   },
 
+  /**
+   * Load product config from url hash
+   */
+  loadProductConfig() {
+    const product = RockCommerce.products[0];
+    if (!product) return;
+
+    let hash = window.location.hash.substring(1).replace(/-/g, "&");
+    hash = hash.replace(/:/g, "=");
+    const urlParams = new URLSearchParams(hash);
+
+    // load amount
+    if (urlParams.has("amount")) {
+      const amount = parseInt(urlParams.get("amount"), 10);
+      if (!isNaN(amount)) product.amount = amount;
+    }
+
+    // loop all product variations
+    // try to find options in the url params object
+    const variations = product.variations || [];
+    variations.forEach((variation) => {
+      const varID = variation.$rcpid;
+      if (urlParams.has(varID)) {
+        variation.disableAll();
+        const options = urlParams.get(varID).split(",");
+        options.forEach((pid) => {
+          const option = RockCommerce.getComponentFromPid(pid);
+          if (option) option.enable();
+        });
+      }
+    });
+  },
+
   minus() {
     if (this.amount - 1 < this.minamount) return (this.amount = this.minamount);
     if (this.amount - 1 > this.maxamount) return (this.amount = this.maxamount);

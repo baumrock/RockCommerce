@@ -79,6 +79,44 @@ var RockCommerce = {
     this.timers[name] = setTimeout(func, wait);
   },
 
+  fetch(url, options = {}) {
+    // make sure url has no leading slash
+    url = url.replace(/^\/+/, "");
+    url = RockCommerce.config.root + "rockcommerce/" + url;
+
+    // Set default headers
+    const defaultHeaders = {
+      "X-Requested-With": "XMLHttpRequest",
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+
+    // Merge default options with provided options
+    const mergedOptions = {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...(options && options.headers),
+      },
+    };
+
+    // Show loading indicator
+    this.loading(options.animation || "rc-dots");
+
+    return fetch(url, mergedOptions)
+      .then((response) => {
+        // Hide loading indicator when the request is complete
+        this.loaded();
+        return response;
+      })
+      .catch((error) => {
+        // Hide loading indicator if there's an error
+        this.loaded();
+        // Re-throw the error to be caught by the caller
+        throw error;
+      });
+  },
+
   /**
    * Find alpine component from DOM element
    * Find closest component: RockCommerce.getComponent(myEl);
@@ -103,7 +141,13 @@ var RockCommerce = {
   /**
    * Show loading indicator
    */
-  loading(show = true) {},
+  loading(name) {
+    document.body.setAttribute("rockloader", name);
+  },
+
+  loaded() {
+    document.body.removeAttribute("rockloader");
+  },
 
   /**
    * Return a raw copy of data
@@ -184,8 +228,5 @@ document.addEventListener("alpine:init", () => {
 });
 
 // let everyone know that RockCommerce is ready
-document.dispatchEvent(
-  new CustomEvent("RockCommerce:init", {
-    detail: RockCommerce,
-  })
-);
+const init = new CustomEvent("RockCommerce:init", { detail: RockCommerce });
+document.dispatchEvent(init);

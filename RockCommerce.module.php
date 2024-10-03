@@ -96,9 +96,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->taxselect = new TaxSelect();
 
     // js config
+    // will be available in fronend via RockCommerce.config
+    // as soon as the RockCommerce:ready event has been fired
     $this->jsConfig = new WireData();
     $this->js('minamount', $this->minamount);
     $this->js('maxamount', $this->maxamount);
+    $this->js('root', wire()->config->urls->root);
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
@@ -150,6 +153,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       // $rm->addStyles(__DIR__ . "/less/backend.less");
       $rm->addScripts(__DIR__ . "/js/RockCommerceBackend.min.js");
     }
+
+    // add rockloaders
+    rockloaders()->addAll(__DIR__ . "/loaders");
   }
 
   /**

@@ -28,9 +28,13 @@ document.addEventListener("alpine:init", () => {
       // load items from localstorage or via ajax from the backend?
       this.ajax = !this.$el.hasAttribute("data-noajax");
 
-      this.wakeup();
       this.$watch("items", this.update.bind(this));
-      this.update();
+
+      // wait for rockcommerce to be ready
+      document.addEventListener("RockCommerce:ready", () => {
+        this.wakeup();
+        this.update();
+      });
     },
 
     /**
@@ -79,7 +83,14 @@ document.addEventListener("alpine:init", () => {
      * Load cart from backend
      */
     loadFromBackend() {
-      RockCommerce.loading();
+      RockCommerce.fetch("/cart/get")
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+        })
+        .catch(() => {
+          alert("Error loading cart from backend");
+        });
     },
 
     /**
