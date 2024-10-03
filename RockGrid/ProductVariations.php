@@ -72,6 +72,9 @@ class ProductVariations extends Grid
         // workaround to select only pages that have options
         // findRaw() fails if this check is removed!
         Variation::field_options . '.count>' => 0,
+
+        // if this is missing, non-superusers will get an empty grid
+        'include' => 'all',
       ],
       [
         'title',
