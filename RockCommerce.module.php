@@ -120,7 +120,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $hookFile = $this->wire->config->paths->templates . "scripts/RCHooks.js";
     if (is_file($hookFile)) $rm->minify($hookFile);
 
-    // HTMX+AJAX
+    // register AJAX endpoints
     rockfrontend()->addAjaxFolder('rockcommerce', __DIR__ . '/ajax');
 
     // hooks
@@ -633,8 +633,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // this is to ensure that all other components are ready at this point
     $this->loadJS('rockcommerce');
     $out .= "<div x-data=rockcommerce data-config='$conf' hidden></div>";
-
-    $out .= $this->view('loader.html');
 
     $out .= "</div>";
 

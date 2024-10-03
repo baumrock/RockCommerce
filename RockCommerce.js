@@ -103,9 +103,7 @@ var RockCommerce = {
   /**
    * Show loading indicator
    */
-  loading() {
-    document.body.classList.add("rc-loading");
-  },
+  loading(show = true) {},
 
   /**
    * Return a raw copy of data
