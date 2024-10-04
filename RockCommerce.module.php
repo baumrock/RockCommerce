@@ -152,6 +152,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if ($admin and !$ajax) {
       // $rm->addStyles(__DIR__ . "/less/backend.less");
       $rm->addScripts(__DIR__ . "/js/RockCommerceBackend.min.js");
+
+      // we need currency.min.js for for variation inputs
+      $rm->addScripts(__DIR__ . '/../RockMoney/lib/currency.min.js');
     }
 
     // add rockloaders
