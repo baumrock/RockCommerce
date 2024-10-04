@@ -158,7 +158,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }
 
     // add rockloaders
-    rockloaders()->addAll(__DIR__ . "/loaders");
+    // rockloaders()->addAll(__DIR__ . "/loaders");
   }
 
   /**
