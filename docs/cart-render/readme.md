@@ -53,6 +53,14 @@ The markup of the cart items is totally up to you. However, you have to apply so
 </template>
 ```
 
+### Loading Spinner
+
+To display a loading spinner while the cart is loading, you can use Alpine's `x-show` directive:
+
+```html
+<div x-show='loading'><!-- your loading spinner --></div>
+```
+
 ## Customizing the cart
 
 ### Using hooks

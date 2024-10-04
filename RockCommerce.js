@@ -101,7 +101,9 @@ var RockCommerce = {
     };
 
     // Show loading indicator
-    this.loading(options.animation || "rc-dots");
+    if (options.animation !== false) {
+      this.loading(options.animation || "rc-dots");
+    }
 
     return fetch(url, mergedOptions)
       .then((response) => {
@@ -201,8 +203,9 @@ var RockCommerce = {
  */
 document.addEventListener("alpine:init", () => {
   /**
-   * Get attribute of alpine component element
-   * Usage c.$rcattr('foo')
+   * Get page id of alpine component element
+   * <div x-data=mycomponent rc-pid=123></div>
+   * Usage c.$rcpid()
    */
   Alpine.magic("rcpid", (el) => {
     const c = RockCommerce.getComponent(el);
@@ -211,6 +214,7 @@ document.addEventListener("alpine:init", () => {
 
   /**
    * Get attribute of alpine component element
+   * <div x-data=mycomponent foo=foo></div>
    * Usage c.$rcattr('foo')
    */
   Alpine.magic("rcattr", (el) => {

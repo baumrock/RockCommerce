@@ -16,6 +16,7 @@ document.addEventListener("alpine:init", () => {
 
   // Alpine component
   Alpine.data("rccart", () => ({
+    itemsLoading: false,
     items: [],
 
     init() {
@@ -80,15 +81,23 @@ document.addEventListener("alpine:init", () => {
     },
 
     /**
-     * Load cart from backend
+     * Reload cart data from backend
      */
-    loadFromBackend() {
-      RockCommerce.fetch("/cart/get")
+    reload() {
+      this.itemsLoading = true;
+      RockCommerce.fetch("/cart/get", {
+        // animation can be disabled by adding rc-animation="false"
+        // to the cart div of the rccart component
+        animation: this.$rcattr("rc-animation"),
+      })
         .then((response) => response.json())
         .then((data) => {
-          console.log(data);
+          this.itemsLoading = false;
+          if (!data.id) throw new Error("No cart id");
+          this.items = data.items;
         })
         .catch(() => {
+          this.itemsLoading = false;
           alert("Error loading cart from backend");
         });
     },
@@ -135,7 +144,7 @@ document.addEventListener("alpine:init", () => {
       // loop through all items from the localstorage
       for (const key in data) {
         if (key === "_items") {
-          if (this.ajax) this.loadFromBackend();
+          if (this.ajax) this.reload();
           else this.items = data._items;
         }
       }
