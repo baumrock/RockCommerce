@@ -11,6 +11,7 @@ $info = [
   'icon' => 'money',
   // PHP8.2 for constants in traits
   // PW 3.0.234 for repeater classes
+  // RockLoaders 1.1.0 for add() short syntax
   'requires' => [
     'PHP>=8.2',
     'ProcessWire>=3.0.234',
@@ -19,7 +20,7 @@ $info = [
     'RockMoney>=1.0.1',
     'RockMollie>=1.2.0',
     'RockGrid>=1.0.1',
-    'RockLoaders>=1.0.0',
+    'RockLoaders>=1.1.0',
   ],
   'installs' => [
     'ProcessRockCommerce',

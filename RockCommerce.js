@@ -102,7 +102,7 @@ var RockCommerce = {
 
     // Show loading indicator
     if (options.animation !== false) {
-      this.loading(options.animation || "rc-dots");
+      this.loading(options.animation || "dots");
     }
 
     return fetch(url, mergedOptions)

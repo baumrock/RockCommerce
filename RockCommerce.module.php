@@ -157,8 +157,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $rm->addScripts(__DIR__ . '/../RockMoney/lib/currency.min.js');
     }
 
-    // add rockloaders
-    rockloaders()->addAll(__DIR__ . "/loaders");
+    // add rockloader
+    rockloaders()->add('dots');
   }
 
   /**
