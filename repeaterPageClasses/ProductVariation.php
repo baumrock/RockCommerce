@@ -38,7 +38,8 @@ class ProductVariation extends RepeaterPage
     if (!is_array($prices)) $prices = [];
 
     $sorted = false;
-    foreach ($json->selected as $id) {
+    $selected = $json->selected ?: [];
+    foreach ($selected as $id) {
       $p = new VariationOption($id);
       $p->product = $this;
       $p->title = $p->option->title;
