@@ -11,7 +11,10 @@ var RockCommerce = ProcessWire.wire(
     hooksBefore: {},
     pidcid: {},
     products: [],
-    taxrate: 0,
+
+    // use getTaxrate() and setTaxrate()!
+    _taxrate: 0,
+
     timers: {},
 
     /**
@@ -115,6 +118,15 @@ var RockCommerce = ProcessWire.wire(
     },
 
     /**
+     * Get taxrate
+     * This ensures that the returned taxrate is numeric even if
+     * this.taxrate is undefined for whatever reason
+     */
+    getTaxrate() {
+      return parseFloat(this.taxrate) || 0;
+    },
+
+    /**
      * Show loading indicator
      *
      * Usage:
@@ -135,6 +147,11 @@ var RockCommerce = ProcessWire.wire(
      */
     raw(data) {
       return JSON.parse(JSON.stringify(data || this));
+    },
+
+    setTaxrate(taxrate) {
+      this._taxrate = taxrate;
+      localStorage.setItem("rc-taxrate", taxrate);
     },
   },
   "RockCommerce"
