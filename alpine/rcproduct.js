@@ -1,5 +1,5 @@
 // Product Component
-RockCommerce.component("rcproduct", {
+RockCommerce.component("RcProduct", {
   amount: 1,
   amountInput: false,
   maxamount: 1,
@@ -39,7 +39,7 @@ RockCommerce.component("rcproduct", {
   },
 
   getVariation(id) {
-    const selector = `[x-data=rcvariation][rc-pid="${id}"]`;
+    const selector = `[x-data=RcVariation][rc-pid="${id}"]`;
     const varEl = this.$root.querySelector(selector);
     return RockCommerce.getComponent(varEl);
   },
@@ -118,7 +118,7 @@ RockCommerce.component("rcproduct", {
   },
 
   update() {
-    RockCommerce.debounce("rcproduct-update", () => {
+    RockCommerce.debounce("RcProduct-update", () => {
       // make sure amount is correct
       // this is because we use x-bind on amount input and cant know the input
       let amount = this.amount;
@@ -164,7 +164,7 @@ RockCommerce.component("rcproduct", {
   },
 
   get variations() {
-    return Array.from(this.$root.querySelectorAll("[x-data=rcvariation]")).map(
+    return Array.from(this.$root.querySelectorAll("[x-data=RcVariation]")).map(
       (el) => {
         return RockCommerce.getComponent(el);
       }

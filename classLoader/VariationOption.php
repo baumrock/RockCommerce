@@ -41,7 +41,7 @@ class VariationOption extends WireData
    */
   public function rcAttributes(): string
   {
-    return rockcommerce()->attrs('rcvariationoption', "
+    return rockcommerce()->attrs('RcVariationOption', "
       rc-pid='{$this->option}'
       rc-price='{$this->price->getFloat()}'
     ");

@@ -181,8 +181,8 @@ trait Product
 
   public function rcAttributes(): string
   {
-    return rockcommerce()->attrs('rcproduct', "
-      x-data='rcproduct'
+    return rockcommerce()->attrs('RcProduct', "
+      x-data='RcProduct'
       rc-pid=$this
       rc-price='{$this->price()->getFloat()}'
       rc-minamount='{$this->minamount()}'

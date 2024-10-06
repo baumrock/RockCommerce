@@ -32,7 +32,7 @@ var RockCommerce = ProcessWire.wire(
       const cid = ++this.cid;
       this.components[cid] = c;
       c.$el.setAttribute("rc-cid", cid);
-      if (c.$rctype === "rcproduct") this.products.push(c);
+      if (c.$rctype === "RcProduct") this.products.push(c);
       const pid = c.$rcattr("rc-pid");
       if (pid) this.pidcid[pid] = cid;
     },
@@ -48,7 +48,7 @@ var RockCommerce = ProcessWire.wire(
 
     /**
      * Debounce callback for specified time
-     * See rcproduct.js update() for how to use
+     * See RcProduct.js update() for how to use
      */
     debounce(name, func, wait) {
       if (typeof wait === "undefined") wait = 10;
@@ -99,7 +99,7 @@ var RockCommerce = ProcessWire.wire(
     /**
      * Find alpine component from DOM element
      * Find closest component: RockCommerce.getComponent(myEl);
-     * Find closest with type: RockCommerce.getComponent(myEl, 'rcproduct');
+     * Find closest with type: RockCommerce.getComponent(myEl, 'RcProduct');
      */
     getComponent(el, type) {
       if (type) el = el.closest(`[x-data=${type}]`);
@@ -185,7 +185,7 @@ document.addEventListener("alpine:init", () => {
   });
 
   /**
-   * Component type (eg rccart, rcproduct)
+   * Component type (eg RcCart, RcProduct)
    */
   Alpine.magic("rctype", (el) => {
     const c = RockCommerce.getComponent(el);

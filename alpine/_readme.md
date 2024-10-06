@@ -3,14 +3,14 @@
 RockCommerce will automatically minify all files in this folder. It will also load the file on the frontend, if you tell it to:
 
 ```php
-$this->loadJS('rccart');
+$this->loadJS('RcCart');
 ```
 
 This is not necessary if you use the `attrs()` helper:
 
 ```php
-rockcommerce()->attrs('rcproduct', "
-  x-data='rcproduct'
+rockcommerce()->attrs('RcProduct', "
+  x-data='RcProduct'
   rc-pid=$this
   rc-price='{$this->price()->getFloat()}'
   rc-minamount='{$this->minamount()}'

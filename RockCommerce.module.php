@@ -635,8 +635,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // if there is no cart element in the DOM. If there is one, the init()
     // method will take care of loading the cart only once.
     // data-ajax=false tells RockCommerce not to load items via ajax
-    $this->loadJS('rccart');
-    $out .= "<div x-data=rccart data-noajax hidden></div>";
+    $this->loadJS('RcCart');
+    $out .= "<div x-data=RcCart data-noajax hidden></div>";
 
     // rockcommerce has to be the last alpine element
     // this is to ensure that all other components are ready at this point

@@ -4,7 +4,7 @@ RockCommerce provides all the tools to manage customers' carts.
 
 On the server side, every cart is a `RockCommerce\Cart` object. This object has all the necessary methods to manage the cart and its items.
 
-On the JS side a cart is a `rccart` Alpine component that you can interact with.
+On the JS side a cart is a `RcCart` Alpine component that you can interact with.
 
 Finally, both the frontend and backend cart can communicate with each other over some AJAX endpoints at `/rockcommerce/cart`.
 

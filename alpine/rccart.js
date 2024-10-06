@@ -15,7 +15,7 @@ document.addEventListener("alpine:init", () => {
   }
 
   // Alpine component
-  Alpine.data("rccart", () => ({
+  Alpine.data("RcCart", () => ({
     itemsLoading: false,
     items: [],
 
@@ -85,7 +85,7 @@ document.addEventListener("alpine:init", () => {
       this.itemsLoading = true;
       RockCommerce.fetch("/cart/get", {
         // animation can be disabled by adding rc-animation="false"
-        // to the cart div of the rccart component
+        // to the cart div of the RcCart component
         animation: this.$rcattr("rc-animation"),
       })
         .then((response) => response.json())

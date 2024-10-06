@@ -61,7 +61,7 @@ class ProductVariation extends RepeaterPage
    */
   public function rcAttributes(): string
   {
-    return rockcommerce()->attrs('rcvariation', "
+    return rockcommerce()->attrs('RcVariation', "
       rc-pid={$this}
       rc-minoptions={$this->minoptions()}
       rc-maxoptions={$this->maxoptions()}

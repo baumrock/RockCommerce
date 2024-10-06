@@ -10,7 +10,7 @@ A RockCommerce cart consists of two parts:
 The html could look like this:
 
 ```html
-<div x-data=rccart>
+<div x-data=RcCart>
   <div>
     <!-- cart items -->
   </div>
@@ -20,11 +20,11 @@ The html could look like this:
 </div>
 ```
 
-Adding `x-data=rccart` to the wrapper div initializes the `rccart` component. This component is responsible for handling all cart operations, like adding and removing items, updating quantities, applying coupons, and calculating shipping costs.
+Adding `x-data=RcCart` to the wrapper div initializes the `RcCart` component. This component is responsible for handling all cart operations, like adding and removing items, updating quantities, applying coupons, and calculating shipping costs.
 
 ### AJAX Response
 
-As soon as the user opens the cart page, the `rccart` component will be initialized and make a GET request to `rockcommerce/cart/get`. This will fetch the cart data, which will look something like this:
+As soon as the user opens the cart page, the `RcCart` component will be initialized and make a GET request to `rockcommerce/cart/get`. This will fetch the cart data, which will look something like this:
 
 ```json
 {
@@ -41,7 +41,7 @@ This date will then be used to render the cart items.
 
 ### Rendering the cart items
 
-The markup of the cart items is totally up to you. However, you have to apply some special attributes to the elements, so that the `rccart` component knows which elements to update:
+The markup of the cart items is totally up to you. However, you have to apply some special attributes to the elements, so that the `RcCart` component knows which elements to update:
 
 ```html
 <template x-for='item in items'>

@@ -7,7 +7,7 @@ If you only want to react to changing properties:
 ```js
 RockCommerce.after("addComponent", (event) => {
   const component = event.return;
-  if (component.$rctype !== "rcproduct") return;
+  if (component.$rctype !== "RcProduct") return;
   // use alpine magic $watch
   // triggers the callback whenever the price property of the product changes
   component.$watch("price", (price) => {
