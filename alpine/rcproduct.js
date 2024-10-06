@@ -30,31 +30,12 @@ RockCommerce.component("rcproduct", {
     });
   },
 
-  addToCart() {
-    RockCommerce.cart.add({
+  ___addToCart() {
+    RockCommerce.cart.addItem({
       pid: this.$rcpid,
       amount: this.amount,
       variation: this.variationString(false, false),
     });
-    // TODO: save to backend?
-  },
-
-  getPriceInit() {
-    return this.money;
-  },
-
-  getPriceVar(money) {
-    this.variations.forEach((variation) => {
-      if (typeof variation == "undefined") return;
-      variation.options(true).forEach((option) => {
-        money = money.plus(option.money.float());
-      });
-    });
-    return money;
-  },
-
-  getPriceTotal(money) {
-    return money.times(this.amount);
   },
 
   getVariation(id) {
@@ -118,6 +99,24 @@ RockCommerce.component("rcproduct", {
     this.amount++;
   },
 
+  ___priceInit(money) {
+    return money;
+  },
+
+  ___priceVar(money) {
+    this.variations.forEach((variation) => {
+      if (typeof variation == "undefined") return;
+      variation.options(true).forEach((option) => {
+        money = money.plus(option.money.float());
+      });
+    });
+    return money;
+  },
+
+  ___priceTotal(money) {
+    return money.times(this.amount);
+  },
+
   update() {
     RockCommerce.debounce("rcproduct-update", () => {
       // make sure amount is correct
@@ -127,10 +126,11 @@ RockCommerce.component("rcproduct", {
       else if (amount < this.minamount) amount = this.minamount;
       this.amount = amount;
 
-      // calc price
-      let money = this.getPriceInit();
-      money = this.getPriceVar(money);
-      money = this.getPriceTotal(money);
+      // calc price via hookable methods
+      let money = this.money;
+      money = this.priceInit(money);
+      money = this.priceVar(money);
+      money = this.priceTotal(money);
 
       // write formatted price to price property
       // so that the frontend can subscribe via x-text=price

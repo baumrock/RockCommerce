@@ -41,24 +41,22 @@ document.addEventListener("alpine:init", () => {
     /**
      * Add item to the JS cart
      */
-    add(data) {
-      RockCommerce.trigger("addToCart", data, (data) => {
-        const item = new CartItem(data);
+    addItem(data) {
+      const item = new CartItem(data);
 
-        // if cart already has an item with the same pid and variation
-        // then we increase the amount of that item
-        // otherwise we add the new item to the cart
-        const existingItem = this.items.find(
-          (i) => i.pid === item.pid && i.variation === item.variation
-        );
-        if (existingItem) {
-          existingItem.amount += item.amount;
-        } else {
-          this.items.push(item);
-        }
+      // if cart already has an item with the same pid and variation
+      // then we increase the amount of that item
+      // otherwise we add the new item to the cart
+      const existingItem = this.items.find(
+        (i) => i.pid === item.pid && i.variation === item.variation
+      );
+      if (existingItem) {
+        existingItem.amount += item.amount;
+      } else {
+        this.items.push(item);
+      }
 
-        this.save();
-      });
+      this.save();
     },
 
     get count() {
