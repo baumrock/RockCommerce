@@ -35,26 +35,6 @@ var RockCommerce = ProcessWire.wire(
     },
 
     /**
-     * Add AFTER hook, eg RockCommerce.after('event', callback);
-     */
-    after(event, handler) {
-      if (!this.hooksAfter[event]) {
-        this.hooksAfter[event] = [];
-      }
-      this.hooksAfter[event].push(handler);
-    },
-
-    /**
-     * Add BEFORE hook, eg RockCommerce.before('event', callback);
-     */
-    before(event, handler) {
-      if (!this.hooksBefore[event]) {
-        this.hooksBefore[event] = [];
-      }
-      this.hooksBefore[event].push(handler);
-    },
-
-    /**
      * Register Alpine Component
      */
     component(name, comp) {
