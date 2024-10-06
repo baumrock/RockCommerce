@@ -653,6 +653,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // Debug::startTimer();
     $urls = [];
 
+    $urls[] = $this->toUrl('/site/modules/RockJavaScriptHooks/Hooks.js', true);
+
     // we always load RockCommerce.js at very first!
     $urls[] = $this->toUrl(__DIR__ . '/RockCommerce.min.js', true);
 

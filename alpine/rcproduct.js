@@ -39,6 +39,24 @@ RockCommerce.component("rcproduct", {
     // TODO: save to backend?
   },
 
+  getPriceInit() {
+    return this.money;
+  },
+
+  getPriceVar(money) {
+    this.variations.forEach((variation) => {
+      if (typeof variation == "undefined") return;
+      variation.options(true).forEach((option) => {
+        money = money.plus(option.money.float());
+      });
+    });
+    return money;
+  },
+
+  getPriceTotal(money) {
+    return money.times(this.amount);
+  },
+
   getVariation(id) {
     const selector = `[x-data=rcvariation][rc-pid="${id}"]`;
     const varEl = this.$root.querySelector(selector);
@@ -110,27 +128,9 @@ RockCommerce.component("rcproduct", {
       this.amount = amount;
 
       // calc price
-      let money = this.money;
-
-      // add prices of variations
-      money = RockCommerce.trigger(
-        "rcproduct:priceAddVariations",
-        money,
-        (money) => {
-          this.variations.forEach((variation) => {
-            if (typeof variation == "undefined") return;
-            variation.options(true).forEach((option) => {
-              money = money.plus(option.money.float());
-            });
-          });
-          return money;
-        }
-      );
-
-      // add amount
-      money = RockCommerce.trigger("rcproduct:priceTotal", money, (money) => {
-        return money.times(this.amount);
-      });
+      let money = this.getPriceInit();
+      money = this.getPriceVar(money);
+      money = this.getPriceTotal(money);
 
       // write formatted price to price property
       // so that the frontend can subscribe via x-text=price
@@ -189,19 +189,21 @@ RockCommerce.component("rcproduct", {
     // this will make sure that variations will be sorted alphabetically
     let obj = this.variationObject();
 
-    if (!includeAmount) {
-      delete obj.amount;
-    }
+    // include amount in string?
+    if (!includeAmount) delete obj.amount;
 
     // convert to string
     let str = "";
     Object.keys(obj).forEach((key) => {
-      str += `-${key}:${obj[key]}`;
+      const value = obj[key] + "";
+      if (!value) return;
+      str += `-${key}:${value}`;
     });
 
     // Add hash symbol if includeHash is true
     str = includeHash ? "#" + str.substring(1) : str.substring(1);
 
+    // return final string
     return str;
   },
 });

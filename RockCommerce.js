@@ -57,16 +57,10 @@ var RockCommerce = {
   /**
    * Register Alpine Component
    */
-  component(name, config) {
-    document.addEventListener("alpine:init", () => {
-      // https://github.com/alpinejs/alpine/discussions/1940#discussioncomment-6586765
-      Alpine.data(name, () =>
-        Object.create(
-          Object.getPrototypeOf(config),
-          Object.getOwnPropertyDescriptors(config)
-        )
-      );
-    });
+  component(name, comp) {
+    document.addEventListener("alpine:init", () =>
+      Alpine.data(name, () => ProcessWire.wire(comp, name, true))
+    );
   },
 
   /**
