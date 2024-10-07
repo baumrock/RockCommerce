@@ -674,8 +674,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $urls[] = $this->toUrl($modules . 'RockMoney/RockMoney.min.js', true);
     $urls[] = $this->toUrl($modules . 'RockMoney/lib/currency.min.js', true);
 
-    // note: alpinejs must be loaded AFTER RockCommerce so that all
-    // alpine:init events will be attached to the document
+    // note: alpinejs must be loaded AFTER all components so
+    // that their alpine:init eventlisteners fire correctly
     $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
 
     $out = "";
