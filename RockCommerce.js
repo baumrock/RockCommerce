@@ -156,7 +156,3 @@ var RockCommerce = ProcessWire.wire(
   },
   "RockCommerce"
 );
-
-// let everyone know that RockCommerce is ready
-const init = new CustomEvent("RockCommerce:init", { detail: RockCommerce });
-document.dispatchEvent(init);
