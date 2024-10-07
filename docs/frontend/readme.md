@@ -7,7 +7,7 @@ For that, RockCommerce will inject some scripts in the `<head>` and the followin
 ```html
 <div id="rockcommerce">
   <div x-data="RcCart" ...></div>
-  <div x-data="rockcommerce" ...></div>
+  <div x-data="RockCommerce" ...></div>
 </div>
 ```
 

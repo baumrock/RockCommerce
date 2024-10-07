@@ -5,7 +5,7 @@
  * RockCommerce.js or other alpine components!
  */
 document.addEventListener("alpine:init", () => {
-  Alpine.data("rockcommerce", () => ({
+  Alpine.data("RockCommerce", () => ({
     init() {
       RockCommerce.addComponent(this);
       RockCommerce.config = JSON.parse(this.$rcattr("data-config") || "{}");

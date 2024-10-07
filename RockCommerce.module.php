@@ -640,8 +640,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // rockcommerce has to be the last alpine element
     // this is to ensure that all other components are ready at this point
-    $this->loadJS('rockcommerce');
-    $out .= "<div x-data=rockcommerce data-config='$conf' hidden></div>";
+    $this->loadJS('RockCommerce');
+    $out .= "<div x-data=RockCommerce data-config='$conf' hidden></div>";
 
     $out .= "</div>";
 
