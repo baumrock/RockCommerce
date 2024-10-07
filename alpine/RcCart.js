@@ -3,8 +3,7 @@
  * Access this component via RockCommerce.cart
  * See docs for details.
  */
-
-document.addEventListener("alpine:init", () => {
+(() => {
   // Cart Item Class
   class CartItem {
     constructor(data) {
@@ -14,8 +13,7 @@ document.addEventListener("alpine:init", () => {
     }
   }
 
-  // Alpine component
-  Alpine.data("RcCart", () => ({
+  RockCommerce.component("RcCart", {
     itemsLoading: false,
     items: [],
 
@@ -147,5 +145,5 @@ document.addEventListener("alpine:init", () => {
         }
       }
     },
-  }));
-});
+  });
+})();
