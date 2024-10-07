@@ -7,8 +7,6 @@ var RockCommerce = ProcessWire.wire(
     cid: 0,
     components: {},
     config: {},
-    hooksAfter: {},
-    hooksBefore: {},
     pidcid: {},
     products: [],
 
