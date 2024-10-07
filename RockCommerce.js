@@ -123,7 +123,7 @@ var RockCommerce = ProcessWire.wire(
      * this.taxrate is undefined for whatever reason
      */
     getTaxrate() {
-      return parseFloat(this.taxrate) || 0;
+      return parseFloat(this._taxrate) || 0;
     },
 
     /**
