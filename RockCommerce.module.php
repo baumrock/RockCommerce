@@ -626,11 +626,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function ___markupBody(): string
   {
-    // we load RockCommerce.js at very first!
-    // this ensures that some parts are available for all other components
-    // but we initialize the RC component later in the dom.
-    $this->loadJS('RockCommerce');
-
     $conf = json_encode($this->jsConfig->getArray());
     $conf = $this->wire->sanitizer->entities($conf);
     $out = '<div id="rockcommerce">';
@@ -661,6 +656,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // we always load RockCommerce.js at very first!
     $urls[] = $this->toUrl(__DIR__ . '/RockCommerce.min.js', true);
+    $urls[] = $this->toUrl(__DIR__ . '/alpine/RockCommerce.min.js', true);
 
     // add RockCommerce Alpine Components
     foreach (glob(__DIR__ . '/alpine/*.min.js') as $file) {

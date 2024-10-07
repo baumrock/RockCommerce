@@ -1,7 +1,8 @@
 /**
  * RockCommerce Frontend Javascript
  */
-var RockCommerce = ProcessWire.wire(
+console.log("RockCommerceOLD");
+var RockCommerceOLD = ProcessWire.wire(
   {
     cart: false,
     cid: 0,
@@ -57,7 +58,7 @@ var RockCommerce = ProcessWire.wire(
     fetch(url, options = {}) {
       // make sure url has no leading slash
       url = url.replace(/^\/+/, "");
-      url = RockCommerce.config.root + "rockcommerce/" + url;
+      url = RockCommerceOLD.config.root + "rockcommerce/" + url;
 
       // Set default headers
       const defaultHeaders = {
@@ -96,14 +97,14 @@ var RockCommerce = ProcessWire.wire(
 
     /**
      * Find alpine component from DOM element
-     * Find closest component: RockCommerce.getComponent(myEl);
-     * Find closest with type: RockCommerce.getComponent(myEl, 'RcProduct');
+     * Find closest component: RockCommerceOLD.getComponent(myEl);
+     * Find closest with type: RockCommerceOLD.getComponent(myEl, 'RcProduct');
      */
     getComponent(el, type) {
       if (type) el = el.closest(`[x-data=${type}]`);
       if (!el) return false;
       const cid = el.closest("[x-data]").getAttribute("rc-cid");
-      if (!cid) console.error("Component is not initialized");
+      if (!cid) console.error("Component is not initialized", type);
       return this.components[cid];
     },
 
@@ -128,8 +129,8 @@ var RockCommerce = ProcessWire.wire(
      * Show loading indicator
      *
      * Usage:
-     * RockCommerce.loading(); // uses "dots" animation
-     * RockCommerce.loading('my-animation');
+     * RockCommerceOLD.loading(); // uses "dots" animation
+     * RockCommerceOLD.loading('my-animation');
      */
     loading(name = "dots") {
       document.body.setAttribute("rockloader", name);

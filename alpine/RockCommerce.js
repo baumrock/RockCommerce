@@ -1,14 +1,21 @@
 /**
  * RockCommerce Alpine component
  *
- * This is by design very minimal. Put your logic in
- * RockCommerce.js or other alpine components!
+ * This is the first file that is loaded by RockCommerce.
+ * All other component files are loaded after this one.
+ *
+ * The RockCommerce DOM element is the very last on every page,
+ * so that the RockCommerce Alpine component is initialized last.
  */
+console.log("RockCommerce");
+var RockCommerce = {};
+
 document.addEventListener("alpine:init", () => {
   Alpine.data("RockCommerce", () => ({
     init() {
-      RockCommerce.addComponent(this);
-      RockCommerce.config = JSON.parse(this.$rcattr("data-config") || "{}");
+      RockCommerce = this;
+      RockCommerceOLD.addComponent(this);
+      RockCommerceOLD.config = JSON.parse(this.$rcattr("data-config") || "{}");
       document.dispatchEvent(new CustomEvent("RockCommerce:ready"));
     },
   }));
@@ -27,7 +34,7 @@ document.addEventListener("alpine:init", () => {
    * Usage c.$rcpid()
    */
   Alpine.magic("rcpid", (el) => {
-    const c = RockCommerce.getComponent(el);
+    const c = RockCommerceOLD.getComponent(el);
     return c.$rcattr("rc-pid");
   });
 
@@ -37,7 +44,7 @@ document.addEventListener("alpine:init", () => {
    * Usage c.$rcattr('foo')
    */
   Alpine.magic("rcattr", (el) => {
-    const c = RockCommerce.getComponent(el);
+    const c = RockCommerceOLD.getComponent(el);
     return (attr) => c.$root.getAttribute(attr);
   });
 
@@ -45,7 +52,7 @@ document.addEventListener("alpine:init", () => {
    * Component type (eg RcCart, RcProduct)
    */
   Alpine.magic("rctype", (el) => {
-    const c = RockCommerce.getComponent(el);
+    const c = RockCommerceOLD.getComponent(el);
     return c.$el.getAttribute("x-data");
   });
 });

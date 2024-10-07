@@ -1,11 +1,11 @@
-RockCommerce.component("RcVariationOption", {
+RockCommerceOLD.component("RcVariationOption", {
   money: null,
   variation: null,
 
   init() {
-    RockCommerce.addComponent(this);
-    this.product = RockCommerce.getComponent(this.$el, "RcProduct");
-    this.variation = RockCommerce.getComponent(this.$el, "RcVariation");
+    RockCommerceOLD.addComponent(this);
+    this.product = RockCommerceOLD.getComponent(this.$el, "RcProduct");
+    this.variation = RockCommerceOLD.getComponent(this.$el, "RcVariation");
     if (!this.variation) alert("options must be placed inside a variation");
     this.$el.addEventListener("click", this.handleClick.bind(this));
     this.money = new RockMoney(this.$rcattr("rc-price"));
@@ -32,7 +32,7 @@ RockCommerce.component("RcVariationOption", {
       this.$el.classList.add("rc-active");
       this.product.update();
     } else {
-      RockCommerce.trigger("RcVariationOption:maxoptions", this);
+      RockCommerceOLD.trigger("RcVariationOption:maxoptions", this);
     }
   },
 

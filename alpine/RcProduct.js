@@ -1,5 +1,5 @@
 // Product Component
-RockCommerce.component("RcProduct", {
+RockCommerceOLD.component("RcProduct", {
   amount: 1,
   amountInput: false,
   maxamount: 1,
@@ -13,15 +13,15 @@ RockCommerce.component("RcProduct", {
   money: null,
 
   init() {
-    RockCommerce.addComponent(this);
+    RockCommerceOLD.addComponent(this);
     this.money = new RockMoney(this.$el.getAttribute("rc-price"));
     this.minamount = parseInt(
-      this.$rcattr("rc-minamount") || RockCommerce.config.minamount
+      this.$rcattr("rc-minamount") || RockCommerceOLD.config.minamount
     );
     this.initAmount();
     this.$watch("amount", this.update.bind(this));
     this.maxamount = parseInt(
-      this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
+      this.$rcattr("rc-maxamount") || RockCommerceOLD.config.maxamount
     );
 
     document.addEventListener("RockCommerce:ready", () => {
@@ -31,7 +31,7 @@ RockCommerce.component("RcProduct", {
   },
 
   ___addToCart() {
-    RockCommerce.cart.addItem({
+    RockCommerceOLD.cart.addItem({
       pid: this.$rcpid,
       amount: this.amount,
       variation: this.variationString(false, false),
@@ -41,7 +41,7 @@ RockCommerce.component("RcProduct", {
   getVariation(id) {
     const selector = `[x-data=RcVariation][rc-pid="${id}"]`;
     const varEl = this.$root.querySelector(selector);
-    return RockCommerce.getComponent(varEl);
+    return RockCommerceOLD.getComponent(varEl);
   },
 
   initAmount() {
@@ -57,7 +57,7 @@ RockCommerce.component("RcProduct", {
    * Load product config from url hash
    */
   loadProductConfig() {
-    const product = RockCommerce.products[0];
+    const product = RockCommerceOLD.products[0];
     if (!product) return;
 
     // get hash from current url
@@ -80,7 +80,7 @@ RockCommerce.component("RcProduct", {
         variation.disableAll();
         const options = urlParams.get(varID).split(",");
         options.forEach((pid) => {
-          const option = RockCommerce.getComponentFromPid(pid);
+          const option = RockCommerceOLD.getComponentFromPid(pid);
           if (option) option.enable();
         });
       }
@@ -118,7 +118,7 @@ RockCommerce.component("RcProduct", {
   },
 
   update() {
-    RockCommerce.debounce("RcProduct-update", () => {
+    RockCommerceOLD.debounce("RcProduct-update", () => {
       // make sure amount is correct
       // this is because we use x-bind on amount input and cant know the input
       let amount = this.amount;
@@ -166,7 +166,7 @@ RockCommerce.component("RcProduct", {
   get variations() {
     return Array.from(this.$root.querySelectorAll("[x-data=RcVariation]")).map(
       (el) => {
-        return RockCommerce.getComponent(el);
+        return RockCommerceOLD.getComponent(el);
       }
     );
   },

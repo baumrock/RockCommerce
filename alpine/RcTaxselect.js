@@ -1,9 +1,9 @@
-RockCommerce.component("RcTaxselect", {
+RockCommerceOLD.component("RcTaxselect", {
   taxrate: 0,
   init() {
     this.$watch("taxrate", (rate) => {
-      RockCommerce.setTaxrate(rate);
-      const product = RockCommerce.getComponent(this.$el, "RcProduct");
+      RockCommerceOLD.setTaxrate(rate);
+      const product = RockCommerceOLD.getComponent(this.$el, "RcProduct");
       if (product) product.update();
     });
     this.taxrate =

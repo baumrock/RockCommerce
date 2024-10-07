@@ -1,6 +1,6 @@
 /**
  * RockCommerce Alpine Cart Component
- * Access this component via RockCommerce.cart
+ * Access this component via RockCommerceOLD.cart
  * See docs for details.
  */
 (() => {
@@ -13,16 +13,16 @@
     }
   }
 
-  RockCommerce.component("RcCart", {
+  RockCommerceOLD.component("RcCart", {
     itemsLoading: false,
     items: [],
 
     init() {
       // we allow only one cart
-      if (RockCommerce.cart) return;
+      if (RockCommerceOLD.cart) return;
 
-      RockCommerce.addComponent(this);
-      RockCommerce.cart = this;
+      RockCommerceOLD.addComponent(this);
+      RockCommerceOLD.cart = this;
 
       // load items from localstorage or via ajax from the backend?
       this.ajax = !this.$el.hasAttribute("data-noajax");
@@ -81,7 +81,7 @@
      */
     reload() {
       this.itemsLoading = true;
-      RockCommerce.fetch("/cart/get", {
+      RockCommerceOLD.fetch("/cart/get", {
         // animation can be disabled by adding rc-animation="false"
         // to the cart div of the RcCart component
         animation: this.$rcattr("rc-animation"),
@@ -111,7 +111,7 @@
      * General update method triggered on every change
      */
     update() {
-      RockCommerce.debounce("rc-cart-update", () => {
+      RockCommerceOLD.debounce("rc-cart-update", () => {
         this.updateCartCount();
       });
     },

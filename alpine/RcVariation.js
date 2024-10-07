@@ -1,10 +1,10 @@
 // Product Variation Component
-RockCommerce.component("RcVariation", {
+RockCommerceOLD.component("RcVariation", {
   minoptions: 0,
   maxoptions: 1,
 
   init() {
-    RockCommerce.addComponent(this);
+    RockCommerceOLD.addComponent(this);
     this.minoptions = parseInt(this.$rcattr("rc-minoptions"));
     this.maxoptions = parseInt(this.$rcattr("rc-maxoptions")) || 1;
   },
@@ -24,7 +24,7 @@ RockCommerce.component("RcVariation", {
       ? "[x-data=RcVariationOption].rc-active"
       : "[x-data=RcVariationOption]";
     return Array.from(this.$el.querySelectorAll(selector)).map((el) =>
-      RockCommerce.getComponent(el)
+      RockCommerceOLD.getComponent(el)
     );
   },
 
