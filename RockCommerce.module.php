@@ -111,6 +111,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       options: ['trigger' => $this],
     );
 
+    // things to do while developing
+    $this->dev();
+
     // trigger maintenance from time to time
     $expire = 60 * 60 * 1; // every hour
     $this->wire->cache->get(self::maintenance, $expire, function () {
@@ -118,7 +121,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     });
 
     // minify all js files during development
-    $rm->minify(__DIR__ . "/RockCommerce.js");
+    $rm->minify(__DIR__ . "/RockCommerceOLD.js");
     $rm->minify(__DIR__ . "/alpine");
     $hookFile = $this->wire->config->paths->templates . "scripts/RCHooks.js";
     if (is_file($hookFile)) $rm->minify($hookFile);
@@ -319,6 +322,33 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if ($log) $this->wire->log($str);
     if (!$this->debug) return;
     echo "$str\n\n";
+  }
+
+  /**
+   * This method will be executed only if debug mode is enabled,
+   * which should only be the case during development.
+   */
+  private function dev(): void
+  {
+    $config = wire()->config;
+    if (!$config->debug) return;
+    if ($config->ajax) return;
+    if ($config->external) return;
+
+    // we compile via RockAssets module, so if that does not exist, we exit
+    /** @var RockAssets $assets */
+    $assets = wire()->modules->get('RockAssets');
+    if (!$assets) return;
+
+    // compile all alpine js components to one JS file
+    // wire()->config->debug = false;
+    // wire()->config->rockassetsForceRecompile = true;
+    $src = __DIR__ . '/alpineNEW';
+    $assets
+      ->addAll($src)
+      ->saveTo(
+        __DIR__ . '/dst/RockCommerce.min.js',
+      );
   }
 
   public function findRawVariationOptions(): array
@@ -640,6 +670,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // rockcommerce has to be the last alpine element
     // this is to ensure that all other components are ready at this point
+    $out .= "<div x-data=RockCommerceNEW data-config='$conf' hidden></div>";
     $out .= "<div x-data=RockCommerce data-config='$conf' hidden></div>";
 
     $out .= "</div>";
@@ -655,7 +686,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $urls[] = $this->toUrl('/site/modules/RockJavaScriptHooks/Hooks.js', true);
 
     // we always load RockCommerce.js at very first!
-    $urls[] = $this->toUrl(__DIR__ . '/RockCommerce.min.js', true);
+    $urls[] = $this->toUrl(__DIR__ . '/RockCommerceOLD.min.js', true);
     $urls[] = $this->toUrl(__DIR__ . '/alpine/RockCommerce.min.js', true);
 
     // add RockCommerce Alpine Components

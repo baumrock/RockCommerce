@@ -1,0 +1,10 @@
+console.log("RockCommerceNEW");
+var RockCommerce = {};
+
+document.addEventListener("alpine:init", () => {
+  Alpine.data("RockCommerceNEW", () => ({
+    init() {
+      console.log("RockCommerceNEW init");
+    },
+  }));
+});
