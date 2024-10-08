@@ -7,13 +7,11 @@
  * The RockCommerce DOM element is the very last on every page,
  * so that the RockCommerce Alpine component is initialized last.
  */
-console.log("RockCommerce");
-var RockCommerce = {};
+console.log("RockCommerceAlpine");
 
 document.addEventListener("alpine:init", () => {
-  Alpine.data("RockCommerce", () => ({
+  Alpine.data("RockCommerceAlpine", () => ({
     init() {
-      RockCommerce = this;
       RockCommerceOLD.addComponent(this);
       RockCommerceOLD.config = JSON.parse(this.$rcattr("data-config") || "{}");
       document.dispatchEvent(new CustomEvent("RockCommerce:ready"));

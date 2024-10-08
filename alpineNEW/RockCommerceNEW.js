@@ -24,10 +24,8 @@ var RockCommerce = {
  * Will be loaded when <div x-data="RockCommerce"> is found in the DOM
  * and then replace the global RockCommerce object.
  */
-document.addEventListener("alpine:init", () => {
-  Alpine.data("RockCommerceNEW", () => ({
-    init() {
-      console.log("RockCommerceNEW init");
-    },
-  }));
+RockCommerce.addComponent("RockCommerceNEW", {
+  init() {
+    console.log("RockCommerceNEW init");
+  },
 });
