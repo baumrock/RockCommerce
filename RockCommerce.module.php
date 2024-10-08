@@ -345,6 +345,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // wire()->config->rockassetsForceRecompile = true;
     $src = __DIR__ . '/alpineNEW';
     $assets
+      // make sure RockCommerceNEW is loaded first
+      ->add($src . '/RockCommerceNEW.js')
+      // then load all other components from that folder
       ->addAll($src)
       ->saveTo(
         __DIR__ . '/dst/RockCommerce.min.js',

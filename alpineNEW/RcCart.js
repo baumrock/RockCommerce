@@ -13,11 +13,15 @@
     }
   }
 
-  RockCommerceOLD.component("RcCart", {
+  RockCommerce.addComponent("RcCart", {
     itemsLoading: false,
     items: [],
 
     init() {
+      console.log("RcCart init");
+    },
+
+    ready() {
       // we allow only one cart
       if (RockCommerceOLD.cart) return;
 
