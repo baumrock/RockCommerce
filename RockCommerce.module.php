@@ -140,20 +140,19 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function ready()
   {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    $admin = $this->wire->page->template == 'admin';
-    $ajax = $this->wire->config->ajax;
-    if ($admin and !$ajax) {
-      // $rm->addStyles(__DIR__ . "/less/backend.less");
-      $rm->addScripts(__DIR__ . "/js/RockCommerceBackend.min.js");
-
-      // we need currency.min.js for for variation inputs
-      $rm->addScripts(__DIR__ . '/../RockMoney/lib/currency.min.js');
-    }
-
-    // add rockloader
     rockloaders()->add('dots');
+    $this->addBackendAssets();
+  }
+
+  private function addBackendAssets(): void
+  {
+    $p = wire()->page;
+    if ($p->template != 'admin') return;
+    if (wire()->config->ajax) return;
+    if (wire()->config->external) return;
+    $rm = rockmigrations();
+    // currency for variation inputs
+    $rm->addScripts(__DIR__ . '/../RockMoney/lib/currency.min.js');
   }
 
   /**
