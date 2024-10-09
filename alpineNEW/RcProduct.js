@@ -13,24 +13,21 @@ RockCommerce.addComponent("RcProduct", {
   money: null,
 
   ready() {
-    // RockCommerceOLD.addComponent(this);
-    // this.money = new RockMoney(this.$el.getAttribute("rc-price"));
-    // this.minamount = parseInt(
-    //   this.$rcattr("rc-minamount") || RockCommerceOLD.config.minamount
-    // );
-    // this.initAmount();
-    // this.$watch("amount", this.update.bind(this));
-    // this.maxamount = parseInt(
-    //   this.$rcattr("rc-maxamount") || RockCommerceOLD.config.maxamount
-    // );
-    // document.addEventListener("RockCommerce:ready", () => {
-    //   this.loadProductConfig();
-    //   this.update();
-    // });
+    this.money = new RockMoney(this.$el.getAttribute("rc-price"));
+    this.minamount = parseInt(
+      this.$rcattr("rc-minamount") || RockCommerce.config.minamount
+    );
+    this.initAmount();
+    this.$watch("amount", this.update.bind(this));
+    this.maxamount = parseInt(
+      this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
+    );
+    this.loadProductConfig();
+    this.update();
   },
 
   ___addToCart() {
-    RockCommerceOLD.cart.addItem({
+    RockCommerce.cart.addItem({
       pid: this.$rcpid,
       amount: this.amount,
       variation: this.variationString(false, false),
@@ -56,7 +53,7 @@ RockCommerce.addComponent("RcProduct", {
    * Load product config from url hash
    */
   loadProductConfig() {
-    const product = RockCommerceOLD.products[0];
+    const product = RockCommerce.products[0];
     if (!product) return;
 
     // get hash from current url

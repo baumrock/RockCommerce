@@ -2,7 +2,8 @@ console.log("RockCommerceNEW");
 
 var RockCommerce;
 (() => {
-  const components = [];
+  let componentID = 0;
+  const components = {};
 
   /**
    * Setup the global RockCommerce object
@@ -30,7 +31,8 @@ var RockCommerce;
           // a <div x-data=...> dom element. the init
           comp.___init = function () {
             // add component to the list of added components
-            components.push(this);
+            components[++componentID] = this;
+            this.$el.setAttribute("rc-cid", componentID);
 
             // if the RockCommerce alpine component was initialized
             // we replace the global RockCommerce object with this component
@@ -62,6 +64,9 @@ var RockCommerce;
     // this is possible because we always only have one cart
     cart: false,
 
+    config: {},
+    pidcid: {},
+    products: [],
     _taxrate: 0,
     timers: {},
 
@@ -78,6 +83,46 @@ var RockCommerce;
       this.timers[name] = setTimeout(func, wait);
     },
 
+    fetch(url, options = {}) {
+      // make sure url has no leading slash
+      url = url.replace(/^\/+/, "");
+      url = RockCommerceOLD.config.root + "rockcommerce/" + url;
+
+      // Set default headers
+      const defaultHeaders = {
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      // Merge default options with provided options
+      const mergedOptions = {
+        ...options,
+        headers: {
+          ...defaultHeaders,
+          ...(options && options.headers),
+        },
+      };
+
+      // Show loading indicator
+      if (options.animation !== false) {
+        this.loading(options.animation || "dots");
+      }
+
+      return fetch(url, mergedOptions)
+        .then((response) => {
+          // Hide loading indicator when the request is complete
+          this.loaded();
+          return response;
+        })
+        .catch((error) => {
+          // Hide loading indicator if there's an error
+          this.loaded();
+          // Re-throw the error to be caught by the caller
+          throw error;
+        });
+    },
+
     /**
      * Find alpine component from DOM element
      * Find closest component: RockCommerce.getComponent(myEl);
@@ -87,14 +132,34 @@ var RockCommerce;
       if (type) el = el.closest(`[x-data=${type}]`);
       else el = el.closest("[x-data]");
       if (!el) return false;
-      components.forEach((c) => {
-        if (c.$el === el) return c;
+      const cid = el.getAttribute("rc-cid");
+      if (!cid) return false;
+      return components[cid];
+    },
+
+    /**
+     * Find alpine component from pw page id (rc-pid attribute)
+     */
+    getComponentFromPid(pid) {
+      Object.values(components).forEach((c) => {
+        if (c.$rcpid() === pid) return c;
       });
       return false;
     },
 
     getComponents(type) {
-      return components.filter((c) => c.$el.getAttribute("x-data") === type);
+      return Object.values(components).filter(
+        (c) => c.$el.getAttribute("x-data") === type
+      );
+    },
+
+    /**
+     * Get taxrate
+     * This ensures that the returned taxrate is numeric even if
+     * this.taxrate is undefined for whatever reason
+     */
+    getTaxrate() {
+      return parseFloat(this._taxrate) || 0;
     },
 
     /**
@@ -121,7 +186,7 @@ var RockCommerce;
     },
 
     ___readyComponents() {
-      components.forEach((c) => {
+      Object.values(components).forEach((c) => {
         // call .ready() method of every component if it exists
         if (typeof c.ready === "function") c.ready();
       });
