@@ -185,12 +185,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $this->markupBody($page) . '</body>',
       $html
     );
-    // now that the scripts are loaded we can add markup to the head
-    $html = str_replace(
-      '</head>',
-      $this->markupHead($page) . '</head>',
-      $html
-    );
 
     return $html;
   }
@@ -343,14 +337,20 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // compile all alpine js components to one JS file
     // wire()->config->debug = false;
     // wire()->config->rockassetsForceRecompile = true;
-    $src = __DIR__ . '/alpineNEW';
     $assets
-      // make sure RockCommerceNEW is loaded first
-      ->add($src . '/RockCommerceNEW.js')
-      // then load all other components from that folder
-      ->addAll($src)
+      ->add('/site/modules/RockJavaScriptHooks/Hooks.js')
+      ->add('/site/modules/RockMoney/RockMoney.min.js')
+      ->add('/site/modules/RockMoney/lib/currency.min.js')
+
+      // load alpine components, with main component first
+      ->add(__DIR__ . '/alpineNEW/RockCommerceNEW.js')
+      // then load all other components from alpine folder
+      ->addAll(__DIR__ . '/alpineNEW')
+      // finally load alpinejs
+      ->add(__DIR__ . '/lib/alpine.min.js', preventMinify: true)
       ->saveTo(
         __DIR__ . '/dst/RockCommerce.min.js',
+        minify: true,
       );
   }
 
@@ -678,46 +678,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     $out .= "</div>";
 
-    return $out;
-  }
-
-  public function ___markupHead(): string
-  {
-    // Debug::startTimer();
-    $urls = [];
-
-    $urls[] = $this->toUrl('/site/modules/RockJavaScriptHooks/Hooks.js', true);
-
-    // we always load RockCommerce.js at very first!
-    $urls[] = $this->toUrl(__DIR__ . '/RockCommerceOLD.min.js', true);
-    $urls[] = $this->toUrl(__DIR__ . '/alpine/RockCommerce.min.js', true);
-
-    // add RockCommerce Alpine Components
-    foreach (glob(__DIR__ . '/alpine/*.min.js') as $file) {
-      $name = substr(basename($file), 0, -7);
-      if (!array_key_exists($name, $this->jsFiles)) continue;
-      $urls[] = $this->toUrl($file, true);
-    }
-
-    // load rockmoney/currency for money calculations
-    $modules = $this->wire->config->paths->siteModules;
-    $urls[] = $this->toUrl($modules . 'RockMoney/RockMoney.min.js', true);
-    $urls[] = $this->toUrl($modules . 'RockMoney/lib/currency.min.js', true);
-
-    // note: alpinejs must be loaded AFTER all components so
-    // that their alpine:init eventlisteners fire correctly
-    $urls[] = $this->toUrl(__DIR__ . '/lib/alpine.min.js', true);
-
-    $out = "";
-    foreach ($urls as $url) {
-      if (strpos($url, '.js?')) {
-        $out .= "<script src='$url' defer></script>\n";
-      } else {
-        $out .= "<link rel='stylesheet' href='$url'>\n";
-      }
-    }
-
-    // bd((Debug::stopTimer() * 1000) . 'ms');
     return $out;
   }
 

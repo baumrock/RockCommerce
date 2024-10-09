@@ -1,6 +1,10 @@
-RockCommerceOLD.component("RcTaxselect", {
+RockCommerce.addComponent("RcTaxselect", {
   taxrate: 0,
   init() {
+    console.log("RcTaxselect init");
+  },
+
+  ready() {
     this.$watch("taxrate", (rate) => {
       RockCommerceOLD.setTaxrate(rate);
       const product = RockCommerceOLD.getComponent(this.$el, "RcProduct");

@@ -1,8 +1,11 @@
-RockCommerceOLD.component("RcVariationOption", {
+RockCommerce.addComponent("RcVariationOption", {
   money: null,
   variation: null,
-
   init() {
+    console.log("RcVariationOption init");
+  },
+
+  ready() {
     RockCommerceOLD.addComponent(this);
     this.product = RockCommerceOLD.getComponent(this.$el, "RcProduct");
     this.variation = RockCommerceOLD.getComponent(this.$el, "RcVariation");

@@ -1,5 +1,5 @@
 // Product Component
-RockCommerceOLD.component("RcProduct", {
+RockCommerce.addComponent("RcProduct", {
   amount: 1,
   amountInput: false,
   maxamount: 1,
@@ -13,6 +13,10 @@ RockCommerceOLD.component("RcProduct", {
   money: null,
 
   init() {
+    console.log("RcProduct init");
+  },
+
+  ready() {
     RockCommerceOLD.addComponent(this);
     this.money = new RockMoney(this.$el.getAttribute("rc-price"));
     this.minamount = parseInt(

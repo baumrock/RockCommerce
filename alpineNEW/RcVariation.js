@@ -1,9 +1,13 @@
 // Product Variation Component
-RockCommerceOLD.component("RcVariation", {
+RockCommerce.addComponent("RcVariation", {
   minoptions: 0,
   maxoptions: 1,
 
   init() {
+    console.log("RcVariation init");
+  },
+
+  ready() {
     RockCommerceOLD.addComponent(this);
     this.minoptions = parseInt(this.$rcattr("rc-minoptions"));
     this.maxoptions = parseInt(this.$rcattr("rc-maxoptions")) || 1;

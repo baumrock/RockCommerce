@@ -29,3 +29,36 @@ RockCommerce.addComponent("RockCommerceNEW", {
     console.log("RockCommerceNEW init");
   },
 });
+
+/**
+ * Add global apine magic
+ */
+document.addEventListener("alpine:init", () => {
+  /**
+   * Get page id of alpine component element
+   * <div x-data=mycomponent rc-pid=123></div>
+   * Usage c.$rcpid()
+   */
+  Alpine.magic("rcpid", (el) => {
+    const c = RockCommerceOLD.getComponent(el);
+    return c.$rcattr("rc-pid");
+  });
+
+  /**
+   * Get attribute of alpine component element
+   * <div x-data=mycomponent foo=foo></div>
+   * Usage c.$rcattr('foo')
+   */
+  Alpine.magic("rcattr", (el) => {
+    const c = RockCommerceOLD.getComponent(el);
+    return (attr) => c.$root.getAttribute(attr);
+  });
+
+  /**
+   * Component type (eg RcCart, RcProduct)
+   */
+  Alpine.magic("rctype", (el) => {
+    const c = RockCommerceOLD.getComponent(el);
+    return c.$el.getAttribute("x-data");
+  });
+});
