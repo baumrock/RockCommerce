@@ -3,12 +3,12 @@ RockCommerce.addComponent("RcVariationOption", {
   variation: null,
 
   ready() {
-    RockCommerceOLD.addComponent(this);
-    this.product = RockCommerceOLD.getComponent(this.$el, "RcProduct");
-    this.variation = RockCommerceOLD.getComponent(this.$el, "RcVariation");
-    if (!this.variation) alert("options must be placed inside a variation");
-    this.$el.addEventListener("click", this.handleClick.bind(this));
-    this.money = new RockMoney(this.$rcattr("rc-price"));
+    // RockCommerceOLD.addComponent(this);
+    // this.product = RockCommerce.getComponent(this.$el, "RcProduct");
+    // this.variation = RockCommerce.getComponent(this.$el, "RcVariation");
+    // if (!this.variation) alert("options must be placed inside a variation");
+    // this.$el.addEventListener("click", this.handleClick.bind(this));
+    // this.money = new RockMoney(this.$rcattr("rc-price"));
   },
 
   get active() {

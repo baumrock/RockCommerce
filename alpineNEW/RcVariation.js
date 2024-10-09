@@ -4,9 +4,9 @@ RockCommerce.addComponent("RcVariation", {
   maxoptions: 1,
 
   ready() {
-    RockCommerceOLD.addComponent(this);
-    this.minoptions = parseInt(this.$rcattr("rc-minoptions"));
-    this.maxoptions = parseInt(this.$rcattr("rc-maxoptions")) || 1;
+    // RockCommerceOLD.addComponent(this);
+    // this.minoptions = parseInt(this.$rcattr("rc-minoptions"));
+    // this.maxoptions = parseInt(this.$rcattr("rc-maxoptions")) || 1;
   },
 
   disableAll() {
@@ -24,7 +24,7 @@ RockCommerce.addComponent("RcVariation", {
       ? "[x-data=RcVariationOption].rc-active"
       : "[x-data=RcVariationOption]";
     return Array.from(this.$el.querySelectorAll(selector)).map((el) =>
-      RockCommerceOLD.getComponent(el)
+      RockCommerce.getComponent(el)
     );
   },
 

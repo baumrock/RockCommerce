@@ -19,21 +19,14 @@
 
     ready() {
       // we allow only one cart
-      if (RockCommerceOLD.cart) return;
-
-      RockCommerceOLD.addComponent(this);
-      RockCommerceOLD.cart = this;
+      if (RockCommerce.cart) return;
+      RockCommerce.cart = this;
 
       // load items from localstorage or via ajax from the backend?
       this.ajax = !this.$el.hasAttribute("data-noajax");
-
       this.$watch("items", this.update.bind(this));
-
-      // wait for rockcommerce to be ready
-      document.addEventListener("RockCommerce:ready", () => {
-        this.wakeup();
-        this.update();
-      });
+      this.wakeup();
+      this.update();
     },
 
     /**
@@ -111,7 +104,7 @@
      * General update method triggered on every change
      */
     update() {
-      RockCommerceOLD.debounce("rc-cart-update", () => {
+      RockCommerce.debounce("rc-cart-update", () => {
         this.updateCartCount();
       });
     },

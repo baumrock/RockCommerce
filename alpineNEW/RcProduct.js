@@ -13,21 +13,20 @@ RockCommerce.addComponent("RcProduct", {
   money: null,
 
   ready() {
-    RockCommerceOLD.addComponent(this);
-    this.money = new RockMoney(this.$el.getAttribute("rc-price"));
-    this.minamount = parseInt(
-      this.$rcattr("rc-minamount") || RockCommerceOLD.config.minamount
-    );
-    this.initAmount();
-    this.$watch("amount", this.update.bind(this));
-    this.maxamount = parseInt(
-      this.$rcattr("rc-maxamount") || RockCommerceOLD.config.maxamount
-    );
-
-    document.addEventListener("RockCommerce:ready", () => {
-      this.loadProductConfig();
-      this.update();
-    });
+    // RockCommerceOLD.addComponent(this);
+    // this.money = new RockMoney(this.$el.getAttribute("rc-price"));
+    // this.minamount = parseInt(
+    //   this.$rcattr("rc-minamount") || RockCommerceOLD.config.minamount
+    // );
+    // this.initAmount();
+    // this.$watch("amount", this.update.bind(this));
+    // this.maxamount = parseInt(
+    //   this.$rcattr("rc-maxamount") || RockCommerceOLD.config.maxamount
+    // );
+    // document.addEventListener("RockCommerce:ready", () => {
+    //   this.loadProductConfig();
+    //   this.update();
+    // });
   },
 
   ___addToCart() {
@@ -41,7 +40,7 @@ RockCommerce.addComponent("RcProduct", {
   getVariation(id) {
     const selector = `[x-data=RcVariation][rc-pid="${id}"]`;
     const varEl = this.$root.querySelector(selector);
-    return RockCommerceOLD.getComponent(varEl);
+    return RockCommerce.getComponent(varEl);
   },
 
   initAmount() {
@@ -118,7 +117,7 @@ RockCommerce.addComponent("RcProduct", {
   },
 
   update() {
-    RockCommerceOLD.debounce("RcProduct-update", () => {
+    RockCommerce.debounce("RcProduct-update", () => {
       // make sure amount is correct
       // this is because we use x-bind on amount input and cant know the input
       let amount = this.amount;
@@ -166,7 +165,7 @@ RockCommerce.addComponent("RcProduct", {
   get variations() {
     return Array.from(this.$root.querySelectorAll("[x-data=RcVariation]")).map(
       (el) => {
-        return RockCommerceOLD.getComponent(el);
+        return RockCommerce.getComponent(el);
       }
     );
   },

@@ -14,8 +14,6 @@ var RockCommerceOLD = ProcessWire.wire(
     // use getTaxrate() and setTaxrate()!
     _taxrate: 0,
 
-    timers: {},
-
     /**
      * Add alpine component to list of components
      *
@@ -43,16 +41,6 @@ var RockCommerceOLD = ProcessWire.wire(
       document.addEventListener("alpine:init", () =>
         Alpine.data(name, () => ProcessWire.wire(comp, name, true))
       );
-    },
-
-    /**
-     * Debounce callback for specified time
-     * See RcProduct.js update() for how to use
-     */
-    debounce(name, func, wait) {
-      if (typeof wait === "undefined") wait = 10;
-      clearTimeout(this.timers[name]);
-      this.timers[name] = setTimeout(func, wait);
     },
 
     fetch(url, options = {}) {
@@ -96,19 +84,6 @@ var RockCommerceOLD = ProcessWire.wire(
     },
 
     /**
-     * Find alpine component from DOM element
-     * Find closest component: RockCommerceOLD.getComponent(myEl);
-     * Find closest with type: RockCommerceOLD.getComponent(myEl, 'RcProduct');
-     */
-    getComponent(el, type) {
-      if (type) el = el.closest(`[x-data=${type}]`);
-      if (!el) return false;
-      const cid = el.closest("[x-data]").getAttribute("rc-cid");
-      if (!cid) console.error("Component is not initialized", type);
-      return this.components[cid];
-    },
-
-    /**
      * Find alpine component from pw page id (rc-pid attribute)
      */
     getComponentFromPid(pid) {
@@ -123,34 +98,6 @@ var RockCommerceOLD = ProcessWire.wire(
      */
     getTaxrate() {
       return parseFloat(this._taxrate) || 0;
-    },
-
-    /**
-     * Show loading indicator
-     *
-     * Usage:
-     * RockCommerceOLD.loading(); // uses "dots" animation
-     * RockCommerceOLD.loading('my-animation');
-     */
-    loading(name = "dots") {
-      document.body.setAttribute("rockloader", name);
-    },
-
-    loaded() {
-      document.body.removeAttribute("rockloader");
-    },
-
-    /**
-     * Return a raw copy of data
-     * This is useful to convert Alpine Proxy objects to a raw JS objects
-     */
-    raw(data) {
-      return JSON.parse(JSON.stringify(data || this));
-    },
-
-    setTaxrate(taxrate) {
-      this._taxrate = taxrate;
-      localStorage.setItem("rc-taxrate", taxrate);
     },
   },
   "RockCommerce"
