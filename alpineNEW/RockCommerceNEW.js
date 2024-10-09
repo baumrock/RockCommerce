@@ -7,13 +7,25 @@ console.log("RockCommerceNEW");
  * lines below in this file once it is loaded.
  */
 var RockCommerce = {
+  components: [],
+
   /**
    * Helper function that is called by all other alpine components
    * and creates a wired alpine component that supports Hooks!
    */
   addComponent(name, comp) {
     document.addEventListener("alpine:init", () =>
-      Alpine.data(name, () => ProcessWire.wire(comp, name, true))
+      Alpine.data(name, () => {
+        // add a custom hookable init method for every added component
+        // this custom init() method is called by alpine whenever it finds
+        // a <div x-data=...> dom element. the init
+        comp.___init = function () {
+          console.log("my init for " + name);
+        };
+        const wired = ProcessWire.wire(comp, name, true);
+        this.components.push(wired);
+        return wired;
+      })
     );
   },
 };
@@ -24,11 +36,7 @@ var RockCommerce = {
  * Will be loaded when <div x-data="RockCommerce"> is found in the DOM
  * and then replace the global RockCommerce object.
  */
-RockCommerce.addComponent("RockCommerceNEW", {
-  init() {
-    console.log("RockCommerceNEW init");
-  },
-});
+RockCommerce.addComponent("RockCommerceNEW", {});
 
 /**
  * Add global apine magic

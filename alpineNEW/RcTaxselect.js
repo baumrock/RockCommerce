@@ -1,8 +1,5 @@
 RockCommerce.addComponent("RcTaxselect", {
   taxrate: 0,
-  init() {
-    console.log("RcTaxselect init");
-  },
 
   ready() {
     this.$watch("taxrate", (rate) => {

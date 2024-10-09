@@ -12,10 +12,6 @@ RockCommerce.addComponent("RcProduct", {
   // this is the base price money object
   money: null,
 
-  init() {
-    console.log("RcProduct init");
-  },
-
   ready() {
     RockCommerceOLD.addComponent(this);
     this.money = new RockMoney(this.$el.getAttribute("rc-price"));
