@@ -1,6 +1,7 @@
-console.log("RockCommerceNEW");
-
+// add the global rockcommerce object
 var RockCommerce;
+
+// define custom scope for this component
 (() => {
   let componentID = 0;
   const components = {};
@@ -16,11 +17,11 @@ var RockCommerce;
      * Helper function that is called by all other alpine components
      * and creates a wired alpine component that supports Hooks!
      */
-    addComponent(name, comp) {
+    addComponent(name, component) {
       document.addEventListener("alpine:init", () =>
         Alpine.data(name, () => {
           // if component has an init() method throw an error
-          if (typeof comp.init === "function") {
+          if (typeof component.init === "function") {
             throw new Error(
               "RockCommerce Alpine components must not have an init() method"
             );
@@ -29,7 +30,7 @@ var RockCommerce;
           // add a custom hookable init method for every added component
           // this custom init() method is called by alpine whenever it finds
           // a <div x-data=...> dom element. the init
-          comp.___init = function () {
+          component.___init = function () {
             // add component to the list of added components
             components[++componentID] = this;
             this.$el.setAttribute("rc-cid", componentID);
@@ -37,17 +38,24 @@ var RockCommerce;
             // if the RockCommerce alpine component was initialized
             // we replace the global RockCommerce object with this component
             if (name === "RockCommerceNEW") {
+              // wait for the next tick to prevent an alpine error
               setTimeout(() => {
+                // replace rockcommerce with this alpine component
                 RockCommerce = this;
+
+                // read config from data-config attribute
+                RockCommerce.config = JSON.parse(
+                  this.$rcattr("data-config") || "{}"
+                );
+
+                // trigger .ready() method of every component if it exists
                 RockCommerce.readyComponents();
               }, 0);
             }
           };
 
-          // make the alpine component hookable
-          const wired = ProcessWire.wire(comp, name, true);
-
-          return wired;
+          // return hookable alpine component
+          return ProcessWire.wire(component, name, true);
         })
       );
     },
@@ -86,7 +94,7 @@ var RockCommerce;
     fetch(url, options = {}) {
       // make sure url has no leading slash
       url = url.replace(/^\/+/, "");
-      url = RockCommerceOLD.config.root + "rockcommerce/" + url;
+      url = RockCommerce.config.root + "rockcommerce/" + url;
 
       // Set default headers
       const defaultHeaders = {
@@ -198,6 +206,10 @@ var RockCommerce;
     setTaxrate(taxrate) {
       this._taxrate = taxrate;
       localStorage.setItem("rc-taxrate", taxrate);
+    },
+
+    trigger(event, data) {
+      console.error("refactor me");
     },
   });
 

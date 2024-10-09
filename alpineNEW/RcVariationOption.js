@@ -31,7 +31,7 @@ RockCommerce.addComponent("RcVariationOption", {
       this.$el.classList.add("rc-active");
       this.product.update();
     } else {
-      RockCommerceOLD.trigger("RcVariationOption:maxoptions", this);
+      RockCommerce.trigger("RcVariationOption:maxoptions", this);
     }
   },
 

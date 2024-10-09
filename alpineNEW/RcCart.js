@@ -1,6 +1,6 @@
 /**
  * RockCommerce Alpine Cart Component
- * Access this component via RockCommerceOLD.cart
+ * Access this component via RockCommerce.cart
  * See docs for details.
  */
 (() => {
@@ -74,7 +74,7 @@
      */
     reload() {
       this.itemsLoading = true;
-      RockCommerceOLD.fetch("/cart/get", {
+      RockCommerce.fetch("/cart/get", {
         // animation can be disabled by adding rc-animation="false"
         // to the cart div of the RcCart component
         animation: this.$rcattr("rc-animation"),

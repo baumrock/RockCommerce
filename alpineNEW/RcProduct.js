@@ -76,7 +76,7 @@ RockCommerce.addComponent("RcProduct", {
         variation.disableAll();
         const options = urlParams.get(varID).split(",");
         options.forEach((pid) => {
-          const option = RockCommerceOLD.getComponentFromPid(pid);
+          const option = RockCommerce.getComponentFromPid(pid);
           if (option) option.enable();
         });
       }
