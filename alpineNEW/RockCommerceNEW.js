@@ -22,8 +22,13 @@ var RockCommerce = {
         comp.___init = function () {
           console.log("my init for " + name);
         };
+
+        // make the alpine component hookable
         const wired = ProcessWire.wire(comp, name, true);
+
+        // add it to the array of added components
         this.components.push(wired);
+
         return wired;
       })
     );
