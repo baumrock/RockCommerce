@@ -120,12 +120,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $this->maintenance();
     });
 
-    // minify all js files during development
-    $rm->minify(__DIR__ . "/RockCommerceOLD.js");
-    $rm->minify(__DIR__ . "/alpine");
-    $hookFile = $this->wire->config->paths->templates . "scripts/RCHooks.js";
-    if (is_file($hookFile)) $rm->minify($hookFile);
-
     // register AJAX endpoints
     rockfrontend()->addAjaxFolder('rockcommerce', __DIR__ . '/ajax');
 
