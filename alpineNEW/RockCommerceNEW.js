@@ -49,7 +49,7 @@ var RockCommerce;
                 );
 
                 // trigger .ready() method of every component if it exists
-                RockCommerce.readyComponents();
+                RockCommerce.makeComponentsReady();
               }, 0);
             }
           };
@@ -74,7 +74,6 @@ var RockCommerce;
 
     config: {},
     pidcid: {},
-    products: [],
     _taxrate: 0,
     timers: {},
 
@@ -148,14 +147,18 @@ var RockCommerce;
     /**
      * Find alpine component from pw page id (rc-pid attribute)
      */
-    getComponentFromPid(pid) {
-      Object.values(components).forEach((c) => {
-        if (c.$rcpid() === pid) return c;
+    getComponentByPid(pid) {
+      let comp = false;
+      this.getComponents().forEach((c) => {
+        if (c.$rcpid === pid) comp = c;
       });
-      return false;
+      return comp;
     },
 
     getComponents(type) {
+      if (!type) {
+        return Object.values(components);
+      }
       return Object.values(components).filter(
         (c) => c.$el.getAttribute("x-data") === type
       );
@@ -185,19 +188,22 @@ var RockCommerce;
       document.body.removeAttribute("rockloader");
     },
 
+    ___makeComponentsReady() {
+      Object.values(components).forEach((c) => {
+        this.makeReady(c);
+      });
+    },
+
+    ___makeReady(component) {
+      if (typeof component.ready === "function") component.ready();
+    },
+
     /**
      * Return a raw copy of data
      * This is useful to convert Alpine Proxy objects to a raw JS objects
      */
     raw(data) {
       return JSON.parse(JSON.stringify(data || this));
-    },
-
-    ___readyComponents() {
-      Object.values(components).forEach((c) => {
-        // call .ready() method of every component if it exists
-        if (typeof c.ready === "function") c.ready();
-      });
     },
 
     /**
@@ -220,7 +226,8 @@ var RockCommerce;
     /**
      * Get page id of alpine component element
      * <div x-data=mycomponent rc-pid=123></div>
-     * Usage c.$rcpid()
+     * Usage c.$rcpid
+     * Returns 123
      */
     Alpine.magic("rcpid", (el) => {
       const c = RockCommerce.getComponent(el);
@@ -229,8 +236,9 @@ var RockCommerce;
 
     /**
      * Get attribute of alpine component element
-     * <div x-data=mycomponent foo=foo></div>
+     * <div x-data=mycomponent foo=bar></div>
      * Usage c.$rcattr('foo')
+     * Returns "bar"
      */
     Alpine.magic("rcattr", (el) => {
       const c = RockCommerce.getComponent(el);

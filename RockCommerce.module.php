@@ -341,7 +341,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       ->add(__DIR__ . '/lib/alpine.min.js', preventMinify: true)
       ->saveTo(
         __DIR__ . '/dst/RockCommerce.min.js',
-        minify: false,
+        minify: true,
       );
   }
 

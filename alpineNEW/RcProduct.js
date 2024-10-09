@@ -22,8 +22,12 @@ RockCommerce.addComponent("RcProduct", {
     this.maxamount = parseInt(
       this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
     );
-    this.loadProductConfig();
-    this.update();
+
+    // wait for all variations and options to be ready
+    // then load product config from url hash
+    ProcessWire.addHookAfter("RockCommerceNEW::makeComponentsReady", () => {
+      this.loadProductConfig();
+    });
   },
 
   ___addToCart() {
@@ -53,8 +57,12 @@ RockCommerce.addComponent("RcProduct", {
    * Load product config from url hash
    */
   loadProductConfig() {
-    const product = RockCommerce.products[0];
-    if (!product) return;
+    const products = RockCommerce.getComponents("RcProduct");
+    if (!products.length) return;
+
+    // populate the first product found with url hash
+    // setting multiple products via url is not possible
+    const product = products[0];
 
     // get hash from current url
     let hash = window.location.hash.substring(1).replace(/-/g, "&");
@@ -73,10 +81,10 @@ RockCommerce.addComponent("RcProduct", {
     variations.forEach((variation) => {
       const varID = variation.$rcpid;
       if (urlParams.has(varID)) {
-        variation.disableAll();
         const options = urlParams.get(varID).split(",");
+        variation.disableAll();
         options.forEach((pid) => {
-          const option = RockCommerce.getComponentFromPid(pid);
+          const option = RockCommerce.getComponentByPid(pid);
           if (option) option.enable();
         });
       }
