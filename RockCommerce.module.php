@@ -133,8 +133,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       ['priority' => 200]
     );
 
-    if (!$this->showRootPageInTree) $rm->hidePageFromTree($this->rootPage());
-
     // now that the module is ready we init the productpage
     // to attach hooks from the product trait
     (new ProductPage())->_init();
@@ -1145,13 +1143,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $fs->icon = 'cogs';
     $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
-
-    $fs->add([
-      'type' => 'checkbox',
-      'name' => 'showRootPageInTree',
-      'checked' => $this->showRootPageInTree ? 'checked' : '',
-      'label' => 'Show rootpage in pagetree',
-    ]);
 
     $fs->add([
       'type' => 'checkbox',
