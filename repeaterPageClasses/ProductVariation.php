@@ -5,9 +5,11 @@ namespace RockCommerce;
 use ProcessWire\RepeaterPage;
 use ProcessWire\WireArray;
 use ProcessWire\WireData;
+use ProcessWire\WireException;
 use RockGrid\RockGridField;
 
 use function ProcessWire\rockcommerce;
+use function ProcessWire\wire;
 
 class ProductVariation extends RepeaterPage
 {
@@ -40,16 +42,20 @@ class ProductVariation extends RepeaterPage
     $sorted = false;
     $selected = $json->selected ?: [];
     foreach ($selected as $id) {
-      $p = new VariationOption($id);
-      $p->product = $this;
-      $p->title = $p->option->title;
-      $p->setPrice($id, $prices);
+      try {
+        $p = new VariationOption($id);
+        $p->product = $this;
+        $p->title = $p->option->title;
+        $p->setPrice($id, $prices);
 
-      // get sort order from variation repeater options
-      if (!$sorted) $sorted = $p->variation->options()->each('id');
+        // get sort order from variation repeater options
+        if (!$sorted) $sorted = $p->variation->options()->each('id');
 
-      $key = array_search($id, $sorted);
-      $options[$key] = $p;
+        $key = array_search($id, $sorted);
+        $options[$key] = $p;
+      } catch (\Throwable $th) {
+        $this->log($th->getMessage());
+      }
     }
     ksort($options);
     return $this->wire(new WireArray())->import($options);
