@@ -2,8 +2,6 @@
 
 namespace RockCommerce;
 
-use ProcessWire\FieldtypeFieldsetOpen;
-use ProcessWire\FieldtypeRockGrid;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;

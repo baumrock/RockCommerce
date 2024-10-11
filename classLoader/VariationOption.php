@@ -44,14 +44,23 @@ class VariationOption extends WireData
     return rockcommerce()->attrs('RcVariationOption', "
       rc-pid='{$this->option}'
       rc-price='{$this->price->getFloat()}'
+      rc-image='{$this->image}'
     ");
   }
 
-  public function setPrice($id, $prices): void
+  public function wakeup($data, $id): void
   {
-    if (!is_array($prices)) $prices = [];
-    if (!array_key_exists($id, $prices)) $prices[$id] = 0;
-    $this->price = rockmoney()->parse($prices[$id]);
+    // set price
+    $this->price = rockmoney()->parse(0);
+    $prices = $data->prices ?: [];
+    if (array_key_exists($id, $prices)) {
+      $this->price = rockmoney()->parse($prices[$id]);
+    }
+
+    // set image
+    $this->image = '';
+    $images = $data->images ?: [];
+    if (array_key_exists($id, $images)) $this->image = $images[$id];
   }
 
   public function __debugInfo(): array
@@ -61,6 +70,7 @@ class VariationOption extends WireData
       'product' => $this->product,
       'price' => $this->price,
       'title' => $this->title,
+      'image' => $this->image,
     ];
   }
 }

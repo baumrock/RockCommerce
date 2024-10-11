@@ -21,25 +21,9 @@ RockCommerce.addComponent("RcVariationOption", {
     this.variation.optionsChanged();
   },
 
-  enable() {
-    let selected = this.variation.numSelected();
-
-    // no early exit if max options are reached!
-    // we need to run the code to update the optionsChanged()
-
-    // Single selection mode
-    if (this.variation.maxoptions === 1) {
-      this.variation.disableAll();
-      this.$el.classList.add("rc-active");
-      this.variation.optionsChanged();
-    }
-    // Multi-selection mode, within limit
-    else if (selected < this.variation.maxoptions) {
-      this.$el.classList.add("rc-active");
-      this.variation.optionsChanged();
-    }
-    // Max options reached
-    // do not enable this option when clicked
+  ___enable() {
+    this.$el.classList.add("rc-active");
+    this.variation.optionsChanged();
   },
 
   handleClick(event) {
@@ -49,6 +33,23 @@ RockCommerce.addComponent("RcVariationOption", {
 
   toggle() {
     if (this.active) this.disable();
-    else this.enable();
+    else {
+      let selected = this.variation.numSelected();
+
+      // no early exit if max options are reached!
+      // we need to run the code to update the optionsChanged()
+
+      // Single selection mode
+      if (this.variation.maxoptions === 1) {
+        this.variation.disableAll();
+        this.enable();
+      }
+      // Multi-selection mode, within limit
+      else if (selected < this.variation.maxoptions) {
+        this.enable();
+      }
+      // Max options reached
+      // do not enable this option when clicked
+    }
   },
 });

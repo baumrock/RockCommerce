@@ -48,6 +48,31 @@ document.addEventListener("RockGrid:init", (e) => {
         },
         hozAlign: "right",
       });
+      defs = grid.addAfter(defs, "total", {
+        field: "addNumbers",
+        title: "",
+        width: 40,
+        headerSort: false,
+        hozAlign: "center",
+        formatter: function (cell) {
+          return (
+            '<a href class="rc-add-image-numbers">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m4 15l3 3l3-3M7 6v12M17 3a2 2 0 0 1 2 2v3a2 2 0 1 1-4 0V5a2 2 0 0 1 2-2zm-2 13a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M19 16v3a2 2 0 0 1-2 2h-1.5"/></g></svg>' +
+            "</a>"
+          );
+        },
+      });
+      defs = grid.addAfter(defs, "addNumbers", {
+        field: "image",
+        title: "image",
+        // using input makes it possible to navigate via up and down keys
+        editor: "number",
+        editorParams: {
+          verticalNavigation: "table",
+        },
+        width: 100,
+        hozAlign: "right",
+      });
 
       defs.forEach((col, i) => {
         if (col.field == "id" || col.field == "varID") {
@@ -97,6 +122,47 @@ document.addEventListener("RockGrid:init", (e) => {
 
   // ### custom events ###
 
+  // image numbers
+  const sleepImages = () => {
+    const numbers = {};
+    table.getSelectedRows().forEach((row) => {
+      const img = row.getData().image;
+      if (!img) return;
+      numbers[row.getData().id] = img;
+    });
+    grid.sleep("images", numbers);
+  };
+  table.on("cellClick", (e, cell) => {
+    const a = e.target.closest(".rc-add-image-numbers");
+    if (!a) return;
+    e.preventDefault();
+    // set all image cells above this to ""
+    // set all image cells below this to 1++
+    // Get all rows in the table
+    let rows = table.getRows();
+
+    // Find the index of the clicked row
+    let clickedIndex = rows.findIndex((row) => row === cell.getRow());
+
+    // Set image values for rows above the clicked row
+    for (let i = 0; i < clickedIndex; i++) {
+      table.updateRow(rows[i].getData().id, { image: "" });
+    }
+
+    // Set image values for the clicked row and below
+    let imageNumber = 1;
+    for (let i = clickedIndex; i < rows.length; i++) {
+      table.updateRow(rows[i].getData().id, { image: imageNumber++ });
+    }
+
+    // build sleep object for storing image numbers
+    sleepImages();
+  });
+  table.on("cellEdited", (cell) => {
+    if (cell.getField() !== "image") return;
+    sleepImages();
+  });
+
   // add filter to show only one single variation
   table.on("rowSelected", (row) => {
     let id = row.getData().varID;
@@ -136,26 +202,35 @@ document.addEventListener("RockGrid:init", (e) => {
     grid.sleep("prices", prices);
   };
 
-  // ### price input
+  // ### wakeup
   table.on("dataProcessed", () => {
+    // prices
     let prices = grid.sleepValue.prices || {};
-    let basePrice = currency(
-      document.getElementById("Inputfield_rc_product_price").value
-    );
+    let basePrice = 0;
+    let priceEl = document.getElementById("Inputfield_rc_product_price");
+    if (priceEl) basePrice = currency(priceEl.value);
     for (let [id, price] of Object.entries(prices)) {
       table.updateRow(id, {
         price: price,
         total: basePrice.add(price),
       });
     }
+
+    // image numbers
+    let images = grid.sleepValue.images || {};
+    for (let [id, imageNumber] of Object.entries(images)) {
+      table.updateRow(id, {
+        image: imageNumber,
+      });
+    }
   });
-  // ### END price input
+  // ### END wakeup
 
   // ### calc/watch total input
   table.on("cellEdited", (cell) => {
-    let basePrice = currency(
-      document.getElementById("Inputfield_rc_product_price").value
-    );
+    let basePrice = 0;
+    let priceEl = document.getElementById("Inputfield_rc_product_price");
+    if (priceEl) basePrice = currency(priceEl.value);
     let val = cell.getValue();
     let data = cell.getRow().getData();
     if (cell.getField() === "price") {

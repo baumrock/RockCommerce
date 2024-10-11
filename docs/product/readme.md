@@ -1,4 +1,4 @@
-# Products
+# Product
 
 ## Make any page a RockCommerce product
 
