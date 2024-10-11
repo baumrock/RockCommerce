@@ -144,14 +144,15 @@ document.addEventListener("RockGrid:init", (e) => {
     // Find the index of the clicked row
     let clickedIndex = rows.findIndex((row) => row === cell.getRow());
 
-    // Set image values for rows above the clicked row
-    for (let i = 0; i < clickedIndex; i++) {
+    // reset image column
+    for (let i = 0; i < rows.length; i++) {
       table.updateRow(rows[i].getData().id, { image: "" });
     }
 
-    // Set image values for the clicked row and below
+    // set image numbers for all selected rows
     let imageNumber = 1;
     for (let i = clickedIndex; i < rows.length; i++) {
+      if (!rows[i].isSelected()) continue;
       table.updateRow(rows[i].getData().id, { image: imageNumber++ });
     }
 
