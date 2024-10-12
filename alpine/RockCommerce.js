@@ -37,7 +37,7 @@ var RockCommerce;
 
             // if the RockCommerce alpine component was initialized
             // we replace the global RockCommerce object with this component
-            if (name === "RockCommerceNEW") {
+            if (name === "RockCommerce") {
               // wait for the next tick to prevent an alpine error
               setTimeout(() => {
                 // replace rockcommerce with this alpine component
@@ -67,7 +67,7 @@ var RockCommerce;
    * Will be loaded when <div x-data="RockCommerce"> is found in the DOM
    * and then replace the global RockCommerce object.
    */
-  RockCommerce.addComponent("RockCommerceNEW", {
+  RockCommerce.addComponent("RockCommerce", {
     // direct reference to the cart component
     // this is possible because we always only have one cart
     cart: false,

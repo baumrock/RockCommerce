@@ -334,9 +334,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       ->add('/site/modules/RockMoney/lib/currency.min.js')
 
       // load alpine components, with main component first
-      ->add(__DIR__ . '/alpineNEW/RockCommerceNEW.js')
+      ->add(__DIR__ . '/alpine/RockCommerce.js')
       // then load all other components from alpine folder
-      ->addAll(__DIR__ . '/alpineNEW')
+      ->addAll(__DIR__ . '/alpine')
       // finally load alpinejs
       ->add(__DIR__ . '/lib/alpine.min.js', preventMinify: true)
       ->saveTo(
@@ -664,7 +664,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // rockcommerce has to be the last alpine element
     // this is to ensure that all other components are ready at this point
-    $out .= "<div x-data=RockCommerceNEW data-config='$conf' hidden></div>";
+    $out .= "<div x-data=RockCommerce data-config='$conf' hidden></div>";
 
     $out .= "</div>";
 

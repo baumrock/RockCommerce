@@ -25,11 +25,17 @@ RockCommerce.addComponent("RcProduct", {
 
     // wait for all variations and options to be ready
     // then load product config from url hash
-    ProcessWire.addHookAfter("RockCommerceNEW::makeComponentsReady", () => {
+    ProcessWire.addHookAfter("RockCommerce::makeComponentsReady", () => {
       this.loadProductConfig();
     });
   },
 
+  /**
+   * Add current product to cart
+   *
+   * This method is triggered by @click.prevent=addToCart
+   * and adds the product, amount and variation to the cart.
+   */
   ___addToCart() {
     RockCommerce.cart.addItem({
       pid: this.$rcpid,
