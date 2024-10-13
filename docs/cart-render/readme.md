@@ -84,6 +84,60 @@ Or as a link with UIkit tooltip:
 </a>
 ```
 
+## Variation Info Table
+
+If you are using variations, you can display them in the cart like this (inside the `x-for='item in items'` loop):
+
+```html
+<div
+  x-show='item.variationTable && item.variationTable.length'
+>
+  <template x-for='row in item.variationTable'>
+    <div>
+      <div x-text='row.variation'></div>
+      <div>
+        <template x-for='opt in row.options'>
+          <div x-text='opt'></div>
+        </template>
+      </div>
+    </div>
+  </template>
+</div>
+```
+
+Of course you can use any other markup as well. Use `<table>` or flexbox or whatever fits your frontend best.
+
+## Item Image
+
+Displaying an image for every item is a little different, because the image path is not available in the cart's JS data. This is because every implementation of RockCommerce can be different.
+
+But it's easy to tell RockCommerce which image to display. We only need a hook to modify the data that RockCommerce uses when grabbing data via AJAX:
+
+```php
+// site/ready.php
+wire()->addHookAfter('Item::getJsonArray', function (HookEvent $event) {
+  $arr = $event->return;
+  $product = wire()->pages->get($arr['product']);
+
+  // check if product is valid
+  // and if so, populate the pic property
+  if(...) {
+    $arr['pic'] = $product->coverpic()->maxSize(100, 100)->webp->url;
+  }
+
+  // return the modified array to the hookevent
+  $event->return = $arr;
+});
+```
+
+<div class='uk-alert uk-alert-warning'>This is an example that you can't copy 1:1 - you have to modify it to fit your needs.</div>
+
+Once that hook is in place, you can use the `pic` property in your template, just like any other item property:
+
+```html
+<img :src='item.pic' :alt='item.title'>
+```
+
 ## Loading Spinner
 
 To display a loading spinner while the cart is loading, you can use Alpine's `x-show` directive:
