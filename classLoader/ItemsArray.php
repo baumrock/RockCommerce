@@ -11,7 +11,7 @@ class ItemsArray extends PageArray
     $arr = [];
     foreach ($this as $item) {
       if (!$item instanceof Item) continue;
-      $arr[] = $item->getArray();
+      $arr[] = $item->getJsonArray();
     }
     return $arr;
   }

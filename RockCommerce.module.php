@@ -942,6 +942,37 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
   }
 
+  /**
+   * Turn a variation string like 6789:6784,6799-6793:6792
+   * into a variation table
+   *
+   * Note: We do not add <table> to make it easy to style the table on
+   * the frontend.
+   */
+  public function variationTable(string $str): array
+  {
+    $str = $this->sanitizeVariation($str);
+    if (!$str) return [];
+
+    $result = [];
+    $variations = explode('-', $str);
+    foreach ($variations as $variation) {
+      list($key, $values) = explode(':', $variation);
+      $variationPage = wire()->pages->get($key);
+      $optionIDs = explode(',', $values);
+      $options = [];
+      foreach ($optionIDs as $optionID) {
+        $option = wire()->pages->get($optionID);
+        $options[] = $option->title;
+      }
+      $result[] = [
+        'variation' => $variationPage->title(),
+        'options' => $options,
+      ];
+    }
+    return $result;
+  }
+
   public function ___view(
     string $file,
     array|Page $vars = [],

@@ -53,12 +53,35 @@ The markup of the cart items is totally up to you. However, you have to apply so
 </template>
 ```
 
+## Show empty cart message
+
+To show a message when the cart is empty, you can use the `x-show` directive:
+
+```html
+<div x-show="!items.length">
+  Ihr Warenkorb ist leer.
+</div>
+```
+
 ## Delete item button
 
 To add a delete button to each cart item, just call the `deleteItem` method with the item's id from any rendered item row inside the `x-for` loop:
 
 ```html
 <button @click='deleteItem(item.id)'>Remove this item from the cart</button>
+```
+
+Or as a link with UIkit tooltip:
+
+```html
+<a
+  href
+  @click.prevent='deleteItem(item.id)'
+  title='Aus dem Warenkorb entfernen'
+  uk-tooltip
+>
+  Remove this item from the cart
+</a>
 ```
 
 ## Loading Spinner

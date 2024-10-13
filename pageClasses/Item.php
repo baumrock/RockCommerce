@@ -10,6 +10,7 @@ use RockFrontend\FieldMethod;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
+use function ProcessWire\rockcommerce;
 use function ProcessWire\rockfrontend;
 use function ProcessWire\rockmigrations;
 use function ProcessWire\rockmoney;
@@ -118,7 +119,7 @@ class Item extends Page
    * Returns the cart item as an array (eg for ajax endpoints)
    * @return array
    */
-  public function getArray(): array
+  public function ___getJsonArray(): array
   {
     /**
      * Data sent to the frontend and stored in localstorage
@@ -130,9 +131,14 @@ class Item extends Page
       'product' => $this->field('product', 'int'),
       'amount' => $this->amount(),
       'variation' => $this->variationString(),
+      'variationTable' => $this->variationTable(),
+
       // urls to item's referenced product
       'url' => $this->fullUrl(),
       'shortUrl' => $this->shortUrl(),
+      // has to be populated via hook
+      // this is individual for each project
+      'pic' => '',
     ];
   }
 
@@ -229,5 +235,11 @@ class Item extends Page
   public function variationString(): string
   {
     return $this->field('variation', 'string');
+  }
+
+  public function variationTable(): array
+  {
+    $str = $this->field('variation', 'string');
+    return rockcommerce()->variationTable($str);
   }
 }
