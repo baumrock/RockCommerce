@@ -7,11 +7,12 @@ namespace ProcessWire;
 
 // get the current user's cart
 $cart = rockcommerce()->cart();
+$cart->setTaxrate($input->taxrate);
 
 // sanitize input
-$pid = (int)$input->pid;
-$amount = (int)$input->amount;
-$variation = rockcommerce()->sanitizeVariation($input->variation);
+$pid = (int)$input->item['pid'];
+$amount = (int)$input->item['amount'];
+$variation = rockcommerce()->sanitizeVariation($input->item['variation']);
 
 // product to add
 $product = rockcommerce()->getProduct($pid);

@@ -35,7 +35,7 @@
       RockCommerce.fetch("/cart/add", {
         payload: {
           item: data,
-          taxrate: RockCommerce.taxrate,
+          taxrate: RockCommerce.getTaxrate(),
         },
       })
         .then((data) => {
