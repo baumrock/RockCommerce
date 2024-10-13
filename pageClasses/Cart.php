@@ -87,6 +87,7 @@ class Cart extends Page
       'id' => $this->name,
       'count' => $this->itemsCount(),
       'items' => $this->items()->getJsonArray(),
+      'addedAmount' => $this->addedAmount,
     ];
   }
 
@@ -156,8 +157,10 @@ class Cart extends Page
     }
     $item->save();
 
-    $this->wire->session->rcAddedAmount = $amount;
-    $this->wire->session->rcAddedProduct = $product->id;
+    // $this->wire->session->rcAddedAmount = $amount;
+    // $this->wire->session->rcAddedProduct = $product->id;
+    $item->addedAmount = $amount;
+
     return $item;
   }
 

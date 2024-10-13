@@ -124,7 +124,7 @@ class Item extends Page
      * Data sent to the frontend and stored in localstorage
      */
     return [
-      'pid' => $this->id,
+      'id' => $this->id,
       'title' => $this->cartTitle(),
       'description' => $this->cartDescription(),
       'product' => $this->field('product', 'int'),

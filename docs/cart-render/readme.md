@@ -22,7 +22,7 @@ The html could look like this:
 
 Adding `x-data=RcCart` to the wrapper div initializes the `RcCart` component. This component is responsible for handling all cart operations, like adding and removing items, updating quantities, applying coupons, and calculating shipping costs.
 
-### AJAX Response
+## AJAX Response
 
 As soon as the user opens the cart page, the `RcCart` component will be initialized and make a GET request to `rockcommerce/cart/get`. This will fetch the cart data, which will look something like this:
 
@@ -39,7 +39,7 @@ As soon as the user opens the cart page, the `RcCart` component will be initiali
 
 This date will then be used to render the cart items.
 
-### Rendering the cart items
+## Rendering cart items
 
 The markup of the cart items is totally up to you. However, you have to apply some special attributes to the elements, so that the `RcCart` component knows which elements to update:
 
@@ -53,36 +53,18 @@ The markup of the cart items is totally up to you. However, you have to apply so
 </template>
 ```
 
-### Loading Spinner
+## Delete item button
+
+To add a delete button to each cart item, just call the `deleteItem` method with the item's id from any rendered item row inside the `x-for` loop:
+
+```html
+<button @click='deleteItem(item.id)'>Remove this item from the cart</button>
+```
+
+## Loading Spinner
 
 To display a loading spinner while the cart is loading, you can use Alpine's `x-show` directive:
 
 ```html
 <div x-show='loading'><!-- your loading spinner --></div>
-```
-
-## Customizing the cart
-
-### Using hooks
-
-Place your hooks in `/site/init.php` (not ready.php!):
-
-```php
-// modify the cartitem's title:
-$wire->addHookAfter("Cartitem::cartTitle", function ($event) {
-  $item = $event->object;
-  $product = $item->product(); // get the item's referenced product
-  $event->return = $product->title;
-});
-
-// modify the cartitem's description:
-$wire->addHookAfter("Cartitem::cartDescription", function ($event) {
-  $item = $event->object;
-  $product = $item->product(); // get the item's referenced product
-
-  // if you want to render html markup you need to use
-  // the html() helper to prevent latte from escaping your markup
-  // note: do this only on save markup!
-  $event->return = $item->html($product->body);
-});
 ```

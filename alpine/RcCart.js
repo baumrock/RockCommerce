@@ -30,14 +30,16 @@
     /**
      * Add item to the JS cart
      */
-    async ___addItem(data) {
+    ___addItem(data) {
       // send ajax request to add item to cart
-      const res = await RockCommerce.fetch("/cart/add", {
+      RockCommerce.fetch("/cart/add", {
         payload: data,
       })
         .then((data) => {
-          if (data.success) this.setData(data.cart);
-          else throw new Error("Error adding item to cart");
+          if (data.success) {
+            this.setData(data.cart);
+            this.itemAdded(data.itemAdded);
+          } else throw new Error("Error adding item to cart");
         })
         .catch((error) => {
           alert(error.message);
@@ -52,6 +54,18 @@
       return count;
     },
 
+    deleteItem(id) {
+      RockCommerce.fetch("/cart/delete", {
+        payload: { id },
+      })
+        .then((data) => {
+          this.setData(data.cart);
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    },
+
     getFromLocalStorage() {
       return JSON.parse(localStorage.getItem("rc-cart") || "{}");
     },
@@ -64,6 +78,11 @@
       };
       return JSON.stringify(data);
     },
+
+    /**
+     * Hookable method executed after an item has been added to the cart
+     */
+    ___itemAdded(item) {},
 
     /**
      * Reload cart data from backend
