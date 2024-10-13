@@ -63,6 +63,14 @@ To show a message when the cart is empty, you can use the `x-show` directive:
 </div>
 ```
 
+## Show cart item count
+
+To show the current item count in the cart, just use the `rc-cart-count` attribute on any dom element on your page:
+
+```html
+<span rc-cart-count>0</span>
+```
+
 ## Delete item button
 
 To add a delete button to each cart item, just call the `deleteItem` method with the item's id from any rendered item row inside the `x-for` loop:
@@ -136,12 +144,4 @@ Once that hook is in place, you can use the `pic` property in your template, jus
 
 ```html
 <img :src='item.pic' :alt='item.title'>
-```
-
-## Loading Spinner
-
-To display a loading spinner while the cart is loading, you can use Alpine's `x-show` directive:
-
-```html
-<div x-show='loading'><!-- your loading spinner --></div>
 ```

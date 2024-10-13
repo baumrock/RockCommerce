@@ -212,6 +212,15 @@ class Item extends Page
     ]);
   }
 
+  /**
+   * Set the amount of the item
+   * Can later get checks if the amount is valid
+   */
+  public function setAmount(int $amount): void
+  {
+    $this->setAndSave(self::field_amount, $amount);
+  }
+
   public function shortUrl(): string
   {
     return $this->field('product', 'first')->url();

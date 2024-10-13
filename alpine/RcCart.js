@@ -63,6 +63,10 @@ RockCommerce.addComponent("RcCart", {
     return JSON.parse(localStorage.getItem("rc-cart") || "{}");
   },
 
+  getItem(id) {
+    return this.items.find((item) => item.id === id);
+  },
+
   getSleepValue() {
     const data = {
       id: this.id,
@@ -77,6 +81,27 @@ RockCommerce.addComponent("RcCart", {
    */
   ___itemAdded(item) {},
 
+  itemAmountAdd(id) {
+    const item = this.getItem(id);
+    item.amount++;
+    RockCommerce.debounce(
+      "rc-cart-item-amount",
+      () => this.setItemCount(id),
+      500
+    );
+  },
+
+  itemAmountSub(id) {
+    const item = this.getItem(id);
+    if (item.amount < 2) return;
+    item.amount--;
+    RockCommerce.debounce(
+      "rc-cart-item-amount",
+      () => this.setItemCount(id),
+      500
+    );
+  },
+
   /**
    * Reload cart data from backend
    */
@@ -87,7 +112,6 @@ RockCommerce.addComponent("RcCart", {
       },
       animation: this.$rcattr("rc-animation"),
     };
-    console.log(options);
     RockCommerce.fetch("/cart/get", options)
       .then((response) => {
         this.setData(response);
@@ -115,6 +139,15 @@ RockCommerce.addComponent("RcCart", {
     this.count = data.count || 0;
     this.items = data.items || [];
     this.save();
+  },
+
+  /**
+   * Set item count via AJAX
+   */
+  setItemCount(id) {
+    RockCommerce.fetch("/cart/set-item-amount", {
+      payload: { item: id, amount: this.getItem(id).amount },
+    });
   },
 
   /**

@@ -5,6 +5,7 @@ namespace RockCommerce;
 use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
+use ProcessWire\NullPage;
 use ProcessWire\Page;
 use ProcessWire\PageArray;
 use ProcessWire\RockMigrations;
@@ -12,6 +13,7 @@ use RockMigrations\MagicPage;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
+use function ProcessWire\wire;
 
 class Cart extends Page
 {
@@ -89,6 +91,14 @@ class Cart extends Page
       'items' => $this->items()->getJsonArray(),
       'addedAmount' => $this->addedAmount,
     ];
+  }
+
+  public function getItem(int|string|Page $id): Item|NullPage
+  {
+    return wire()->pages->get([
+      'parent' => $this,
+      'id' => (string)$id,
+    ]);
   }
 
   public function item(string $variation = null): Page|false

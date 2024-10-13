@@ -28,7 +28,6 @@ if (!$product || !$product->isProduct) {
 $item = $cart->addItem($product, $amount, $variation);
 
 return [
-  // implement the success message on the frontend
   'success' => 1,
   'cart' => $cart->getArray(),
   'itemAdded' => $item->getArray(),
