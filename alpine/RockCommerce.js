@@ -74,7 +74,7 @@ var RockCommerce;
 
     config: {},
     pidcid: {},
-    _taxrate: 0,
+    _taxrate: false,
     timers: {},
 
     /**
@@ -199,6 +199,9 @@ var RockCommerce;
      * this.taxrate is undefined for whatever reason
      */
     getTaxrate() {
+      if (this._taxrate === false) {
+        this.setTaxrate(localStorage.getItem("rc-taxrate") || 0);
+      }
       return parseFloat(this._taxrate) || 0;
     },
 

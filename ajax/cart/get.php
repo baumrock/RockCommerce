@@ -4,6 +4,7 @@ namespace ProcessWire;
 
 // access: anybody can access this
 
-// sleep(2);
+$cart = rockcommerce()->cart();
+$cart->setTaxrate($input->taxrate);
 
-return rockcommerce()->cart()->getArray();
+return $cart->getArray();

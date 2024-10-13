@@ -194,6 +194,7 @@ class Cart extends Page
             'title' => [
               'collapsed' => Inputfield::collapsedHidden,
             ],
+            Taxrate::field_taxrate,
             // self::field_items,
           ],
           'parentTemplates' => [
@@ -213,5 +214,10 @@ class Cart extends Page
         ],
       ],
     ]);
+  }
+
+  public function setTaxrate(float $taxrate): void
+  {
+    $this->setAndSave(Taxrate::field_taxrate, $taxrate);
   }
 }

@@ -33,7 +33,10 @@
     ___addItem(data) {
       // send ajax request to add item to cart
       RockCommerce.fetch("/cart/add", {
-        payload: data,
+        payload: {
+          item: data,
+          taxrate: RockCommerce.taxrate,
+        },
       })
         .then((data) => {
           if (data.success) {
@@ -88,9 +91,14 @@
      * Reload cart data from backend
      */
     reload() {
-      RockCommerce.fetch("/cart/get", {
+      const options = {
+        payload: {
+          taxrate: RockCommerce.getTaxrate(),
+        },
         animation: this.$rcattr("rc-animation"),
-      })
+      };
+      console.log(options);
+      RockCommerce.fetch("/cart/get", options)
         .then((response) => {
           this.setData(response);
         })
