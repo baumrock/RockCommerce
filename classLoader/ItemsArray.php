@@ -13,6 +13,6 @@ class ItemsArray extends PageArray
       if (!$item instanceof Item) continue;
       $arr[] = $item->getJsonArray();
     }
-    return $arr;
+    return array_reverse($arr);
   }
 }
