@@ -36,7 +36,7 @@ RockCommerce.addComponent("RcProduct", {
    * This method is triggered by @click.prevent=addToCart
    * and adds the product, amount and variation to the cart.
    */
-  ___addToCart() {
+  addToCart() {
     RockCommerce.cart.addItem({
       pid: this.$rcpid,
       amount: this.amount,

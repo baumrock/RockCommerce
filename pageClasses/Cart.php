@@ -94,7 +94,7 @@ class Cart extends Page
   {
     // create selector as string
     // this is to make it match pipes in the value and not treat them as OR
-    $selector = Cartitem::field_variation . "='$variation'";
+    $selector = Item::field_variation . "='$variation'";
     $item = $this->wire->pages->get("parent={$this},$selector");
     if (!$item->id) return false;
     return $item;
@@ -134,10 +134,10 @@ class Cart extends Page
   /** backend */
 
   public function addItem(
-    string|Page $product,
+    string|int|Page $product,
     int $amount = null,
     string $variation = null,
-  ): Cartitem {
+  ): Item {
     if (!$amount) $amount = 1;
     $product = rockcommerce()->getProduct($product);
 
@@ -146,13 +146,13 @@ class Cart extends Page
     if ($item) {
       // increase amount
       $item->of(false);
-      $item->set(Cartitem::field_amount, $item->amount() + $amount);
+      $item->set(Item::field_amount, $item->amount() + $amount);
     } else {
       // create new item
-      $item = new Cartitem($this);
-      $item->set(Cartitem::field_product, $product);
-      $item->set(Cartitem::field_amount, $amount);
-      $item->set(Cartitem::field_variation, $variation);
+      $item = new Item($this);
+      $item->set(Item::field_product, $product);
+      $item->set(Item::field_amount, $amount);
+      $item->set(Item::field_variation, $variation);
     }
     $item->save();
 

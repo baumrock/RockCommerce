@@ -111,6 +111,13 @@ var RockCommerce;
         },
       };
 
+      // Add payload to the request if provided
+      if (options.payload !== undefined) {
+        mergedOptions.body = JSON.stringify(options.payload);
+        // default method is POST when payload
+        mergedOptions.method = options.method || "POST";
+      }
+
       // Show loading indicator
       if (options.animation !== false) {
         this.loading(options.animation || "dots");
@@ -118,14 +125,36 @@ var RockCommerce;
 
       return fetch(url, mergedOptions)
         .then((response) => {
-          // Hide loading indicator when the request is complete
           this.loaded();
-          return response;
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const contentType = response.headers.get("content-type");
+
+          if (contentType && contentType.includes("application/json")) {
+            return response.json();
+          } else {
+            return response.text();
+          }
+        })
+        .then((data) => {
+          if (typeof data === "string") {
+            try {
+              data = JSON.parse(data);
+            } catch (e) {
+              return data;
+            }
+          }
+
+          if (data && data.error) {
+            throw new Error(data.error);
+          }
+
+          return data;
         })
         .catch((error) => {
-          // Hide loading indicator if there's an error
           this.loaded();
-          // Re-throw the error to be caught by the caller
+          alert(error.message);
           throw error;
         });
     },
@@ -212,10 +241,6 @@ var RockCommerce;
     setTaxrate(taxrate) {
       this._taxrate = taxrate;
       localStorage.setItem("rc-taxrate", taxrate);
-    },
-
-    trigger(event, data) {
-      console.error("refactor me");
     },
   });
 

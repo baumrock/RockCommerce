@@ -14,40 +14,34 @@
   }
 
   RockCommerce.addComponent("RcCart", {
-    itemsLoading: false,
+    count: 0,
+    id: false,
     items: [],
 
     ready() {
       // we allow only one cart
       if (RockCommerce.cart) return;
       RockCommerce.cart = this;
-
-      // load items from localstorage or via ajax from the backend?
-      this.ajax = !this.$el.hasAttribute("data-noajax");
       this.$watch("items", this.update.bind(this));
       this.wakeup();
-      this.update();
+      if (this.$el.hasAttribute("rc-reload")) this.reload();
     },
 
     /**
      * Add item to the JS cart
      */
-    addItem(data) {
-      const item = new CartItem(data);
-
-      // if cart already has an item with the same pid and variation
-      // then we increase the amount of that item
-      // otherwise we add the new item to the cart
-      const existingItem = this.items.find(
-        (i) => i.pid === item.pid && i.variation === item.variation
-      );
-      if (existingItem) {
-        existingItem.amount += item.amount;
-      } else {
-        this.items.push(item);
-      }
-
-      this.save();
+    async ___addItem(data) {
+      // send ajax request to add item to cart
+      const res = await RockCommerce.fetch("/cart/add", {
+        payload: data,
+      })
+        .then((data) => {
+          if (data.success) this.setData(data.cart);
+          else throw new Error("Error adding item to cart");
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
     },
 
     get count() {
@@ -64,7 +58,9 @@
 
     getSleepValue() {
       const data = {
-        _items: this.items,
+        id: this.id,
+        count: this.count,
+        items: this.items,
       };
       return JSON.stringify(data);
     },
@@ -73,21 +69,15 @@
      * Reload cart data from backend
      */
     reload() {
-      this.itemsLoading = true;
       RockCommerce.fetch("/cart/get", {
-        // animation can be disabled by adding rc-animation="false"
-        // to the cart div of the RcCart component
         animation: this.$rcattr("rc-animation"),
       })
-        .then((response) => response.json())
-        .then((data) => {
-          this.itemsLoading = false;
-          if (!data.id) throw new Error("No cart id");
-          this.items = data.items;
+        .then((response) => {
+          this.setData(response);
         })
-        .catch(() => {
-          this.itemsLoading = false;
-          alert("Error loading cart from backend");
+        .catch((error) => {
+          console.error("Error loading cart from backend:", error);
+          alert("Error loading cart from backend. Please try again later.");
         });
     },
 
@@ -98,6 +88,16 @@
       this.update();
       json = this.getSleepValue();
       localStorage.setItem("rc-cart", json);
+    },
+
+    /**
+     * Set given data and save to localstorage
+     */
+    setData(data) {
+      this.id = data.id || false;
+      this.count = data.count || 0;
+      this.items = data.items || [];
+      this.save();
     },
 
     /**
@@ -129,14 +129,7 @@
      * Wakeup: Read data from localstorage
      */
     wakeup() {
-      const data = this.getFromLocalStorage();
-      // loop through all items from the localstorage
-      for (const key in data) {
-        if (key === "_items") {
-          if (this.ajax) this.reload();
-          else this.items = data._items;
-        }
-      }
+      this.setData(this.getFromLocalStorage());
     },
   });
 })();

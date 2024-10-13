@@ -107,12 +107,22 @@ class Item extends Page
     return "";
   }
 
+  public function fullUrl(): string
+  {
+    return $this->field('product', 'first')->url()
+      . '#' . $this->variationString()
+      . '-amount:' . $this->amount();
+  }
+
   /**
    * Returns the cart item as an array (eg for ajax endpoints)
    * @return array
    */
   public function getArray(): array
   {
+    /**
+     * Data sent to the frontend and stored in localstorage
+     */
     return [
       'pid' => $this->id,
       'title' => $this->cartTitle(),
@@ -120,6 +130,9 @@ class Item extends Page
       'product' => $this->field('product', 'int'),
       'amount' => $this->amount(),
       'variation' => $this->variationString(),
+      // urls to item's referenced product
+      'url' => $this->fullUrl(),
+      'shortUrl' => $this->shortUrl(),
     ];
   }
 
@@ -191,6 +204,11 @@ class Item extends Page
         ],
       ],
     ]);
+  }
+
+  public function shortUrl(): string
+  {
+    return $this->field('product', 'first')->url();
   }
 
   public function totalNet(): Money

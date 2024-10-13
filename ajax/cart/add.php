@@ -8,19 +8,27 @@ namespace ProcessWire;
 // get the current user's cart
 $cart = rockcommerce()->cart();
 
+// sanitize input
+$pid = (int)$input->pid;
+$amount = (int)$input->amount;
+$variation = rockcommerce()->sanitizeVariation($input->variation);
+
 // product to add
-$product = rockcommerce()->getProduct(1555);
+$product = rockcommerce()->getProduct($pid);
 
 // check if the product is valid
-if (!$product->isProduct) {
+if (!$product || !$product->isProduct) {
   return [
     'error' => 'Not a valid product',
   ];
 }
 
 // add the product to the cart
-// tbd
+$item = $cart->addItem($product, $amount, $variation);
 
 return [
-  'success' => 'Item has been added to the cart',
+  // implement the success message on the frontend
+  'success' => 1,
+  'cart' => $cart->getArray(),
+  'itemAdded' => $item->getArray(),
 ];

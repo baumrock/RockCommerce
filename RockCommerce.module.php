@@ -10,11 +10,13 @@ use RockCommerce\Invoices;
 use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\ProductPage;
+use RockCommerce\ProductVariation;
 use RockCommerce\RootPage;
 use RockCommerce\Taxrate;
 use RockCommerce\Taxrates;
 use RockCommerce\TaxSelect;
 use RockCommerce\Variation;
+use RockCommerce\VariationOption;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
@@ -821,6 +823,48 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       // 'parent' => 2,
       'template' => RootPage::tpl,
     ]);
+  }
+
+  public function sanitizeVariation(string|null $variation): string
+  {
+    if (is_null($variation)) return '';
+
+    $str = '';
+    // "6780:6730,6731-6789:6784"
+    // Split the variation string into individual key-value pairs
+    $pairs = explode('-', $variation);
+    foreach ($pairs as $pair) {
+      // Split each pair into key and values
+      list($key, $values) = explode(':', $pair);
+
+      // Sanitize key
+      $key = (int)$key;
+
+      // get variation from key
+      $variation = wire()->pages->get($key);
+      if (!$variation instanceof ProductVariation) continue;
+      $validOptionIds = [];
+      foreach ($variation->options() as $opt) {
+        $validOptionIds[] = $opt->option->id;
+      }
+
+      $sanitizedValues = [];
+
+      // Split values by comma and sanitize each
+      $valueArray = explode(',', $values);
+      foreach ($valueArray as $value) {
+        $value = (int)$value;
+        if (!in_array($value, $validOptionIds)) continue;
+        $sanitizedValues[] = $value;
+      }
+
+      // Only add to the sanitized string if key is valid and there are sanitized values
+      if (!empty($sanitizedValues)) {
+        $str .= ($str ? '-' : '') . $key . ':' . implode(',', $sanitizedValues);
+      }
+    }
+
+    return $str;
   }
 
   public function setCart(Cart $cart): void
