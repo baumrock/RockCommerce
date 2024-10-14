@@ -15,6 +15,11 @@ class Taxrate extends Page
   const field_taxrate = self::prefix . 'taxrate';
   const field_isdefault = self::prefix . 'isdefault';
 
+  public function label(): string
+  {
+    return $this->title . ' (' . $this->taxrate() . '%)';
+  }
+
   public function taxrate(): float
   {
     return $this->getFormatted(self::field_taxrate);
