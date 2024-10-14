@@ -139,6 +139,14 @@ class Item extends Page
       // has to be populated via hook
       // this is individual for each project
       'pic' => '',
+
+      // prices
+      'itemNet' => $this->itemNet()->format(),
+      'itemVat' => $this->itemVat()->format(),
+      'itemGross' => $this->itemGross()->format(),
+      'totalNet' => $this->totalNet()->format(),
+      'totalVat' => $this->totalVat()->format(),
+      'totalGross' => $this->totalGross()->format(),
     ];
   }
 
@@ -147,19 +155,30 @@ class Item extends Page
     return rockfrontend()->html($str);
   }
 
+  /**
+   * Net price of this item (amount=1)
+   */
   public function itemNet(): Money
   {
-    return rockmoney()->parse(0);
+    // get base price from product
+    $product = $this->field('product', 'first');
+    return $product->priceNet($this->variationString());
   }
 
+  /**
+   * Vat of this item (amount=1)
+   */
   public function itemVat(): Money
   {
-    return rockmoney()->parse(0);
+    return $this->itemNet()->times($this->parent->taxrate());
   }
 
+  /**
+   * Gross price of this item (amount=1)
+   */
   public function itemGross(): Money
   {
-    return rockmoney()->parse(0);
+    return $this->itemNet()->plus($this->itemVat());
   }
 
   public function migrate()

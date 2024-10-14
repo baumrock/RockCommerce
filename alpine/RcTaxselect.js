@@ -11,6 +11,10 @@ RockCommerce.addComponent("RcTaxselect", {
       RockCommerce.getComponents("RcProduct").forEach((product) => {
         product.update();
       });
+
+      // reload cart?
+      const cart = RockCommerce.cart;
+      if (cart && cart.doReload) cart.reload();
     });
     this.taxrate =
       localStorage.getItem("rc-taxrate") ||

@@ -19,5 +19,5 @@ if ($item instanceof Item) $item->setAmount($amount);
 
 return [
   'success' => 1,
-  'cart' => $cart->getArray(),
+  'cart' => $cart->getJsonArray(),
 ];

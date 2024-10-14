@@ -17,5 +17,5 @@ if ($item->id) $item->trash();
 
 return [
   'success' => 1,
-  'cart' => $cart->getArray(),
+  'cart' => $cart->getJsonArray(),
 ];

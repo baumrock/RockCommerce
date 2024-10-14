@@ -29,6 +29,6 @@ $item = $cart->addItem($product, $amount, $variation);
 
 return [
   'success' => 1,
-  'cart' => $cart->getArray(),
-  'itemAdded' => $item->getArray(),
+  'cart' => $cart->getJsonArray(),
+  'itemAdded' => $item->getJsonArray(),
 ];

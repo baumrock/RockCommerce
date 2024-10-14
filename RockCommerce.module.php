@@ -576,8 +576,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function invoicesPage(): Invoices
   {
     return $this->wire->pages->get([
-      'template' => Invoices::tpl,
       'parent' => $this->rootPage(),
+      'template' => Invoices::tpl,
     ]);
   }
 
@@ -934,6 +934,29 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $http . '/' . ltrim($str, "/");
   }
 
+  /**
+   * Convert variation string to array
+   *
+   * Example return:
+   * [
+   *   6780 => [6730, 6731],
+   *   6799 => [6793, 6792],
+   * ]
+   */
+  public function variationArray(string $str): array
+  {
+    $str = $this->sanitizeVariation($str);
+    if (!$str) return [];
+
+    $result = [];
+    $variations = explode('-', $str);
+    foreach ($variations as $variation) {
+      list($key, $values) = explode(':', $variation);
+      $result[$key] = array_map('intval', explode(',', $values));
+    }
+    return $result;
+  }
+
   public function variationsPage(): Variations
   {
     return $this->wire->pages->get([
@@ -951,18 +974,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function variationTable(string $str): array
   {
-    $str = $this->sanitizeVariation($str);
-    if (!$str) return [];
+    $variationArray = $this->variationArray($str);
+    if (empty($variationArray)) return [];
 
     $result = [];
-    $variations = explode('-', $str);
-    foreach ($variations as $variation) {
-      list($key, $values) = explode(':', $variation);
-      $variationPage = wire()->pages->get($key);
-      $optionIDs = explode(',', $values);
+    foreach ($variationArray as $variationId => $optionIds) {
+      $variationPage = wire()->pages->get($variationId);
       $options = [];
-      foreach ($optionIDs as $optionID) {
-        $option = wire()->pages->get($optionID);
+      foreach ($optionIds as $optionId) {
+        $option = wire()->pages->get($optionId);
         $options[] = $option->title;
       }
       $result[] = [

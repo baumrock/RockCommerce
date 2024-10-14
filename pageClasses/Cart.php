@@ -7,12 +7,13 @@ use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\NullPage;
 use ProcessWire\Page;
-use ProcessWire\PageArray;
 use ProcessWire\RockMigrations;
 use RockMigrations\MagicPage;
+use RockMoney\Money;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
+use function ProcessWire\rockmoney;
 use function ProcessWire\wire;
 
 class Cart extends Page
@@ -83,13 +84,15 @@ class Cart extends Page
 
   /** frontend */
 
-  public function getArray(): array
+  public function ___getJsonArray(): array
   {
     return [
       'id' => $this->name,
       'count' => $this->itemsCount(),
       'items' => $this->items()->getJsonArray(),
       'addedAmount' => $this->addedAmount,
+      'totalNet' => $this->totalNet()->format(),
+      'totalGross' => $this->totalGross()->format(),
     ];
   }
 
@@ -229,5 +232,40 @@ class Cart extends Page
   public function setTaxrate(float $taxrate): void
   {
     $this->setAndSave(Taxrate::field_taxrate, $taxrate);
+  }
+
+  /**
+   * Return taxrate, eg 0.2 for 20%
+   */
+  public function taxrate(): float
+  {
+    return $this->getFormatted(Taxrate::field_taxrate) / 100;
+  }
+
+  public function totalNet(): Money
+  {
+    $total = rockmoney()->parse(0);
+    foreach ($this->items() as $item) {
+      $total = $total->plus($item->totalNet());
+    }
+    return $total;
+  }
+
+  public function totalVat(): Money
+  {
+    $total = rockmoney()->parse(0);
+    foreach ($this->items() as $item) {
+      $total = $total->plus($item->totalVat());
+    }
+    return $total;
+  }
+
+  public function totalGross(): Money
+  {
+    $total = rockmoney()->parse(0);
+    foreach ($this->items() as $item) {
+      $total = $total->plus($item->totalGross());
+    }
+    return $total;
   }
 }

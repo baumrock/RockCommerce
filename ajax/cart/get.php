@@ -7,4 +7,4 @@ namespace ProcessWire;
 $cart = rockcommerce()->cart();
 $cart->setTaxrate($input->taxrate);
 
-return $cart->getArray();
+return $cart->getJsonArray();

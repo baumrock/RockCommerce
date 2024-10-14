@@ -6,7 +6,9 @@ use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\WireData;
 use RockGrid\RockGridField;
+use RockMoney\Money;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
@@ -164,6 +166,30 @@ trait Product
     }
   }
 
+  public function ___priceNet($variationString = ''): Money
+  {
+    // get base price
+    $price = $this->getFormatted(self::field_price);
+
+    // get variation prices
+    // this is the data selected in the RockGrid by page admins
+    $prices = $this->variationPriceData();
+    // bdb($prices);
+
+    // add selected variation options to base price
+    // this is the data selected by the user
+    $chosen = rockcommerce()->variationArray($variationString);
+    // bdb($chosen);
+    foreach ($chosen as $varID => $options) {
+      $optionPrices = $prices->get($varID);
+      foreach ($options as $optionID) {
+        $price = $price->plus($optionPrices->get($optionID));
+      }
+    }
+
+    return $price;
+  }
+
   public function productOptionsString(): string
   {
     $arr = [];
@@ -191,6 +217,31 @@ trait Product
   public function taxrate(): float
   {
     return rockcommerce()->taxrate($this);
+  }
+
+  /**
+   * Get array of all available variation prices
+   *
+   * Example:
+   * [
+   *   1234 => 100,
+   *   1235 => 200,
+   *   1236 => 300,
+   * ]
+   *
+   * Where 1234, 1235, 1236 are variation ids and values are net prices
+   */
+  public function variationPriceData(): WireData
+  {
+    $data = new WireData();
+    foreach ($this->variations() as $variation) {
+      if (!$variation instanceof ProductVariation) continue;
+      $optionPrices = new WireData();
+      $grid = $variation->getFormatted(self::field_variation);
+      $optionPrices->setArray($grid->json->prices ?? []);
+      $data->set($variation->id, $optionPrices);
+    }
+    return $data;
   }
 
   protected function variationRepeaterLabel(HookEvent $event): void
