@@ -278,7 +278,7 @@ class Cart extends Page
    */
   public function taxrate(): float
   {
-    return $this->getFormatted(Taxrate::field_taxrate) / 100;
+    return ($this->getFormatted(Taxrate::field_taxrate) ?: 0) / 100;
   }
 
   /**

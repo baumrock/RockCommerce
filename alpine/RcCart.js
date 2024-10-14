@@ -86,6 +86,15 @@ RockCommerce.addComponent("RcCart", {
       id: this.id,
       count: this.count,
       items: this.items,
+      itemsNet: this.itemsNet,
+      itemsVat: this.itemsVat,
+      itemsGross: this.itemsGross,
+      totalNet: this.totalNet,
+      totalVat: this.totalVat,
+      totalGross: this.totalGross,
+      shippingNet: this.shippingNet,
+      shippingVat: this.shippingVat,
+      shippingGross: this.shippingGross,
     };
     return JSON.stringify(data);
   },
