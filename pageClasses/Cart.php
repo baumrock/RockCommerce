@@ -67,6 +67,36 @@ class Cart extends Page
     }
   }
 
+  public function ___totalNet(): Money
+  {
+    return $this->itemsNet()->plus($this->shippingNet());
+  }
+
+  public function totalVat(): Money
+  {
+    return $this->totalNet()->times($this->taxrate());
+  }
+
+  public function totalGross(): Money
+  {
+    return $this->totalNet()->plus($this->totalVat());
+  }
+
+  public function ___shippingNet(): Money
+  {
+    return rockmoney()->parse(0);
+  }
+
+  public function shippingVat(): Money
+  {
+    return $this->shippingNet()->times($this->taxrate());
+  }
+
+  public function shippingGross(): Money
+  {
+    return $this->shippingNet()->plus($this->shippingVat());
+  }
+
   public function onCreate(): void
   {
     // set random pagename
@@ -82,8 +112,6 @@ class Cart extends Page
     return $this->name;
   }
 
-  /** frontend */
-
   public function ___getJsonArray(): array
   {
     return [
@@ -91,8 +119,21 @@ class Cart extends Page
       'count' => $this->itemsCount(),
       'items' => $this->items()->getJsonArray(),
       'addedAmount' => $this->addedAmount,
+
+      // item prices
+      'itemsNet' => $this->itemsNet()->format(),
+      'itemsVat' => $this->itemsVat()->format(),
+      'itemsGross' => $this->itemsGross()->format(),
+
+      // final prices (all items + shipping + coupons)
       'totalNet' => $this->totalNet()->format(),
+      'totalVat' => $this->totalVat()->format(),
       'totalGross' => $this->totalGross()->format(),
+
+      // shipping prices
+      'shippingNet' => $this->shippingNet()->format(),
+      'shippingVat' => $this->shippingVat()->format(),
+      'shippingGross' => $this->shippingGross()->format(),
     ];
   }
 
@@ -144,8 +185,6 @@ class Cart extends Page
     $pages = $this->items()->add($this);
     return $pages->sort("modified")->last()->modified;
   }
-
-  /** backend */
 
   public function addItem(
     string|int|Page $product,
@@ -242,7 +281,10 @@ class Cart extends Page
     return $this->getFormatted(Taxrate::field_taxrate) / 100;
   }
 
-  public function totalNet(): Money
+  /**
+   * Total of all items (without shipping or coupons)
+   */
+  public function itemsNet(): Money
   {
     $total = rockmoney()->parse(0);
     foreach ($this->items() as $item) {
@@ -251,7 +293,10 @@ class Cart extends Page
     return $total;
   }
 
-  public function totalVat(): Money
+  /**
+   * Total of all items (without shipping or coupons)
+   */
+  public function itemsVat(): Money
   {
     $total = rockmoney()->parse(0);
     foreach ($this->items() as $item) {
@@ -260,7 +305,10 @@ class Cart extends Page
     return $total;
   }
 
-  public function totalGross(): Money
+  /**
+   * Total of all items (without shipping or coupons)
+   */
+  public function itemsGross(): Money
   {
     $total = rockmoney()->parse(0);
     foreach ($this->items() as $item) {

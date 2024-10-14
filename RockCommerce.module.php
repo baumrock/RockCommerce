@@ -12,11 +12,11 @@ use RockCommerce\Orders;
 use RockCommerce\ProductPage;
 use RockCommerce\ProductVariation;
 use RockCommerce\RootPage;
+use RockCommerce\Settings;
 use RockCommerce\Taxrate;
 use RockCommerce\Taxrates;
 use RockCommerce\TaxSelect;
 use RockCommerce\Variation;
-use RockCommerce\VariationOption;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
@@ -741,6 +741,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: 'Taxrates',
       name: 'taxrates',
     );
+    $rm->createPage(
+      template: Settings::tpl,
+      parent: $rootPage,
+      title: 'Settings',
+      name: 'settings',
+    );
 
     // set tags for all fields
     foreach ($this->wire->fields as $field) {
@@ -870,6 +876,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function setCart(Cart $cart): void
   {
     $this->wire->session->set(self::session_cart, $cart->name);
+  }
+
+  public function settings(): Settings
+  {
+    return wire()->pages->get([
+      'template' => Settings::tpl,
+      'parent' => $this->rootPage(),
+    ]);
   }
 
   // /**

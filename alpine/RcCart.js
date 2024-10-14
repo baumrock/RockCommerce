@@ -8,9 +8,16 @@ RockCommerce.addComponent("RcCart", {
   id: false,
   items: [],
   doReload: false,
+
+  itemsNet: 0,
+  itemsVat: 0,
+  itemsGross: 0,
   totalNet: 0,
-  totalGross: 0,
   totalVat: 0,
+  totalGross: 0,
+  shippingNet: 0,
+  shippingVat: 0,
+  shippingGross: 0,
 
   ready() {
     // we allow only one cart
@@ -113,20 +120,26 @@ RockCommerce.addComponent("RcCart", {
    * Reload cart data from backend
    */
   reload() {
-    const options = {
-      payload: {
-        taxrate: RockCommerce.getTaxrate(),
+    RockCommerce.debounce(
+      "rc-cart-reload",
+      () => {
+        const options = {
+          payload: {
+            taxrate: RockCommerce.getTaxrate(),
+          },
+          animation: this.$rcattr("rc-animation"),
+        };
+        RockCommerce.fetch("/cart/get", options)
+          .then((response) => {
+            this.setData(response);
+          })
+          .catch((error) => {
+            console.error("Error loading cart from backend:", error);
+            alert("Error loading cart from backend. Please try again later.");
+          });
       },
-      animation: this.$rcattr("rc-animation"),
-    };
-    RockCommerce.fetch("/cart/get", options)
-      .then((response) => {
-        this.setData(response);
-      })
-      .catch((error) => {
-        console.error("Error loading cart from backend:", error);
-        alert("Error loading cart from backend. Please try again later.");
-      });
+      50
+    );
   },
 
   /**
@@ -145,12 +158,17 @@ RockCommerce.addComponent("RcCart", {
     this.id = data.id || false;
     this.count = data.count || 0;
     this.items = data.items || [];
+    this.itemsNet = data.itemsNet || 0;
+    this.itemsVat = data.itemsVat || 0;
+    this.itemsGross = data.itemsGross || 0;
     this.totalNet = data.totalNet || 0;
-    this.totalGross = data.totalGross || 0;
     this.totalVat = data.totalVat || 0;
+    this.totalGross = data.totalGross || 0;
+    this.shippingNet = data.shippingNet || 0;
+    this.shippingVat = data.shippingVat || 0;
+    this.shippingGross = data.shippingGross || 0;
     this.save();
   },
-
   /**
    * Set item count via AJAX
    */
