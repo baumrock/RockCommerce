@@ -44,7 +44,7 @@ class Taxrate extends Page
 
   public function label(): string
   {
-    return $this->title . ' (' . $this->taxrate() . '%)';
+    return $this->title;
   }
 
   public function labelLong(): string
