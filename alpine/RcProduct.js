@@ -52,8 +52,8 @@ RockCommerce.addComponent("RcProduct", {
 
   initAmount() {
     this.amountInput = this.$el.querySelector("[x-model=amount]");
-    this.amount = parseInt(this.amountInput.value || this.minamount);
     if (!this.amountInput) return;
+    this.amount = parseInt(this.amountInput.value || this.minamount);
     this.amountInput.addEventListener("focus", (e) => {
       e.target.select();
     });

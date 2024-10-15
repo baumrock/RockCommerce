@@ -10,9 +10,13 @@ use RockCommerce\Item;
 // sanitize input
 $taxID = (int)$input->taxID;
 
+// sleep(1);
+
 // save taxID to cart
-rockcommerce()->cart()->setTaxID($taxID);
+$cart = rockcommerce()->cart();
+$cart->setTaxID($taxID);
 
 return [
   'success' => 1,
+  'cart' => $cart->getJsonArray(),
 ];

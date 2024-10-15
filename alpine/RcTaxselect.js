@@ -1,53 +1,44 @@
 RockCommerce.addComponent("RcTaxselect", {
-  first: true,
   id: false,
-  percentLong: "",
+  first: true,
 
   ready() {
-    this.$watch("id", this.setTaxID.bind(this));
-    setTimeout(() => this.setCurrent(), 0);
+    this.$watch("id", this.watchTaxID.bind(this));
+  },
+
+  get percentLong() {
+    if (!this.id) return;
+    return this.taxrate.percentLong;
   },
 
   setCurrent() {
-    const current = RockCommerce.taxrates.getCurrentTaxrate();
-    if (!current) return;
-    this.id = current.id;
-    this.percentLong = current.percentLong;
+    if (!this.taxrate) return;
+    this.id = this.taxrate.id;
   },
 
-  setTaxID(id) {
-    RockCommerce.debounce(
-      "setTaxID",
-      () => {
-        // set taxID for JS
-        RockCommerce.taxrates.setCurrentID(id);
+  get taxrate() {
+    return RockCommerce.taxrates.getCurrentTaxrate();
+  },
 
-        // set current taxrate in this component
-        this.setCurrent();
+  watchTaxID() {
+    // on the first change we don't do anything
+    // this is when the id is initially set from false to 123
+    if (this.first) return (this.first = false);
 
-        // update all products
-        RockCommerce.getComponents("RcProduct").forEach((product) => {
-          product.update();
-        });
+    // set taxID for JS
+    RockCommerce.taxrates.setCurrentID(this.id);
 
-        // are we on the cart page? then reload the cart
-        const cart = RockCommerce.cart;
-        if (cart && cart.doReload) cart.reload();
+    // update all products
+    RockCommerce.getComponents("RcProduct").forEach((product) => {
+      product.update();
+    });
 
-        // set taxID for PHP
-        if (this.first) {
-          this.first = false;
-          return;
-        } else {
-          RockCommerce.fetch("/set-tax-id", {
-            payload: { taxID: id },
-            animation: false,
-          });
-        }
-      },
-      // cart.reload has 50ms debounce
-      // so we need something smaller to not trigger another reload
-      10
-    );
+    // send taxID to PHP
+    RockCommerce.fetch("/set-tax-id", {
+      payload: { taxID: this.id },
+      // animation: false,
+    }).then((data) => {
+      if (data.cart) RockCommerce.cart.setData(data.cart);
+    });
   },
 });

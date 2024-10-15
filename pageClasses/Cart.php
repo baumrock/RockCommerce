@@ -115,6 +115,7 @@ class Cart extends Page
 
   public function ___getJsonArray(): array
   {
+
     return [
       'id' => $this->name,
       'count' => $this->itemsCount(),
@@ -135,8 +136,6 @@ class Cart extends Page
       'shippingNet' => $this->shippingNet()->format(),
       'shippingVat' => $this->shippingVat()->format(),
       'shippingGross' => $this->shippingGross()->format(),
-
-      'taxID' => $this->taxID(),
     ];
   }
 
@@ -300,7 +299,9 @@ class Cart extends Page
    */
   public function taxrate(): float
   {
-    return ($this->getFormatted(Taxrate::field_taxrate) ?: 0) / 100;
+    $taxPage = wire()->pages->get($this->taxID());
+    if (!$taxPage instanceof Taxrate) return 0;
+    return $taxPage->taxrate();
   }
 
   /**

@@ -8,6 +8,11 @@ RockCommerce.addComponent("RcTaxrates", {
     this.defaultID = RockCommerce.config.defaultTaxID;
     this.initCurrentID();
     this.setTaxrates();
+
+    // notify all taxselects about the current taxrate
+    RockCommerce.getComponents("RcTaxselect").forEach((taxselect) => {
+      taxselect.setCurrent();
+    });
   },
 
   getCurrentTaxrate() {
