@@ -37,10 +37,7 @@ RockCommerce.addComponent("RcCart", {
   ___addItem(data) {
     // send ajax request to add item to cart
     RockCommerce.fetch("/cart/add", {
-      payload: {
-        item: data,
-        taxrate: RockCommerce.getTaxrate(),
-      },
+      payload: data,
     })
       .then((data) => {
         if (data.success) {
@@ -133,9 +130,6 @@ RockCommerce.addComponent("RcCart", {
       "rc-cart-reload",
       () => {
         const options = {
-          payload: {
-            taxrate: RockCommerce.getTaxrate(),
-          },
           animation: this.$rcattr("rc-animation"),
         };
         RockCommerce.fetch("/cart/get", options)

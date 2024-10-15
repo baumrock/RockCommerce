@@ -74,7 +74,7 @@ var RockCommerce;
 
     config: {},
     pidcid: {},
-    _taxrate: false,
+    taxrates: false,
     timers: {},
 
     /**
@@ -193,16 +193,8 @@ var RockCommerce;
       );
     },
 
-    /**
-     * Get taxrate
-     * This ensures that the returned taxrate is numeric even if
-     * this.taxrate is undefined for whatever reason
-     */
     getTaxrate() {
-      if (this._taxrate === false) {
-        this.setTaxrate(localStorage.getItem("rc-taxrate") || 0);
-      }
-      return parseFloat(this._taxrate) || 0;
+      return RockCommerce.taxrates.getCurrentTaxrate().taxrate;
     },
 
     /**
@@ -236,14 +228,6 @@ var RockCommerce;
      */
     raw(data) {
       return JSON.parse(JSON.stringify(data || this));
-    },
-
-    /**
-     * Set the global taxrate
-     */
-    setTaxrate(taxrate) {
-      this._taxrate = taxrate;
-      localStorage.setItem("rc-taxrate", taxrate);
     },
   });
 

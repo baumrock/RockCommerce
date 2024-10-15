@@ -24,6 +24,7 @@ class Cart extends Page
   const prefix = "rockcommerce_cart_";
 
   const field_order = self::prefix . "order";
+  const field_taxid = self::prefix . "taxid";
 
   private $cachedItems;
 
@@ -134,6 +135,8 @@ class Cart extends Page
       'shippingNet' => $this->shippingNet()->format(),
       'shippingVat' => $this->shippingVat()->format(),
       'shippingGross' => $this->shippingGross()->format(),
+
+      'taxID' => $this->taxID(),
     ];
   }
 
@@ -238,6 +241,15 @@ class Cart extends Page
           'collapsed' => Inputfield::collapsedNoLocked,
           'icon' => 'shopping-bag',
         ],
+        self::field_taxid => [
+          'type' => 'page',
+          'label' => 'Taxrate',
+          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
+          'inputfield' => 'InputfieldPageListSelect',
+          'findPagesSelector' => 'id>0,template!=admin',
+          'labelFieldName' => 'title',
+          'collapsed' => Inputfield::collapsedNoLocked,
+        ],
       ],
       'templates' => [
         self::tpl => [
@@ -246,7 +258,7 @@ class Cart extends Page
             'title' => [
               'collapsed' => Inputfield::collapsedHidden,
             ],
-            Taxrate::field_taxrate,
+            self::field_taxid,
             // self::field_items,
           ],
           'parentTemplates' => [
@@ -268,9 +280,19 @@ class Cart extends Page
     ]);
   }
 
-  public function setTaxrate(float $taxrate): void
+  public function setTaxID(int|string $id): void
   {
-    $this->setAndSave(Taxrate::field_taxrate, $taxrate);
+    $taxrate = wire()->pages->get([
+      'id' => $id,
+      'template' => Taxrate::tpl,
+      'parent' => rockcommerce()->taxratesPage(),
+    ]);
+    $this->setAndSave(self::field_taxid, $taxrate);
+  }
+
+  public function taxID(): int
+  {
+    return (int)$this->getFormatted(self::field_taxid . ".first")?->id;
   }
 
   /**

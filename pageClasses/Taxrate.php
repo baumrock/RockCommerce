@@ -13,33 +13,63 @@ class Taxrate extends Page
   const prefix = 'rockcommerce_taxrate_';
 
   const field_taxrate = self::prefix . 'taxrate';
-  const field_isdefault = self::prefix . 'isdefault';
+
+  public function loaded(): void
+  {
+    // make all properties of getJsonArray available as properties of the page
+    // this is to support selectors like
+    // rockcommerce()->taxrates()->get('isDefault=1')
+    foreach ($this->getJsonArray() as $k => $v) {
+      if ($k === 'id') continue;
+      $this->$k = $v;
+    }
+  }
+
+  public function __debugInfo()
+  {
+    return $this->getJsonArray();
+  }
+
+  public function ___getJsonArray(): array
+  {
+    return [
+      'id' => $this->id,
+      'label' => $this->title,
+      'labelLong' => $this->labelLong(),
+      'percent' => $this->percent(),
+      'percentLong' => $this->percentLong(),
+      'taxrate' => $this->taxrate(),
+    ];
+  }
 
   public function label(): string
   {
     return $this->title . ' (' . $this->taxrate() . '%)';
   }
 
+  public function labelLong(): string
+  {
+    return $this->title . ' (' . $this->percentLong() . ')';
+  }
+
   public function taxrate(): float
   {
-    return $this->getFormatted(self::field_taxrate);
+    $val = $this->getFormatted(self::field_taxrate);
+    return (float)$val / 100;
   }
 
   public function migrate()
   {
     $rm = $this->rockmigrations();
     $taxfield = self::field_taxrate;
+    $rm->deleteField(self::prefix . 'isdefault', true);
     $rm->migrate([
       'fields' => [
         self::field_taxrate => [
           'type' => 'decimal',
-          'label' => 'Taxrate',
+          'label' => 'Taxrate Percentage',
           'icon' => 'percent',
           'notes' => 'Example: For 20% VAT enter 20',
-        ],
-        self::field_isdefault => [
-          'type' => 'checkbox',
-          'label' => 'Set as default for new website visitors',
         ],
       ],
       'templates' => [
@@ -53,7 +83,6 @@ class Taxrate extends Page
               'required' => false,
               'columnWidth' => 70,
             ],
-            self::field_isdefault,
           ],
           'parentTemplates' => [
             Taxrates::tpl,
@@ -63,5 +92,15 @@ class Taxrate extends Page
         ],
       ],
     ]);
+  }
+
+  public function percent(): float
+  {
+    return $this->taxrate() * 100;
+  }
+
+  public function percentLong(): string
+  {
+    return $this->percent() . '%';
   }
 }

@@ -13,8 +13,8 @@ use RockCommerce\ProductPage;
 use RockCommerce\ProductVariation;
 use RockCommerce\RootPage;
 use RockCommerce\Settings;
-use RockCommerce\Taxrate;
 use RockCommerce\Taxrates;
+use RockCommerce\TaxratesArray;
 use RockCommerce\TaxSelect;
 use RockCommerce\Variation;
 use RockCommerce\Variations;
@@ -104,6 +104,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->js('minamount', $this->minamount);
     $this->js('maxamount', $this->maxamount);
     $this->js('root', wire()->config->urls->root);
+    $this->js('taxrates', $this->taxrates()->getJsonArray());
+    $this->js('defaultTaxID', $this->taxratesPage()->getDefaultTaxID());
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
@@ -400,18 +402,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $cart;
   }
 
-  public function getDefaultTaxrate(): float
-  {
-    $taxrate = wire()->pages->get([
-      'template' => Taxrate::tpl,
-      Taxrate::field_isdefault => 1,
-    ]);
-    if ($taxrate->id) {
-      return $taxrate->getFormatted(Taxrate::field_taxrate);
-    }
-    return 0;
-  }
-
   /**
    * Get file either from templates/rockcommerce
    * or from module frontend folder
@@ -663,6 +653,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // data-ajax=false tells RockCommerce not to load items via ajax
     $this->loadJS('RcCart');
     $out .= "<div x-data=RcCart data-noajax hidden></div>";
+
+    // load other alpine components
+    $out .= "<div x-data=RcTaxrates hidden></div>";
 
     // rockcommerce has to be the last alpine element
     // this is to ensure that all other components are ready at this point
@@ -916,10 +909,19 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return (float)$this->wire->config->rockcommerceTaxrate;
   }
 
-  public function taxrates(): PageArray
+  public function taxrates(): TaxratesArray
   {
-    return $this->wire->pages->find([
+    $arr = new TaxratesArray();
+    return $arr->import(wire()->pages->find([
       'parent' => $this->rootPage()->path . 'taxrates',
+    ]));
+  }
+
+  public function taxratesPage(): Taxrates
+  {
+    return wire()->pages->get([
+      'template' => Taxrates::tpl,
+      'parent' => $this->rootPage(),
     ]);
   }
 
