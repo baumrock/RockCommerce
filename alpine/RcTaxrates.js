@@ -30,11 +30,25 @@ RockCommerce.addComponent("RcTaxrates", {
     // if a taxrate is saved in localstorage, use that
     const taxID = parseInt(localStorage.getItem("rc-taxID"));
     if (!isNaN(taxID)) this.currentID = taxID;
+
+    // update all products
+    RockCommerce.updateProducts();
   },
 
   setCurrentID(id) {
     this.currentID = parseInt(id);
     localStorage.setItem("rc-taxID", id);
+
+    // update all products
+    RockCommerce.updateProducts();
+
+    // send taxID to PHP
+    RockCommerce.fetch("/set-tax-id", {
+      payload: { taxID: this.id },
+      // animation: false,
+    }).then((data) => {
+      if (data.cart) RockCommerce.cart.setData(data.cart);
+    });
   },
 
   setTaxrates() {

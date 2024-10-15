@@ -229,6 +229,15 @@ var RockCommerce;
     raw(data) {
       return JSON.parse(JSON.stringify(data || this));
     },
+
+    /**
+     * Shortcut to trigger update() on all product components
+     */
+    updateProducts() {
+      RockCommerce.getComponents("RcProduct").forEach((product) => {
+        product.update();
+      });
+    },
   });
 
   /**
