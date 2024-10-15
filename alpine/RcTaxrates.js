@@ -44,7 +44,7 @@ RockCommerce.addComponent("RcTaxrates", {
 
     // send taxID to PHP
     RockCommerce.fetch("/set-tax-id", {
-      payload: { taxID: this.id },
+      payload: { taxID: this.currentID },
       // animation: false,
     }).then((data) => {
       if (data.cart) RockCommerce.cart.setData(data.cart);
