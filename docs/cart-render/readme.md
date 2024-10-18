@@ -59,7 +59,7 @@ To show a message when the cart is empty, you can use the `x-show` directive:
 
 ```html
 <div x-show="!items.length">
-  Ihr Warenkorb ist leer.
+  Your cart is empty.
 </div>
 ```
 
