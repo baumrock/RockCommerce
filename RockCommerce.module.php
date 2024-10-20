@@ -94,7 +94,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // load submodules
     $this->frontend = new Frontend();
-    $this->checkout = new MultiStepForm();
+    $this->checkout = wire()->modules->isInstalled('RockForms')
+      ? new MultiStepForm()
+      : false;
     $this->taxselect = new TaxSelect();
 
     // js config
