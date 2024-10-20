@@ -17,10 +17,10 @@ $info = [
   'requires' => [
     'PHP>=8.2',
     'ProcessWire>=3.0.234',
-    'RockMigrations>=4.3.0',
-    'RockFrontend>=3.17.0',
+    'RockMigrations>=5.4.1',
+    'RockFrontend>=3.21.2',
     'RockMoney>=1.0.1',
-    'RockGrid>=1.0.1',
+    'RockGrid>=1.0.2',
     'Less>=0.0.5',
     'RockLoaders>=1.1.0',
   ],
