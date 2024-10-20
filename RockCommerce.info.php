@@ -23,6 +23,7 @@ $info = [
     'RockGrid>=1.0.2',
     'Less>=0.0.5',
     'RockLoaders>=1.1.0',
+    'RockJavaScriptHooks>=1.0.0',
   ],
   'installs' => [
     'ProcessRockCommerce',
