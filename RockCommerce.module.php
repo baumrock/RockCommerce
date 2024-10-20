@@ -303,8 +303,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * This method will be executed only if debug mode is enabled,
-   * which should only be the case during development.
+   * This method will only be executed if debug mode is enabled
+   * and $config->RockCommerceDev = true;
    */
   private function dev(): void
   {
@@ -312,6 +312,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if (!$config->debug) return;
     if ($config->ajax) return;
     if ($config->external) return;
+    if (!$config->RockCommerceDev) return;
 
     // we compile via RockAssets module, so if that does not exist, we exit
     /** @var RockAssets $assets */
