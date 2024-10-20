@@ -1211,77 +1211,39 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
-    // taxrates
-    $fs->add([
-      'type' => 'text',
-      'name' => 'rawtaxrates',
-      'label' => 'Taxrates',
-      'notes' => 'Enter comma-seperated list of taxrates, eg "10.5, 20".
-        The first item in the list will be used as default value on new products.',
-      'value' => $this->rawtaxrates,
-      'icon' => 'percent',
-      'required' => true,
-      'columnWidth' => 50,
-    ]);
-
     // complex pricing?
     $fs->add([
       'type' => 'checkbox',
       'name' => 'noComplexPricing',
-      'label' => 'Allow only simple pricing for all products',
+      'label' => 'Disable Variations',
       'checked' => $this->noComplexPricing ? 'checked' : '',
-      'columnWidth' => 50,
-    ]);
-
-    // frontend pricing
-    $fs->add([
-      'type' => 'toggle',
-      'name' => 'priceType',
-      'label' => 'Frontend Pricing Display',
-      'formatType' => 0, // integer
-      'labelType' => 100, // custom
-      'useOther' => 0,
-      'icon' => 'money',
-      'yesLabel' => 'net',
-      'noLabel' => 'gross',
-      'defaultOption' => 'net',
-      'value' => $this->priceType,
-      'notes' => 'Choose how to display pricing on the frontend.',
-      'columnWidth' => 50,
-    ]);
-
-    $fs->add([
-      'type' => 'text',
-      'name' => 'frontendLocale',
-      'label' => 'Frontend Locale (JavaScript)',
-      'notes' => 'Used to render prices on the frontend. Default is de-DE.',
-      'value' => $this->frontendLocale,
-      'icon' => 'money',
-      'columnWidth' => 50,
+      'columnWidth' => 100,
     ]);
 
     $link = $this->wire->pages->get(2)->url . "module/edit?name=RockMoney";
     $fs->add([
       'type' => 'markup',
-      'value' => "Note: PHP pricing settings are defined in the <a href=$link>RockMoney module</a>.",
+      'value' => nl2br("Note:
+        PHP pricing settings are defined in the <a href=$link>RockMoney module</a>.
+        Frontend pricing can be customised via hooks."),
     ]);
 
-    // Order
-    $fs = new InputfieldFieldset();
-    $fs->label = 'Orders';
-    $fs->icon = 'check-square-o';
-    $fs->collapsed = Inputfield::collapsedYes;
-    $inputfields->add($fs);
+    // Orders
+    // $fs = new InputfieldFieldset();
+    // $fs->label = 'Orders';
+    // $fs->icon = 'check-square-o';
+    // $fs->collapsed = Inputfield::collapsedYes;
+    // $inputfields->add($fs);
 
-    $fs->add([
-      'type' => 'text',
-      'name' => 'publicOrderPageUrl',
-      'label' => 'Public Orderpage-Url',
-      'description' => 'The url of the page that you created for handling order updates, eg after payment to show the success message.',
-      'notes' => 'Make sure the url has a trailing slash or not depending on your site settings - otherwise it will redirect to the other version and lose query parameters!
-        Example: If the final url is https://example.com/order/?id=123 you have to enter /order/ in this field.',
-      'value' => $this->publicOrderPageUrl,
-    ]);
+    // $fs->add([
+    //   'type' => 'text',
+    //   'name' => 'publicOrderPageUrl',
+    //   'label' => 'Public Orderpage-Url',
+    //   'description' => 'The url of the page that you created for handling order updates, eg after payment to show the success message.',
+    //   'notes' => 'Make sure the url has a trailing slash or not depending on your site settings - otherwise it will redirect to the other version and lose query parameters!
+    //     Example: If the final url is https://example.com/order/?id=123 you have to enter /order/ in this field.',
+    //   'value' => $this->publicOrderPageUrl,
+    // ]);
 
     // Backend
     $fs = new InputfieldFieldset();
