@@ -562,12 +562,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     if (!$this->isInstalled()) return;
 
-    $rm = rockmigrations();
-    $rm->installModule('ProcessRockCommerce');
-    $rm->installModule('InputfieldRcPricing');
-    $rm->installModule('FieldtypeRcVariations');
-    $rm->installModule('InputfieldRcVariations');
-
     // js config for the frontend
     $this->jsConfig();
 
@@ -713,15 +707,16 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->migrateCleanup();
     $rm = rockmigrations();
 
+    $rm->installModule('ProcessRockCommerce');
+    $rm->installModule('InputfieldRcPricing');
+    $rm->installModule('FieldtypeRcVariations');
+    $rm->installModule('InputfieldRcVariations');
+
     // add permissions
     $rm->createPermission(
       self::permission_variations,
       'User can manage product variations'
     );
-
-    $rm->installModule("InputfieldRcPricing");
-    $rm->installModule("FieldtypeRcVariations");
-    $rm->installModule("InputfieldRcVariations");
 
     $rootPage = $rm->createPage(
       template: RootPage::tpl,
@@ -1116,7 +1111,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->log("Installing RockCommerce");
     $this->init();
-    $this->migrate();
+    $rm->migrateModule($this);
   }
 
   /**
