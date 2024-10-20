@@ -89,6 +89,7 @@ class Taxrate extends Page
           ],
           'noUnpublish' => '1', // Don't allow unpublished pages
           'pageLabelField' => "{{$taxfield}}% ({title})",
+          'icon' => 'percent',
         ],
       ],
     ]);

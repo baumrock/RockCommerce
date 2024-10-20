@@ -248,6 +248,7 @@ class Cart extends Page
           'findPagesSelector' => 'id>0,template!=admin',
           'labelFieldName' => 'title',
           'collapsed' => Inputfield::collapsedNoLocked,
+          'icon' => 'percent',
         ],
       ],
       'templates' => [

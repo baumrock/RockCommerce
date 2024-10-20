@@ -71,6 +71,7 @@ class Webhook extends Page
           'noLang' => true, // only english
           'noChildren' => true,
           'noSettings' => true,
+          'icon' => 'anchor',
         ],
       ],
     ]);

@@ -83,6 +83,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function init()
   {
+    // add classloader
+    // should be done by rockmigrations but does not work during installation
+    wire()->classLoader->addNamespace('RockCommerce', __DIR__ . '/pageClasses');
+
     // set default values
     if ($this->minamount === null) $this->minamount = 1;
     if ($this->maxamount === null) $this->maxamount = 10;
@@ -99,15 +103,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       : false;
     $this->taxselect = new TaxSelect();
 
-    // js config
-    // will be available in fronend via RockCommerce.config
-    // as soon as the RockCommerce:ready event has been fired
-    $this->jsConfig = new WireData();
-    $this->js('minamount', $this->minamount);
-    $this->js('maxamount', $this->maxamount);
-    $this->js('root', wire()->config->urls->root);
-    $this->js('taxrates', $this->taxrates()->getJsonArray());
-    $this->js('defaultTaxID', $this->taxratesPage()->getDefaultTaxID());
+    $this->initWhenInstalled();
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
@@ -116,15 +112,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       what: __DIR__ . "/classLoader/Product.php",
       options: ['trigger' => $this],
     );
-
-    // things to do while developing
-    $this->dev();
-
-    // trigger maintenance from time to time
-    $expire = 60 * 60 * 1; // every hour
-    $this->wire->cache->get(self::maintenance, $expire, function () {
-      $this->maintenance();
-    });
 
     // register AJAX endpoints
     rockfrontend()->addAjaxFolder('rockcommerce', __DIR__ . '/ajax');
@@ -565,6 +552,29 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   //   );
   // }
 
+  /**
+   * Things to do only when the module is installed
+   *
+   * These operations throw an error if the module is not yet completely
+   * installed, eg the RootPage does not exist yet etc;
+   */
+  public function initWhenInstalled(): void
+  {
+    if (!$this->isInstalled()) return;
+
+    // js config for the frontend
+    $this->jsConfig();
+
+    // things to do while developing
+    $this->dev();
+
+    // trigger maintenance from time to time
+    $expire = 60 * 60 * 1; // every hour
+    $this->wire->cache->get(self::maintenance, $expire, function () {
+      $this->maintenance();
+    });
+  }
+
   public function invoicesPage(): Invoices
   {
     return $this->wire->pages->get([
@@ -573,12 +583,36 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     ]);
   }
 
+  public function isInstalled(): bool
+  {
+    try {
+      return $this->rootPage()->id > 0;
+    } catch (\Throwable $th) {
+      return false;
+    }
+  }
+
   /**
    * Set JS config value
    */
   public function js(string $prop, mixed $val): void
   {
     $this->jsConfig->set($prop, $val);
+  }
+
+  /**
+   * js config
+   * will be available in fronend via RockCommerce.config
+   * as soon as the RockCommerce:ready event has been fired
+   */
+  private function jsConfig(): void
+  {
+    $this->jsConfig = new WireData();
+    $this->js('minamount', $this->minamount);
+    $this->js('maxamount', $this->maxamount);
+    $this->js('root', wire()->config->urls->root);
+    $this->js('taxrates', $this->taxrates()->getJsonArray());
+    $this->js('defaultTaxID', $this->taxratesPage()->getDefaultTaxID());
   }
 
   /**
@@ -818,7 +852,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $this->wire->modules->get('RockMollie');
   }
 
-  public function rootPage(): RootPage
+  public function rootPage(): RootPage|NullPage
   {
     return $this->wire->pages->get([
       // 'parent' => 2,

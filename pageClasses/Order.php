@@ -343,6 +343,7 @@ class Order extends Page
           'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
+          'icon' => 'money',
         ],
         self::field_vat => [
           'type' => 'RockMoney',
@@ -350,6 +351,7 @@ class Order extends Page
           'icon' => '',
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
+          'icon' => 'percent',
         ],
         self::field_total => [
           'type' => 'RockMoney',
@@ -358,6 +360,7 @@ class Order extends Page
           'collapsed' => Inputfield::collapsedNoLocked,
           'tags' => 'RockCommerce',
           'notes' => '',
+          'icon' => 'money',
         ],
         self::field_payment => [
           'type' => 'text',
@@ -368,6 +371,7 @@ class Order extends Page
           ],
           'collapsed' => Inputfield::collapsedNoLocked,
           'notes' => 'The id of the payment of the payment provider.',
+          'icon' => 'money',
         ],
         self::field_paymentstatus => [
           'type' => 'text',
@@ -377,6 +381,7 @@ class Order extends Page
             'TextformatterEntities',
           ],
           'collapsed' => Inputfield::collapsedNoLocked,
+          'icon' => 'money',
         ],
         self::field_invoice => [
           'type' => 'page',
@@ -408,6 +413,7 @@ class Order extends Page
           'dateInputFormat' => 'j.n.y',
           'timeInputFormat' => '',
           'defaultToday' => 0,
+          'icon' => 'calendar',
         ],
         self::field_cart => [
           'type' => 'page',
@@ -466,6 +472,7 @@ class Order extends Page
           ],
           'noParents' => 1,
           'noLang' => 1, // single language
+          'icon' => 'shopping-bag',
         ],
       ],
     ]);

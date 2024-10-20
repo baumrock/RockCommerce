@@ -32,6 +32,7 @@ class Taxrates extends Page
           'inputfield' => 'InputfieldSelect',
           'findPagesSelector' => 'template=' . Taxrate::tpl,
           'labelFieldName' => 'title',
+          'icon' => 'percent',
         ],
       ],
       'templates' => [
@@ -44,6 +45,7 @@ class Taxrates extends Page
             Taxrate::tpl,
           ],
           'noParents' => 1,
+          'icon' => 'percent',
         ],
       ],
     ]);

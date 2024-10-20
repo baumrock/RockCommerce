@@ -6,6 +6,7 @@ use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\Template;
 use RockFrontend\FieldMethod;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
@@ -209,7 +210,12 @@ class Item extends Page
       ],
       'templates' => [
         self::tpl => [
-          'fields-' => [
+          'fields' => [
+            // hide the title field
+            // removing it causes an error even when flag system is set :(
+            'title' => [
+              'collapsed' => Inputfield::collapsedHidden,
+            ],
             self::field_product => ['columnWidth' => 50],
             self::field_amount => ['columnWidth' => 50],
             self::field_variation,
