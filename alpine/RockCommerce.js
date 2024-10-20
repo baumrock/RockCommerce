@@ -274,10 +274,4 @@ var RockCommerce;
       return c.$el.getAttribute("x-data");
     });
   });
-
-  // ping/pong event listener
-  // this is for testing if this script is loaded properly on the frontend
-  document.addEventListener("click", (e) => {
-    if (e.target.matches("[rc-ping]")) alert("pong");
-  });
 })();

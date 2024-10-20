@@ -13,11 +13,9 @@ Finally you have to make your pageclass use the `Product` trait of RockCommerce.
 
 namespace ProcessWire;
 
-use RockCommerce\Product;
-
 class ProductPage extends Page
 {
-  use Product;
+  use \RockCommerce\Product;
 }
 ```
 

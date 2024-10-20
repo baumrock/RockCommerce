@@ -205,6 +205,7 @@ RockCommerce.addComponent("RcCart", {
     let elements = document.querySelectorAll("[rc-cart-count]");
     elements.forEach((el) => {
       el.textContent = this.count;
+      if (!el.hasAttribute("rc-autohide")) return;
       if (this.count > 0) el.removeAttribute("hidden");
       else el.setAttribute("hidden", true);
     });

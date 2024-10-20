@@ -6,7 +6,6 @@ use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
-use ProcessWire\Template;
 use RockFrontend\FieldMethod;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
@@ -237,6 +236,11 @@ class Item extends Page
     ]);
   }
 
+  public function product()
+  {
+    return $this->field('product', 'int');
+  }
+
   /**
    * Set the amount of the item
    * Can later get checks if the amount is valid
@@ -268,12 +272,13 @@ class Item extends Page
 
   public function variationString(): string
   {
-    return $this->field('variation', 'string');
+    return (string)$this->field('variation', 'string');
   }
 
   public function variationTable(): array
   {
-    $str = $this->field('variation', 'string');
-    return rockcommerce()->variationTable($str);
+    return rockcommerce()->variationTable(
+      $this->variationString()
+    );
   }
 }

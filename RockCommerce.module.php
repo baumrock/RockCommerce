@@ -20,7 +20,6 @@ use RockCommerce\Variation;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
-use RockForms\MultiStepForm;
 use RockMoney\Money;
 
 /**
@@ -54,9 +53,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   const pricetype_net = 1;
   const pricetype_gross = 0;
   const pricetype_runtime = 2; // not yet implemented
-
-  /** @var MultiStepForm */
-  public $checkout;
 
   /** @var array */
   public $findRawVariationOptions;
@@ -98,9 +94,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // load submodules
     $this->frontend = new Frontend();
-    $this->checkout = wire()->modules->isInstalled('RockForms')
-      ? new MultiStepForm()
-      : false;
     $this->taxselect = new TaxSelect();
 
     $this->initWhenInstalled();
@@ -871,6 +864,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // Split the variation string into individual key-value pairs
     $pairs = explode('-', $variation);
     foreach ($pairs as $pair) {
+      if (!strpos($pair, ':')) continue;
+
       // Split each pair into key and values
       list($key, $values) = explode(':', $pair);
 

@@ -15,6 +15,7 @@ $variation = rockcommerce()->sanitizeVariation($input->variation);
 
 // product to add
 $product = rockcommerce()->getProduct($pid);
+bd($product, 'product');
 
 // check if the product is valid
 if (!$product || !$product->isProduct) {
@@ -25,7 +26,7 @@ if (!$product || !$product->isProduct) {
 
 // add the product to the cart
 $item = $cart->addItem($product, $amount, $variation);
-
+bd($item, 'item');
 return [
   'success' => 1,
   'cart' => $cart->getJsonArray(),

@@ -6,6 +6,7 @@ use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\RepeaterPageArray;
 use ProcessWire\WireData;
 use RockGrid\RockGridField;
 use RockMoney\Money;
@@ -166,6 +167,11 @@ trait Product
     }
   }
 
+  public function price()
+  {
+    return $this->getFormatted(self::field_price);
+  }
+
   public function ___priceNet($variationString = ''): Money
   {
     // get base price
@@ -260,5 +266,10 @@ trait Product
     } catch (\Throwable $th) {
       $event->return = $th->getMessage();
     }
+  }
+
+  public function variations(): RepeaterPageArray
+  {
+    return $this->getFormatted(self::field_variations);
   }
 }
