@@ -1121,6 +1121,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function getModuleConfigInputfields($inputfields)
   {
     $name = strtolower($this);
+
+    if (!wire()->config->usePageClasses) {
+      $inputfields->add([
+        'type' => 'markup',
+        'label' => 'WARNING',
+        'value' => "<div class='uk-alert uk-alert-warning uk-margin-remove'>
+          This module requires the use of page classes. Please set <code>\$config->usePageClasses = true;</code> in your config.php file.
+        </div>",
+      ]);
+    }
+
     $inputfields->add([
       'type' => 'markup',
       'label' => 'Documentation & Updates',
