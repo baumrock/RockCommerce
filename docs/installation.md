@@ -126,3 +126,101 @@ Now let's create a simple checkout page where users can enter their details and 
 
 In this example we'll use `RockForms`, but you can use any other module or plain html markup as well. But be aware that things can quickly get complicated, so we highly recommend using RockForms, which supports Multi-Step Forms out of the box!
 
+First, we create a new Form using the GUI:
+
+<img src=https://i.imgur.com/XZzjrOF.png class=blur height=250>
+
+This will create a boilerplate file in `/site/templates/RockForms/Checkout.php`. Replace the content of this file with the following:
+
+```php
+<?php
+
+namespace RockForms;
+
+use function ProcessWire\rockcommerce;
+
+class Checkout extends RockForm
+{
+  public function buildForm()
+  {
+    $form = $this;
+    $form->setRockFormsRenderer('UIkit');
+    $form->addText("name", "Enter your name")
+      ->setRequired("We need your name to fulfill your order!");
+    $form->addSubmit("submit", "Place order");
+  }
+
+  // processSuccess
+
+  // renderSuccess
+}
+```
+
+To render this form, we need to create another template. Let's call this template `checkout` and add the following markup to `site/templates/checkout.php`:
+
+```php
+<?php
+
+namespace ProcessWire;
+
+$content = rockforms()->render('Checkout');
+```
+
+Then add a page using this template and view it. You should see the form and if you try to submit it without entering a name, you should see an error message:
+
+<img src=https://i.imgur.com/Y0S0Vkq.png class=blur height=300>
+
+If you enter a name and click submit, you will see that you see nothing. Let's add a success message to the form (in `site/templates/RockForms/Checkout.php`):
+
+```php
+public function renderSuccess($entityValues)
+{
+  // NOTE: $entityValues are safe to output in your HTML
+  return "Thank you for your order, {$entityValues->name}!";
+}
+```
+
+Submit the form again and you should see the success message!
+
+<img src=https://i.imgur.com/q8kHfJD.png class=blur height=200>
+
+## Step 7: Create an order and send an email
+
+So far the form doesn't do anything other than showing a success message. Let's change that!
+
+```php
+public function processSuccess()
+{
+  // get submitted values
+  $values = $this->values();
+
+  // create order
+  $subject = "New Order from {$values->name}";
+  $order = rockcommerce()->cart()->createOrder($subject);
+
+  // send an email using wiremail
+  $mail = new \ProcessWire\WireMail();
+  $mail->from("robot@yourdomain.com");
+  $mail->subject($subject);
+  $mail->to("you@yourdomain.com");
+  $mail->bodyHTML("
+    <p>The order ID is {$order->id}</p>
+    <p>To view the order, click <a href='{$order->editUrl(true)}'>here</a></p>
+  ");
+  $mail->send();
+}
+```
+
+<img src=https://i.imgur.com/GACQhgj.png class=blur height=400>
+
+Now whenever a user places an order, an email will be sent to the admin with the order details and a link to the order:
+
+<img src=https://i.imgur.com/OckdB0W.png class=blur height=400>
+
+## Congratulations!
+
+You've now created a fully functional e-commerce site with a shopping cart, a checkout form and an order processing system! 🎉
+
+What about online payments? Shipping costs? Taxes? Coupons? Product variants? Product images? Videos?
+
+Please refer to the related sections in the docs to learn how to implement these features. 🚀

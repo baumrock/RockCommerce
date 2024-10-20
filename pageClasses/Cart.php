@@ -28,7 +28,22 @@ class Cart extends Page
 
   private $cachedItems;
 
-  /** magic */
+  public function createOrder(
+    string $subject = '',
+    string $email = '',
+    array $pageProperties = [],
+    array $meta = [],
+  ): Order {
+    return rockcommerce()->createOrder(
+      subject: $subject,
+      net: $this->totalNet(),
+      vat: $this->totalVat(),
+      total: $this->totalGross(),
+      email: $email,
+      pageProperties: $pageProperties,
+      meta: $meta,
+    );
+  }
 
   public function editForm(InputfieldWrapper $form): void
   {
