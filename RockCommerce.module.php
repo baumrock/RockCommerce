@@ -562,6 +562,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     if (!$this->isInstalled()) return;
 
+    $rm = rockmigrations();
+    $rm->installModule('ProcessRockCommerce');
+    $rm->installModule('InputfieldRcPricing');
+    $rm->installModule('FieldtypeRcVariations');
+    $rm->installModule('InputfieldRcVariations');
+
     // js config for the frontend
     $this->jsConfig();
 
