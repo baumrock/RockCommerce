@@ -11,6 +11,7 @@ use RockCommerce\Order;
  */
 class ProcessRockCommerce extends Process
 {
+  const dashboardPageName = 'rc-dashboard';
 
   const permission = 'rockcommerce-dashboard';
 
@@ -31,7 +32,7 @@ class ProcessRockCommerce extends Process
 
       // page that you want created to execute this module
       'page' => [
-        'name' => 'rc-dashboard',
+        'name' => self::dashboardPageName,
         'parent' => 2,
         'title' => 'Shop'
       ],

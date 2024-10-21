@@ -114,6 +114,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // hooks
     wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
+    wire()->addHookAfter('ProcessPageList::execute', $this, 'redirectPageList');
     wire()->addHookAfter(
       'Page::render',
       $this,
@@ -289,6 +290,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $order->save();
     $order->meta('details', $meta);
     return $order;
+  }
+
+  public function dashboardPage(): Page
+  {
+    return wire()->pages->get([
+      'template' => 'admin',
+      'name' => ProcessRockCommerce::dashboardPageName,
+    ]);
   }
 
   /**
@@ -844,6 +853,27 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function processUrl(string $url): string
   {
     return $this->processPage()->url . $url;
+  }
+
+  /**
+   * This hook is used to make sure that when a breadcrumb item is clicked
+   * we don't land on the main pagelist but on the RockCommerce branch
+   */
+  protected function redirectPageList(): void
+  {
+    if (wire()->config->ajax) return;
+    if (wire()->config->external) return;
+    if (wire()->input->get('id')) return;
+    $open = wire()->input->get('open', 'int');
+    if (!$open) return;
+    $p = wire()->pages->get($open);
+    $isRockCommerce = $p->closest('template=' . RootPage::tpl)->id > 0;
+    if (!$isRockCommerce) return;
+
+    // redirect to rockcommerce settings page
+    $url = $this->wire->pages->get(2)->url;
+    $p = rockcommerce()->rootPage();
+    $this->wire->session->redirect($url . "page/?id=$p&open=$open");
   }
 
   public function rockfrontend(): RockFrontend
