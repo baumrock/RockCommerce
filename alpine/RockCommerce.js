@@ -194,7 +194,7 @@ var RockCommerce;
     },
 
     getTaxrate() {
-      return RockCommerce.taxrates.getCurrentTaxrate().taxrate;
+      return RockCommerce.taxrates.getCurrentTaxrate().taxrate || 0;
     },
 
     /**

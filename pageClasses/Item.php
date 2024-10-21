@@ -236,9 +236,9 @@ class Item extends Page
     ]);
   }
 
-  public function product()
+  public function product(): Page|false
   {
-    return $this->field('product', 'int');
+    return $this->field('product', 'first');
   }
 
   /**

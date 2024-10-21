@@ -17,7 +17,16 @@ class Taxrates extends Page
 
   public function getDefaultTaxID(): int
   {
-    return (int)$this->getFormatted(self::field_default . '.first')?->id;
+    // if default is set we return it
+    $id = (int)$this->getFormatted(self::field_default . '.first')?->id;
+    if ($id) return $id;
+
+    // otherwise we return the first taxrate that we find
+    $id = (int)$this->children()->first()->id;
+    if ($id) return $id;
+
+    // otherwise we return 0
+    return 0;
   }
 
   public function migrate()

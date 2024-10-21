@@ -20,6 +20,7 @@ use RockCommerce\Variation;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
+use RockForms\MultiStepForm;
 use RockMoney\Money;
 
 /**
@@ -53,6 +54,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   const pricetype_net = 1;
   const pricetype_gross = 0;
   const pricetype_runtime = 2; // not yet implemented
+
+  private $checkout = false;
 
   /** @var array */
   public $findRawVariationOptions;
@@ -233,6 +236,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'parent' => $this->rootPage(),
       'name' => 'carts',
     ]);
+  }
+
+  public function checkout(): MultiStepForm
+  {
+    if ($this->checkout) return $this->checkout;
+    return $this->checkout = new MultiStepForm();
   }
 
   /**
