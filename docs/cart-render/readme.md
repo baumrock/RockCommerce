@@ -63,14 +63,6 @@ To show a message when the cart is empty, you can use the `x-show` directive:
 </div>
 ```
 
-## Show cart item count
-
-To show the current item count in the cart, just use the `rc-cart-count` attribute on any dom element on your page:
-
-```html
-<span rc-cart-count>0</span>
-```
-
 ## Delete item button
 
 To add a delete button to each cart item, just call the `deleteItem` method with the item's id from any rendered item row inside the `x-for` loop:
