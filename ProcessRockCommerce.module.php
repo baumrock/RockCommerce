@@ -19,7 +19,7 @@ class ProcessRockCommerce extends Process
   {
     return [
       'title' => 'RockCommerce',
-      'version' => '0.0.1',
+      'version' => json_decode(file_get_contents(__DIR__ . '/package.json'))->version,
       'summary' => 'Dashboard for the RockCommerce Shop',
       'icon' => 'bar-chart',
       'requires' => [
