@@ -18,6 +18,7 @@ use RockMigrations\MagicPage;
 use RockMoney\Money;
 
 use function ProcessWire\rockcommerce;
+use function ProcessWire\rockmigrations;
 
 class Order extends Page
 {
@@ -33,13 +34,13 @@ class Order extends Page
   const field_payment = self::prefix . "payment";
   const field_paymentstatus = self::prefix . "paymentstatus";
   const field_invoice = self::prefix . "invoice";
-  const field_attachments = self::prefix . "attachments";
   const field_cart = self::prefix . "cart";
 
   const field_net = self::prefix . "net";
   const field_vat = self::prefix . "vat";
   const field_total = self::prefix . "total";
   const field_paymentdate = self::prefix . "paymentdate";
+  const field_customfields = self::prefix . "customfields";
 
   public function __construct()
   {
@@ -67,53 +68,18 @@ class Order extends Page
 
     $rm = $this->rockmigrations();
     $rc = rockcommerce();
+
+    // ----- header section -----
     $form->prepend($rm->inputfield([
       'type' => 'markup',
       'label' => 'Order ID',
       'value' => "<div class='uk-text-truncate'>{$this->name}</div>",
       'columnWidth' => 50,
       'notes' => 'Order created at ' . date("d.m.Y H:i:s", $this->created)
-        . $this->apiNote('$order->name'),
+        . rockcommerce()->apiNote('$order->name'),
     ]));
 
-    $invoice = $this->invoice(1);
-    $url = $invoice ? $invoice->editUrl() : '';
-    $mail = $this->email(1);
-    $form->add($rm->inputfield([
-      'type' => 'markup',
-      'label' => 'Invoice',
-      'value' => "<a href='$url'>$url</a>",
-      'icon' => 'file-pdf-o',
-      'entityEncodeText' => false,
-      'notes' => "Usually the invoice is created when the webhook is triggered.
-        Manual actions:
-        <a href='./?id=$this&createinvoice=1'>Create invoice manually</a>
-        <a href='./?id=$this&sendinvoice=1'>Send invoice to client $mail</a>"
-        . $this->apiNote('$order->createInvoice()'),
-      'collapsed' => $url ? Inputfield::collapsedNo : Inputfield::collapsedYes,
-    ]));
-    $form->add($rm->inputfield([
-      'type' => 'markup',
-      'name' => 'order-details',
-      'label' => 'Order Details',
-      'icon' => 'table',
-      'value' => $rm->renderTable($this->details()),
-      'collapsed' => Inputfield::collapsedNo,
-      'notes' => 'Additional information for the order.'
-        . $this->apiNote('$order->details() or $order->details("item")'),
-    ]));
-    if ($f = $form->get(self::field_paymentstatus)) {
-      $url = rockcommerce()->url(
-        rockcommerce()->publicOrderPageUrl . "?id=" . $this->name
-      );
-      $editlink = $rc->processUrl("edit-status/?id=$this");
-      $f->entityEncodeText = false;
-      $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
-        <a href=$editlink>Edit Status</a>"
-        . $this->apiNote('$order->paymentStatus()');
-    }
-
-    // cost wrapper
+    // ----- totals section -----
     $rm->wrapFields($form, [
       self::field_net,
       self::field_vat,
@@ -123,6 +89,18 @@ class Order extends Page
       'icon' => 'shopping-basket',
     ]);
 
+    // ----- payment section -----
+    // payment notes
+    if ($f = $form->get(self::field_paymentdate)) {
+      if ($f->value) $f->notes .= date('Y-m-d H:i:s', (int)$f->value) . "\n";
+      $f->notes .= "You can change the payment date here. Note that the status will automatically be set to paid when the payment date is changed.";
+    }
+    $details = $this->meta('payment');
+    try {
+      $details = json_decode($details, true);
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+    }
     // payment wrapper
     $rm->wrapFields($form, [
       self::field_payment,
@@ -133,16 +111,58 @@ class Order extends Page
         'name' => 'payment-details',
         'label' => 'Initial Payment Details',
         'value' => '<p>Payment details that have been received at the time of creating the order and payment.</p>'
-          . $rm->renderTable($this->meta('payment'), [
-            'tableclass' => 'uk-table-divider',
-          ]),
+          . rockmigrations()->dump($details),
         'collapsed' => Inputfield::collapsedYesAjax,
       ]
     ], [
       'label' => 'Payment',
       'icon' => 'money',
-      'collapsed' => $this->paymentId() ? Inputfield::collapsedNo : Inputfield::collapsedYes,
+      'collapsed' => Inputfield::collapsedNo,
     ]);
+
+    // ----- cart section -----
+
+    // ----- invoice section -----
+    $invoice = $this->invoice(1);
+    $url = $invoice ? $invoice->editUrl() : '';
+    $mail = $this->email(1);
+    $form->insertAfter($rm->inputfield([
+      'type' => 'markup',
+      'label' => 'Invoice',
+      'value' => "<a href='$url'>$url</a>",
+      'icon' => 'file-pdf-o',
+      'entityEncodeText' => false,
+      'notes' => "Usually the invoice is created when the webhook is triggered.
+      Manual actions:
+      <a href='./?id=$this&createinvoice=1'>Create invoice manually</a>
+      <a href='./?id=$this&sendinvoice=1'>Send invoice to client $mail</a>"
+        . rockcommerce()->apiNote('$order->createInvoice()'),
+      'collapsed' => $url ? Inputfield::collapsedNo : Inputfield::collapsedYes,
+    ]), $form->get(self::field_cart));
+
+    // ----- custom fields section -----
+
+    // ----- order details section -----
+    $form->add($rm->inputfield([
+      'type' => 'markup',
+      'name' => 'order-details',
+      'label' => 'Order Details',
+      'icon' => 'table',
+      'value' => $rm->renderTable($this->details()),
+      'collapsed' => Inputfield::collapsedNo,
+      'notes' => 'Additional information for the order.'
+        . rockcommerce()->apiNote('$order->details() or $order->details("item")'),
+    ]));
+    if ($f = $form->get(self::field_paymentstatus)) {
+      $url = rockcommerce()->url(
+        rockcommerce()->publicOrderPageUrl . "?id=" . $this->name
+      );
+      $editlink = $rc->processUrl("edit-status/?id=$this");
+      $f->entityEncodeText = false;
+      $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
+        <a href=$editlink>Edit Status</a>"
+        . rockcommerce()->apiNote('$order->paymentStatus()');
+    }
   }
 
   public function onCreate(): void
@@ -208,12 +228,6 @@ class Order extends Page
   }
 
   /** backend */
-
-  public function apiNote($note, $nl = true): string
-  {
-    if (!$this->wire->user->isSuperuser()) return '';
-    return ($nl ? "\n" : "") . "API: $note";
-  }
 
   public function getPageListLabel()
   {
@@ -327,6 +341,10 @@ class Order extends Page
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
+
+    // cleanup
+    $rm->deleteField('rockcommerce_order_attachments');
+
     $rm->migrate([
       'fields' => [
         self::field_price => [
@@ -393,16 +411,6 @@ class Order extends Page
           'collapsed' => Inputfield::collapsedHidden,
           'icon' => 'file-pdf-o',
         ],
-        self::field_attachments => [
-          'type' => 'file',
-          'label' => 'Attachments',
-          'maxFiles' => 0,
-          'descriptionRows' => 0,
-          'extensions' => 'pdf zip',
-          'icon' => 'file-archive-o',
-          'outputFormat' => FieldtypeFile::outputFormatArray,
-          'collapsed' => Inputfield::collapsedBlank,
-        ],
         self::field_paymentdate => [
           'type' => 'datetime',
           'label' => 'Payment-Date',
@@ -424,6 +432,13 @@ class Order extends Page
           'labelFieldName' => 'title',
           'collapsed' => Inputfield::collapsedBlankLocked,
           'icon' => 'shopping-cart',
+        ],
+
+        // field that allows users to add custom fields
+        self::field_customfields => [
+          'label' => 'Custom Fields',
+          'type' => 'FieldtypeFieldsetPage',
+          'icon' => 'cubes',
         ],
       ],
       'templates' => [
@@ -458,11 +473,11 @@ class Order extends Page
             self::field_paymentdate => [
               'columnWidth' => 33,
             ],
-
             self::field_cart,
+            self::field_customfields,
 
+            // hidden
             self::field_invoice,
-            self::field_attachments,
           ],
           'parentTemplates' => [
             Orders::tpl,
@@ -590,6 +605,18 @@ class Order extends Page
     $this->sendInvoice();
   }
 
+  public function setPaymentData(
+    string $id = '',
+    string $status = '',
+    int $date = 0,
+    mixed $details = null,
+  ): void {
+    if ($id) $this->setAndSave(self::field_payment, $id);
+    if ($status) $this->setAndSave(self::field_paymentstatus, $status);
+    if ($date) $this->setAndSave(self::field_paymentdate, $date);
+    if ($details) $this->meta('payment', json_encode($details, JSON_PRETTY_PRINT));
+  }
+
   /**
    * Save payment ID and payment info to this order
    */
@@ -630,5 +657,10 @@ class Order extends Page
       self::status_open,
       self::status_paid,
     ];
+  }
+
+  public function total(): Money
+  {
+    return $this->getFormatted(self::field_total);
   }
 }

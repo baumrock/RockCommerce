@@ -184,6 +184,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       . $this->variationsPage();
   }
 
+  public function apiNote($note, $nl = true): string
+  {
+    return $this->helpNote($note, 'API', $nl);
+  }
+
   public function attrs($name, $attrs): string
   {
     $this->loadJS($name);
@@ -275,7 +280,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     Money|float $total,
     string $email,
     array $pageProperties = [],
-    array $meta = [],
+    array $details = [],
   ): Order {
     $money = rockmoney();
     $order = $this->wire->pages->newPage('template=' . Order::tpl);
@@ -288,7 +293,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $order->set(Order::prefix . $k, $v);
     }
     $order->save();
-    $order->meta('details', $meta);
+    $order->meta('details', $details);
     return $order;
   }
 
@@ -537,6 +542,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return true;
   }
 
+  public function helpNote($note, $prefix = '', $nl = true): string
+  {
+    if (!$this->showHelp) return '';
+    if (!$this->wire->user->isSuperuser()) return '';
+    $out = $nl ? "\n" : "";
+    $out .= $prefix ? "$prefix: $note" : $note;
+    return $out;
+  }
+
   /**
    * Host without trailing slash
    */
@@ -634,9 +648,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   private function loadConfig(): void
   {
-    $overrides = $this->wire->config->rockcommerce;
+    $overrides = wire()->config->rockcommerce;
     if (!is_array($overrides)) return;
-    foreach ($overrides as $k => $v) $this->set($k, $v);
+    // note: $this->set($k, $v) does not work here
+    foreach ($overrides as $k => $v) $this->$k = $v;
   }
 
   public function loadJS($jsfile): void
@@ -1184,49 +1199,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'type' => 'markup',
       'label' => 'Config Settings Override',
       'value' => "You can override any setting in your config.php file:<br>
-        <pre class=uk-margin-small-top><code>\$config->rockcommerce['setting'] = 'newvalue';</code></pre>",
+        <pre class=uk-margin-small-top><code>\$config->rockcommerce['setting'] = 'newvalue';</code></pre>
+        <p>Active Overrides from \$config:</p>"
+        . rockmigrations()->dump(wire()->config->rockcommerce),
       'icon' => 'life-ring',
       'notes' => 'Use Shilft+Click on any field label to copy fieldname to clipboard.',
     ]);
 
-    $fs = new InputfieldFieldset();
-    $fs->label = 'E-Mails';
-    $fs->icon = 'cogs';
-    $fs->collapsed = Inputfield::collapsedYes;
-    $inputfields->add($fs);
-
-    // admin email address
-    $fs->add([
-      'type' => 'email',
-      'name' => 'adminmail',
-      'label' => 'Admin E-Mail',
-      'icon' => 'envelope-o',
-      'value' => $this->adminmail,
-      'notes' => "Send an email to this address on every new order.",
-      'columnWidth' => 33,
+    $inputfields->add([
+      'type' => 'checkbox',
+      'name' => 'showHelp',
+      'checked' => $this->showHelp ? 'checked' : '',
+      'label' => 'Show help and API notes to superusers',
     ]);
+    $inputfields->children->last()->notes = '$config->rockcommerce["showHelp"] = true/false;';
 
-    // email address used to send emails
-    $fs->add([
-      'type' => 'email',
-      'name' => 'mailfrom',
-      'label' => 'Mailfrom E-Mail Address',
-      'icon' => 'envelope-o',
-      'value' => $this->mailfrom,
-      'columnWidth' => 33,
-    ]);
-
-    // email name used to send emails
-    $fs->add([
-      'type' => 'text',
-      'name' => 'mailfromName',
-      'label' => 'Mailfrom E-Mail Name',
-      'icon' => 'user-o',
-      'value' => $this->mailfromName,
-      'columnWidth' => 33,
-    ]);
-
-    // Product
+    // Products
     $fs = new InputfieldFieldset();
     $fs->label = 'Products';
     $fs->icon = 'cubes';
@@ -1269,41 +1257,16 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $link = $this->wire->pages->get(2)->url . "module/edit?name=RockMoney";
     $fs->add([
       'type' => 'markup',
-      'value' => nl2br("Note:
-        PHP pricing settings are defined in the <a href=$link>RockMoney module</a>.
+      'value' => nl2br("PHP pricing settings are defined in the <a href=$link>RockMoney module</a>.
         Frontend pricing can be customised via hooks."),
     ]);
 
-    // Orders
+    // // Backend
     // $fs = new InputfieldFieldset();
-    // $fs->label = 'Orders';
-    // $fs->icon = 'check-square-o';
+    // $fs->label = 'Backend';
+    // $fs->icon = 'cogs';
     // $fs->collapsed = Inputfield::collapsedYes;
     // $inputfields->add($fs);
-
-    // $fs->add([
-    //   'type' => 'text',
-    //   'name' => 'publicOrderPageUrl',
-    //   'label' => 'Public Orderpage-Url',
-    //   'description' => 'The url of the page that you created for handling order updates, eg after payment to show the success message.',
-    //   'notes' => 'Make sure the url has a trailing slash or not depending on your site settings - otherwise it will redirect to the other version and lose query parameters!
-    //     Example: If the final url is https://example.com/order/?id=123 you have to enter /order/ in this field.',
-    //   'value' => $this->publicOrderPageUrl,
-    // ]);
-
-    // Backend
-    $fs = new InputfieldFieldset();
-    $fs->label = 'Backend';
-    $fs->icon = 'cogs';
-    $fs->collapsed = Inputfield::collapsedYes;
-    $inputfields->add($fs);
-
-    $fs->add([
-      'type' => 'checkbox',
-      'name' => 'showHelp',
-      'checked' => $this->showHelp ? 'checked' : '',
-      'label' => 'Show help notes to superusers',
-    ]);
 
     return $inputfields;
   }

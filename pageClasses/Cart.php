@@ -32,7 +32,7 @@ class Cart extends Page
     string $subject = '',
     string $email = '',
     array $pageProperties = [],
-    array $meta = [],
+    array $details = [],
   ): Order {
     return rockcommerce()->createOrder(
       subject: $subject,
@@ -41,7 +41,7 @@ class Cart extends Page
       total: $this->totalGross(),
       email: $email,
       pageProperties: $pageProperties,
-      meta: $meta,
+      details: $details,
     );
   }
 
