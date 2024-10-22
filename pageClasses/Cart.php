@@ -22,6 +22,7 @@ class Cart extends Page
 
   const tpl = "rockcommerce_cart";
   const prefix = "rockcommerce_cart_";
+  // const watchPriority = 50;
 
   const field_order = self::prefix . "order";
   const field_taxid = self::prefix . "taxid";

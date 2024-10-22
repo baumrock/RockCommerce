@@ -28,6 +28,7 @@ trait Product
   const field_minoptions            = self::_prefix . "minoptions";
   const field_variationcomment      = self::_prefix . "variationcomment";
   const field_price                 = self::_prefix . "price";
+  const field_customfields          = self::_prefix . "customfields";
 
   public function _init(): void
   {
@@ -126,6 +127,11 @@ trait Product
         'repeaterAddLabel' => 'Add New Variation',
         'columnWidth' => 100,
       ],
+      // self::field_customfields => [
+      //   'label' => 'Custom Fields',
+      //   'type' => 'FieldtypeFieldsetPage',
+      //   'icon' => 'cubes',
+      // ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";
     $rm->createFields($fields);
