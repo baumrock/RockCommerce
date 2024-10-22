@@ -184,9 +184,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       . $this->variationsPage();
   }
 
-  public function apiNote($note, $nl = true): string
+  public function apiNote(Inputfield $field, $note, $nl = true): void
   {
-    return $this->helpNote($note, 'API', $nl);
+    $this->helpNote($field, $note, 'API', $nl);
   }
 
   public function attrs($name, $attrs): string
@@ -542,13 +542,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return true;
   }
 
-  public function helpNote($note, $prefix = '', $nl = true): string
+  public function helpNote(Inputfield $field, $note, $prefix = '', $nl = true): void
   {
-    if (!$this->showHelp) return '';
-    if (!$this->wire->user->isSuperuser()) return '';
-    $out = $nl ? "\n" : "";
-    $out .= $prefix ? "$prefix: $note" : $note;
-    return $out;
+    if (!$this->showHelp) return;
+    if (!$this->wire->user->isSuperuser()) return;
+    $notes = array_filter([
+      $field->notes,
+      $prefix ? "$prefix: $note" : $note,
+    ]);
+    $field->notes = $nl
+      ? implode("\n", $notes)
+      : implode(" ", $notes);
   }
 
   /**

@@ -53,6 +53,14 @@ class Order extends Page
 
   /** magic */
 
+  public function editForm($form): void
+  {
+    // lock the name field
+    if ($f = $form->get('_pw_page_name')) {
+      $f->collapsed = Inputfield::collapsedLocked;
+    }
+  }
+
   public function editFormContent(InputfieldWrapper $form): void
   {
     // create invoice manually
@@ -70,14 +78,17 @@ class Order extends Page
     $rc = rockcommerce();
 
     // ----- header section -----
-    $form->prepend($rm->inputfield([
+    $f = $rm->inputfield([
       'type' => 'markup',
-      'label' => 'Order ID',
-      'value' => "<div class='uk-text-truncate'>{$this->name}</div>",
+      'label' => 'Order ID/Name',
+      'value' => "<div class='uk-text-truncate'>
+        {$this->id}<br>
+        {$this->name}
+      </div>",
       'columnWidth' => 50,
-      'notes' => 'Order created at ' . date("d.m.Y H:i:s", $this->created)
-        . rockcommerce()->apiNote('$order->name'),
-    ]));
+      'notes' => 'Order created at ' . date("d.m.Y H:i:s", $this->created),
+    ]);
+    $form->prepend($f);
 
     // ----- totals section -----
     $rm->wrapFields($form, [
@@ -126,7 +137,7 @@ class Order extends Page
     $invoice = $this->invoice(1);
     $url = $invoice ? $invoice->editUrl() : '';
     $mail = $this->email(1);
-    $form->insertAfter($rm->inputfield([
+    $f = $rm->inputfield([
       'type' => 'markup',
       'label' => 'Invoice',
       'value' => "<a href='$url'>$url</a>",
@@ -135,24 +146,31 @@ class Order extends Page
       'notes' => "Usually the invoice is created when the webhook is triggered.
       Manual actions:
       <a href='./?id=$this&createinvoice=1'>Create invoice manually</a>
-      <a href='./?id=$this&sendinvoice=1'>Send invoice to client $mail</a>"
-        . rockcommerce()->apiNote('$order->createInvoice()'),
+      <a href='./?id=$this&sendinvoice=1'>Send invoice to client $mail</a>",
       'collapsed' => $url ? Inputfield::collapsedNo : Inputfield::collapsedYes,
-    ]), $form->get(self::field_cart));
+    ]);
+    $form->insertAfter($f, $form->get(self::field_cart));
+    rockcommerce()->apiNote($f, '$order->createInvoice()');
 
     // ----- custom fields section -----
+    if ($f = $form->get(self::field_customfields)) {
+      $fieldname = self::field_customfields;
+      rockcommerce()->helpNote($f, "You can edit the field $fieldname and add custom fields as you need.");
+    }
 
     // ----- order details section -----
-    $form->add($rm->inputfield([
+    $f = $rm->inputfield([
       'type' => 'markup',
       'name' => 'order-details',
       'label' => 'Order Details',
       'icon' => 'table',
       'value' => $rm->renderTable($this->details()),
       'collapsed' => Inputfield::collapsedNo,
-      'notes' => 'Additional information for the order.'
-        . rockcommerce()->apiNote('$order->details() or $order->details("item")'),
-    ]));
+      'notes' => 'Additional information for the order.',
+    ]);
+    $form->add($f);
+    rockcommerce()->apiNote($f, '$order->details() or $order->details("item")');
+
     if ($f = $form->get(self::field_paymentstatus)) {
       $url = rockcommerce()->url(
         rockcommerce()->publicOrderPageUrl . "?id=" . $this->name
@@ -160,8 +178,8 @@ class Order extends Page
       $editlink = $rc->processUrl("edit-status/?id=$this");
       $f->entityEncodeText = false;
       $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
-        <a href=$editlink>Edit Status</a>"
-        . rockcommerce()->apiNote('$order->paymentStatus()');
+        <a href=$editlink>Edit Status</a>";
+      rockcommerce()->apiNote($f, '$order->paymentStatus()');
     }
   }
 
