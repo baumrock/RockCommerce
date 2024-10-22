@@ -2,6 +2,11 @@
  * RockCommerce Alpine Cart Component
  * Access this component via RockCommerce.cart
  * See docs for details.
+ *
+ * Available config attributes:
+ *
+ * rc-reload: Reload cart data via ajax when page is loaded
+ * rc-animation: Set to false to disable loading animation
  */
 RockCommerce.addComponent("RcCart", {
   count: 0,
