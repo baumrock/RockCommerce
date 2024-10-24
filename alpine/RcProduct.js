@@ -35,12 +35,16 @@ RockCommerce.addComponent("RcProduct", {
    *
    * This method is triggered by @click.prevent=addToCart
    * and adds the product, amount and variation to the cart.
+   *
+   * It also sends the currently selected taxrate to make sure the cart uses
+   * the correct taxrate for all calculations.
    */
   addToCart() {
     RockCommerce.cart.addItem({
       pid: this.$rcpid,
       amount: this.amount,
       variation: this.variationString(false, false),
+      taxID: RockCommerce.taxrates.currentID,
     });
   },
 

@@ -12,10 +12,14 @@ $cart = rockcommerce()->cart();
 $pid = (int)$input->pid;
 $amount = (int)$input->amount;
 $variation = rockcommerce()->sanitizeVariation($input->variation);
+$taxID = (int)$input->taxID;
+
+// update taxID in cart
+$cart->setTaxID($taxID);
 
 // product to add
 $product = rockcommerce()->getProduct($pid);
-bd($product, 'product');
+// bd($product, 'product');
 
 // check if the product is valid
 if (!$product || !$product->isProduct) {
@@ -26,7 +30,7 @@ if (!$product || !$product->isProduct) {
 
 // add the product to the cart
 $item = $cart->addItem($product, $amount, $variation);
-bd($item, 'item');
+// bd($item, 'item');
 return [
   'success' => 1,
   'cart' => $cart->getJsonArray(),

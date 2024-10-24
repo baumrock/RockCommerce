@@ -22,7 +22,6 @@ class Cart extends Page
 
   const tpl = "rockcommerce_cart";
   const prefix = "rockcommerce_cart_";
-  // const watchPriority = 50;
 
   const field_order = self::prefix . "order";
   const field_taxid = self::prefix . "taxid";
@@ -218,7 +217,7 @@ class Cart extends Page
 
     // try to find existing item
     $item = $this->item($product, $variation);
-    bd($item, 'item in additem');
+    // bd($item, 'item in additem');
     if ($item) {
       // increase amount
       $item->of(false);

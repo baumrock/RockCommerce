@@ -103,7 +103,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
-    // $rm->watch($this, 50);
     $rm->watch($this);
     $rm->watch(
       what: __DIR__ . "/classLoader/Product.php",
