@@ -7,7 +7,12 @@ RockCommerce.addComponent("RcProduct", {
   updateTimer: false,
 
   // dont use empty string to avoid FOUC on init
+  // price formatted as string like € 0,00
   price: 0,
+
+  // price as float
+  // can be used to hide price if it is 0 via x-show="priceFloat > 0"
+  priceFloat: 0,
 
   // this is the base price money object
   money: null,
@@ -149,6 +154,7 @@ RockCommerce.addComponent("RcProduct", {
       // write formatted price to price property
       // so that the frontend can subscribe via x-text=price
       this.price = money.format();
+      this.priceFloat = money.float();
       this.updateUrl();
     });
   },

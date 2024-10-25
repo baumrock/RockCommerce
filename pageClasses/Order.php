@@ -106,7 +106,7 @@ class Order extends Page
       if ($f->value) $f->notes .= date('Y-m-d H:i:s', (int)$f->value) . "\n";
       $f->notes .= "You can change the payment date here. Note that the status will automatically be set to paid when the payment date is changed.";
     }
-    $details = $this->meta('payment');
+    $details = (string)$this->meta('payment');
     try {
       $details = json_decode($details, true);
     } catch (\Throwable $th) {
