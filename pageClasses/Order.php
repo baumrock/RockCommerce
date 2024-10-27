@@ -5,6 +5,7 @@ namespace RockCommerce;
 use Mollie\Api\Resources\Payment;
 use ProcessWire\FieldtypeFile;
 use ProcessWire\FieldtypePage;
+use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldDatetime;
 use ProcessWire\InputfieldWrapper;
@@ -19,6 +20,7 @@ use RockMoney\Money;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
+use function ProcessWire\wire;
 
 class Order extends Page
 {
@@ -58,6 +60,14 @@ class Order extends Page
     // lock the name field
     if ($f = $form->get('_pw_page_name')) {
       $f->collapsed = Inputfield::collapsedLocked;
+    }
+
+    // show cart name and link to it
+    if ($f = $form->get(self::field_cart)) {
+      $id = $f->value;
+      $url = wire()->pages->get(2)->url . "page/edit/?id=$id";
+      $f->collapsed = Inputfield::collapsedYesLocked;
+      $f->value = "<a href=$url>$id</a>";
     }
   }
 

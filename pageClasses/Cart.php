@@ -34,7 +34,7 @@ class Cart extends Page
     array $pageProperties = [],
     array $details = [],
   ): Order {
-    return rockcommerce()->createOrder(
+    $order = rockcommerce()->createOrder(
       subject: $subject,
       net: $this->totalNet(),
       vat: $this->totalVat(),
@@ -43,6 +43,8 @@ class Cart extends Page
       pageProperties: $pageProperties,
       details: $details,
     );
+    $order->setAndSave(Order::field_cart, $this);
+    return $order;
   }
 
   public function editForm(InputfieldWrapper $form): void
