@@ -471,7 +471,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $templates = new WireArray();
     foreach ($this->wire->templates as $tpl) {
-      if (!$tpl->fields->has("name=" . ProductPage::field_canbebought)) continue;
+      if (!$tpl->fields->has("name=" . ProductPage::field_price)) continue;
       $templates->add($tpl);
     }
     return $templates;

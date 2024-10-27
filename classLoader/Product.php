@@ -127,11 +127,6 @@ trait Product
         'repeaterAddLabel' => 'Add New Variation',
         'columnWidth' => 100,
       ],
-      // self::field_customfields => [
-      //   'label' => 'Custom Fields',
-      //   'type' => 'FieldtypeFieldsetPage',
-      //   'icon' => 'cubes',
-      // ],
     ];
     foreach ($fields as &$v) $v['tags'] = "RockCommerce";
     $rm->createFields($fields);
