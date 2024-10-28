@@ -377,6 +377,32 @@ class Cart extends Page
     $this->setAndSave(self::field_taxid, $taxrate);
   }
 
+  /**
+   * Minimalistic summary of the cart
+   * To be used in the checkout summary or order confirmation email.
+   * Use hooks or RockFrontend's domtools to modify the output.
+   */
+  public function ___summary(): string
+  {
+    return "<table>
+      <tr class='items'>
+        <td>Subtotal</td>
+        <td>{$this->itemsNet()}</td>
+      </tr>
+      <tr class='shipping'>
+        <td>Shipping</td><td>{$this->shippingNet()}</td>
+      </tr>
+      <tr class='vat'>
+        <td>VAT</td>
+        <td>{$this->totalVat()}</td>
+      </tr>
+      <tr class='total'>
+        <td>Total</td>
+        <td>{$this->totalGross()}</td>
+      </tr>
+    </table>";
+  }
+
   public function taxID(): int
   {
     return (int)$this->getFormatted(self::field_taxid . ".first")?->id;
