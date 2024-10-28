@@ -225,9 +225,30 @@ class Cart extends Page
     return $total;
   }
 
-  public function itemsTable(): string
+  /**
+   * Minimalistic HTML table of items to be used in the checkout summary
+   * or order confirmation email. Use hooks to modify to your needs!
+   *
+   * $wire->addHookBefore('Cart::itemsTable', function(HookEvent $event) {
+   *   $event->replace = true;
+   *   $cart = $event->object;
+   *   $event->return = "modified table";
+   * });
+   */
+  public function ___itemsTable(): string
   {
-    return rockcommerce()->itemsTable();
+    $str = "<table class='uk-table uk-table-small uk-table-striped'>";
+    foreach ($this->items() as $item) {
+      $str .= "<tr>";
+      $str .= "<td>
+        <div><strong>{$item->product()->title}</strong></div>
+        <div>{$item->variationList()}</div>
+        <div>{$item->amount()}x {$item->itemNet()}</div>
+      </td>";
+      $str .= "</tr>";
+    }
+    $str .= "</table>";
+    return $str;
   }
 
   /**
@@ -305,7 +326,10 @@ class Cart extends Page
           'noMove' => 1,
           'noChangeTemplate' => 1,
           'noParents' => 1,
-          'sortfield' => '-id',
+          // sort by id
+          // this is to make sure items are always in the same order
+          // and later added items are further down in the list
+          'sortfield' => 'id',
           'icon' => 'shopping-basket',
           'noSettings' => 1,
         ],

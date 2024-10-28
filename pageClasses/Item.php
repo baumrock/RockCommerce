@@ -13,7 +13,6 @@ use RockMoney\Money;
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockfrontend;
 use function ProcessWire\rockmigrations;
-use function ProcessWire\rockmoney;
 
 /**
  * RockCommerce Cart or Order Item
@@ -115,6 +114,11 @@ class Item extends Page
       . '-amount:' . $this->amount();
   }
 
+  public function getPageListLabel()
+  {
+    return $this->amount() . 'x ' . ($this->product()->title ?: $this->name);
+  }
+
   /**
    * Returns the cart item as an array (eg for ajax endpoints)
    * @return array
@@ -131,7 +135,7 @@ class Item extends Page
       'product' => $this->field('product', 'int'),
       'amount' => $this->amount(),
       'variation' => $this->variationString(),
-      'variationTable' => $this->variationTable(),
+      'variationTableData' => $this->variationTableData(),
 
       // urls to item's referenced product
       'url' => $this->fullUrl(),
@@ -270,14 +274,38 @@ class Item extends Page
     return $this->itemGross()->times($this->amount(1));
   }
 
+  /**
+   * List of variations to be used in cart summary and order confirmation
+   *
+   * Example:
+   * - Color: Red
+   * - Size: M
+   */
+  public function variationList(): string
+  {
+    $data = $this->variationTableData();
+    $str = '';
+    foreach ($data as $var) {
+      $str .= " - " . $var['variation'] . ": " . implode('; ', $var['options']) . "\n";
+    }
+    return $str;
+  }
+
+  /**
+   * Return variation string like 2030:4040,3020,3029
+   */
   public function variationString(): string
   {
     return (string)$this->field('variation', 'string');
   }
 
-  public function variationTable(): array
+  /**
+   * Get array representation of variation string with translated
+   * variation and option labels
+   */
+  public function variationTableData(): array
   {
-    return rockcommerce()->variationTable(
+    return rockcommerce()->variationTableData(
       $this->variationString()
     );
   }

@@ -90,9 +90,9 @@ If you are using variations, you can display them in the cart like this (inside 
 
 ```html
 <div
-  x-show='item.variationTable && item.variationTable.length'
+  x-show='item.variationTableData && item.variationTableData.length'
 >
-  <template x-for='row in item.variationTable'>
+  <template x-for='row in item.variationTableData'>
     <div>
       <div x-text='row.variation'></div>
       <div>

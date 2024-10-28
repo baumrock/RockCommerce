@@ -623,11 +623,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }
   }
 
-  public function itemsTable(): string
-  {
-    return "TBD";
-  }
-
   /**
    * Set JS config value
    */
@@ -1104,7 +1099,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    * Note: We do not add <table> to make it easy to style the table on
    * the frontend.
    */
-  public function variationTable(string $str): array
+  public function variationTableData(string $str): array
   {
     $variationArray = $this->variationArray($str);
     if (empty($variationArray)) return [];
