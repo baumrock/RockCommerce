@@ -623,6 +623,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     }
   }
 
+  public function itemsTable(): string
+  {
+    return "TBD";
+  }
+
   /**
    * Set JS config value
    */
@@ -894,6 +899,25 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $url = $this->wire->pages->get(2)->url;
     $p = rockcommerce()->rootPage();
     $this->wire->session->redirect($url . "page/?id=$p&open=$open");
+  }
+
+  public function ___renderAddress($data, $lang = 'en'): string
+  {
+    $parts = [];
+
+    // get country via hookable method to make them translatable
+    $country = rockcountries()
+      ->countries($lang)
+      ->getWireData("alpha2=" . $data->country);
+
+    if ($data->company) $parts[] = "$data->company";
+    $parts[] = "{$data->firstname} {$data->lastname} {$data->fullname}";
+    $parts[] = "$data->street";
+    $parts[] = "$data->zip $data->city";
+    $parts[] = "$country->name";
+
+    $addr = array_filter(array_map('trim', $parts));
+    return implode('<br>', $addr);
   }
 
   public function rockfrontend(): RockFrontend

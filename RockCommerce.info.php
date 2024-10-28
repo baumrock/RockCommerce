@@ -24,8 +24,10 @@ $info = [
     'Less>=0.0.5',
     'RockLoaders>=1.1.0',
     'RockJavaScriptHooks>=1.0.0',
+    'RockCountries',
   ],
   'installs' => [
+    'RockCountries',
     'ProcessRockCommerce',
     'InputfieldRcPricing',
     'FieldtypeRcVariations',

@@ -68,6 +68,8 @@ class Order extends Page
       $url = wire()->pages->get(2)->url . "page/edit/?id=$id";
       $f->collapsed = Inputfield::collapsedYesLocked;
       $f->value = "<a href=$url>$id</a>";
+      rockcommerce()->helpNote($f, "This links to the cart that was used for creating this order.
+      IMPORTANT NOTE: Cart data is not persistant! Referenced products may be removed from the system or prices might get changed.");
     }
   }
 
@@ -174,7 +176,7 @@ class Order extends Page
       'name' => 'order-details',
       'label' => 'Order Details',
       'icon' => 'table',
-      'value' => $rm->renderTable($this->details()),
+      'value' => $rm->dump($this->details()),
       'collapsed' => Inputfield::collapsedNo,
       'notes' => 'Additional information for the order.',
     ]);

@@ -8,6 +8,7 @@ use ProcessWire\InputfieldWrapper;
 use ProcessWire\NullPage;
 use ProcessWire\Page;
 use ProcessWire\RockMigrations;
+use ProcessWire\WireData;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
@@ -28,12 +29,48 @@ class Cart extends Page
 
   private $cachedItems;
 
+
+  public function addItem(
+    string|int|Page $product,
+    int $amount = null,
+    string $variation = null,
+  ): Item {
+    if (!$amount) $amount = 1;
+    $product = rockcommerce()->getProduct($product);
+
+    // try to find existing item
+    $item = $this->item($product, $variation);
+    // bd($item, 'item in additem');
+    if ($item) {
+      // increase amount
+      $item->of(false);
+      $item->set(Item::field_amount, $item->amount() + $amount);
+    } else {
+      // create new item
+      $item = new Item($this);
+      $item->set(Item::field_product, $product);
+      $item->set(Item::field_amount, $amount);
+      $item->set(Item::field_variation, $variation);
+    }
+    $item->save();
+
+    // $this->wire->session->rcAddedAmount = $amount;
+    // $this->wire->session->rcAddedProduct = $product->id;
+    $item->addedAmount = $amount;
+
+    return $item;
+  }
+
   public function createOrder(
     string $subject = '',
     string $email = '',
     array $pageProperties = [],
     array $details = [],
   ): Order {
+
+    $_details = ['cartData' => $this->getJsonArray()];
+    $mergedDetails = array_merge($_details, $details);
+
     $order = rockcommerce()->createOrder(
       subject: $subject,
       net: $this->totalNet(),
@@ -41,7 +78,7 @@ class Cart extends Page
       total: $this->totalGross(),
       email: $email,
       pageProperties: $pageProperties,
-      details: $details,
+      details: $mergedDetails,
     );
     $order->setAndSave(Order::field_cart, $this);
     return $order;
@@ -85,51 +122,10 @@ class Cart extends Page
     }
   }
 
-  public function ___totalNet(): Money
-  {
-    return $this->itemsNet()->plus($this->shippingNet());
-  }
-
-  public function totalVat(): Money
-  {
-    return $this->totalNet()->times($this->taxrate());
-  }
-
-  public function totalGross(): Money
-  {
-    return $this->totalNet()->plus($this->totalVat());
-  }
-
-  public function ___shippingNet(): Money
-  {
-    return rockmoney()->parse(0);
-  }
-
-  public function shippingVat(): Money
-  {
-    return $this->shippingNet()->times($this->taxrate());
-  }
-
-  public function shippingGross(): Money
-  {
-    return $this->shippingNet()->plus($this->shippingVat());
-  }
-
-  public function onCreate(): void
-  {
-    // set random pagename
-    $this->name = $this->wire->pages->names->uniqueRandomPageName([
-      'page' => rockcommerce()->cartsPage(),
-      'min' => 10,
-      'max' => 20,
-    ]);
-  }
-
-  public function pageListLabel()
-  {
-    return $this->name;
-  }
-
+  /**
+   * Array data used for AJAX calls and to store as persistent data
+   * on the order page.
+   */
   public function ___getJsonArray(): array
   {
 
@@ -144,16 +140,21 @@ class Cart extends Page
       'itemsVat' => $this->itemsVat()->format(),
       'itemsGross' => $this->itemsGross()->format(),
 
-      // final prices (all items + shipping + coupons)
-      'totalNet' => $this->totalNet()->format(),
-      'totalVat' => $this->totalVat()->format(),
-      'totalGross' => $this->totalGross()->format(),
-
       // shipping prices
       'shippingNet' => $this->shippingNet()->format(),
       'shippingVat' => $this->shippingVat()->format(),
       'shippingGross' => $this->shippingGross()->format(),
+
+      // final prices (all items + shipping + coupons)
+      'totalNet' => $this->totalNet()->format(),
+      'totalVat' => $this->totalVat()->format(),
+      'totalGross' => $this->totalGross()->format(),
     ];
+  }
+
+  public function getJsonData(): WireData
+  {
+    return (new WireData())->setArray($this->getJsonArray());
   }
 
   public function getItem(int|string|Page $id): Item|NullPage
@@ -201,43 +202,53 @@ class Cart extends Page
   }
 
   /**
+   * Total of all items (without shipping or coupons)
+   */
+  public function itemsGross(): Money
+  {
+    $total = rockmoney()->parse(0);
+    foreach ($this->items() as $item) {
+      $total = $total->plus($item->totalGross());
+    }
+    return $total;
+  }
+
+  /**
+   * Total of all items (without shipping or coupons)
+   */
+  public function itemsNet(): Money
+  {
+    $total = rockmoney()->parse(0);
+    foreach ($this->items() as $item) {
+      $total = $total->plus($item->totalNet());
+    }
+    return $total;
+  }
+
+  public function itemsTable(): string
+  {
+    return rockcommerce()->itemsTable();
+  }
+
+  /**
+   * Total of all items (without shipping or coupons)
+   */
+  public function itemsVat(): Money
+  {
+    $total = rockmoney()->parse(0);
+    foreach ($this->items() as $item) {
+      $total = $total->plus($item->totalVat());
+    }
+    return $total;
+  }
+
+  /**
    * Get modified timestamp of this cart
    */
   public function modified(): int
   {
     $pages = $this->items()->add($this);
     return $pages->sort("modified")->last()->modified;
-  }
-
-  public function addItem(
-    string|int|Page $product,
-    int $amount = null,
-    string $variation = null,
-  ): Item {
-    if (!$amount) $amount = 1;
-    $product = rockcommerce()->getProduct($product);
-
-    // try to find existing item
-    $item = $this->item($product, $variation);
-    // bd($item, 'item in additem');
-    if ($item) {
-      // increase amount
-      $item->of(false);
-      $item->set(Item::field_amount, $item->amount() + $amount);
-    } else {
-      // create new item
-      $item = new Item($this);
-      $item->set(Item::field_product, $product);
-      $item->set(Item::field_amount, $amount);
-      $item->set(Item::field_variation, $variation);
-    }
-    $item->save();
-
-    // $this->wire->session->rcAddedAmount = $amount;
-    // $this->wire->session->rcAddedProduct = $product->id;
-    $item->addedAmount = $amount;
-
-    return $item;
   }
 
   public function migrate()
@@ -302,6 +313,36 @@ class Cart extends Page
     ]);
   }
 
+  public function onCreate(): void
+  {
+    // set random pagename
+    $this->name = $this->wire->pages->names->uniqueRandomPageName([
+      'page' => rockcommerce()->cartsPage(),
+      'min' => 10,
+      'max' => 20,
+    ]);
+  }
+
+  public function pageListLabel()
+  {
+    return $this->name;
+  }
+
+  public function ___shippingNet(): Money
+  {
+    return rockmoney()->parse(0);
+  }
+
+  public function shippingVat(): Money
+  {
+    return $this->shippingNet()->times($this->taxrate());
+  }
+
+  public function shippingGross(): Money
+  {
+    return $this->shippingNet()->plus($this->shippingVat());
+  }
+
   public function setTaxID(int|string $id): void
   {
     $taxrate = wire()->pages->get([
@@ -327,39 +368,18 @@ class Cart extends Page
     return $taxPage->taxrate();
   }
 
-  /**
-   * Total of all items (without shipping or coupons)
-   */
-  public function itemsNet(): Money
+  public function ___totalNet(): Money
   {
-    $total = rockmoney()->parse(0);
-    foreach ($this->items() as $item) {
-      $total = $total->plus($item->totalNet());
-    }
-    return $total;
+    return $this->itemsNet()->plus($this->shippingNet());
   }
 
-  /**
-   * Total of all items (without shipping or coupons)
-   */
-  public function itemsVat(): Money
+  public function totalVat(): Money
   {
-    $total = rockmoney()->parse(0);
-    foreach ($this->items() as $item) {
-      $total = $total->plus($item->totalVat());
-    }
-    return $total;
+    return $this->totalNet()->times($this->taxrate());
   }
 
-  /**
-   * Total of all items (without shipping or coupons)
-   */
-  public function itemsGross(): Money
+  public function totalGross(): Money
   {
-    $total = rockmoney()->parse(0);
-    foreach ($this->items() as $item) {
-      $total = $total->plus($item->totalGross());
-    }
-    return $total;
+    return $this->totalNet()->plus($this->totalVat());
   }
 }
