@@ -34,6 +34,10 @@ RockCommerce.addComponent("RcCart", {
       this.doReload = true;
       this.reload();
     }
+
+    // reset cart?
+    const reset = document.querySelector("[rc-cart-reset]");
+    if (reset) this.reset();
   },
 
   /**
@@ -148,6 +152,14 @@ RockCommerce.addComponent("RcCart", {
       },
       50
     );
+  },
+
+  reset() {
+    RockCommerce.debounce("rc-cart-reset", () => {
+      localStorage.removeItem("rc-cart");
+      this.setData({});
+      RockCommerce.fetch("/cart/reset", { animation: false });
+    });
   },
 
   /**

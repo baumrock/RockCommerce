@@ -7,6 +7,7 @@ use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\NullPage;
 use ProcessWire\Page;
+use ProcessWire\RockCommerce;
 use ProcessWire\RockMigrations;
 use ProcessWire\WireData;
 use RockMigrations\MagicPage;
@@ -28,7 +29,6 @@ class Cart extends Page
   const field_taxid = self::prefix . "taxid";
 
   private $cachedItems;
-
 
   public function addItem(
     string|int|Page $product,
@@ -350,6 +350,15 @@ class Cart extends Page
   public function pageListLabel()
   {
     return $this->name;
+  }
+
+  /**
+   * Reset cart (create a new one instead)
+   * @return void
+   */
+  public function reset(): void
+  {
+    wire()->session->remove(RockCommerce::session_cart);
   }
 
   public function ___shippingNet(): Money

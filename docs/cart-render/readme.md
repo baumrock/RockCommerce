@@ -137,3 +137,11 @@ Once that hook is in place, you can use the `pic` property in your template, jus
 ```html
 <img :src='item.pic' :alt='item.title'>
 ```
+
+## Reset cart
+
+On your order confirmation page, you might want to reset the cart. You can do this by adding the `rc-cart-reset` attribute to a div element. This will clear the cart count from local storage and send a request to the backend to reset the cart as soon as the page is loaded.
+
+```html
+<div rc-cart-reset></div>
+```
