@@ -259,16 +259,15 @@ class Order extends Page
 
   /** backend */
 
+  /**
+   * Show minimal info in the page list
+   * An extensive list of orders is shown via RockGrid
+   * @return string
+   */
   public function getPageListLabel()
   {
-    $rc = rockcommerce();
-    $date = $rc->badge(date("d.m.Y H:i:s", $this->created));
-    $status = $this->statusBadge();
-    return $date
-      . $status
-      . $rc->badge($this->net())
-      . $rc->badge($this->title)
-      . $rc->badge($this->name());
+    $date = date("d.m.Y H:i:s", $this->created);
+    return "&nbsp;&nbsp;" . $date . "&nbsp;&nbsp;" . $this->net();
   }
 
   /**
