@@ -2,6 +2,7 @@
 
 namespace ProcessWire;
 
+use Mollie\Api\Resources\Payment;
 use RockCommerce\Cart;
 use RockCommerce\Carts;
 use RockCommerce\Frontend;
@@ -86,6 +87,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // should be done by rockmigrations but does not work during installation
     wire()->classLoader->addNamespace('RockCommerce', __DIR__ . '/pageClasses');
 
+    // attach hooks from rockcommerce.php
+    $hookFile = wire()->config->paths->site . 'rockcommerce.php';
+    if (is_file($hookFile)) require_once $hookFile;
+
     // set default values
     if ($this->minamount === null) $this->minamount = 1;
     if ($this->maxamount === null) $this->maxamount = 10;
@@ -114,7 +119,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     rockfrontend()->addAjaxFolder('rockcommerce', __DIR__ . '/ajax');
 
     // hooks
-    wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
+    wire()->addHookAfter(self::webhookurl, $this, "handleWebhookHook");
     wire()->addHookAfter('ProcessPageList::execute', $this, 'redirectPageList');
     wire()->addHookAfter(
       'Page::render',
@@ -203,23 +208,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     if (!"$str") return;
     return "<span class='uk-alert $cls rc-badge'>$str</span>";
-  }
-
-  /**
-   * Logic triggered by mollie webhook
-   * Hookable if custom actions should be needed.
-   */
-  public function ___callWebhook(string $paymentid): void
-  {
-    $this->debug("Payment ID: $paymentid");
-    $payment = $this->rockmollie()->api()->payments->get($paymentid);
-    $order = $this->getOrder($payment->metadata->orderid);
-    if ($order) {
-      $this->debug("Order: " . $order);
-      $order->setPaymentStatus($payment->status);
-    } else {
-      throw new WireException("No order found");
-    }
   }
 
   /**
@@ -442,12 +430,30 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   //   return $config;
   // }
 
+  /**
+   * Get order by id or name
+   * returns false if order is not found
+   */
   public function getOrder(string $orderid = null): Order|false
   {
     if ($orderid === null) $orderid = $this->wire->input->get('id', 'string');
     $order = $this->wire->pages->get([
       'template' => Order::tpl,
       'name' => $orderid,
+    ]);
+    if (!$order->id) return false;
+    return $order;
+  }
+
+  /**
+   * Get order by payment ID
+   * returns false if order is not found
+   */
+  public function getOrderByPaymentID(string $paymentid): Order|false
+  {
+    $order = $this->wire->pages->get([
+      'template' => Order::tpl,
+      Order::field_payment => $paymentid,
     ]);
     if (!$order->id) return false;
     return $order;
@@ -499,47 +505,73 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $this->taxrates = $arr;
   }
 
-  public function handleWebhook(HookEvent $event)
+  /**
+   * Hookable method to attach actions after webhook is received
+   * @return void
+   */
+  public function ___handleWebhook(
+    Webhook $log,
+    $input,
+    $info,
+  ) {
+    // get payment ID from input
+    $paymentID = wire()->sanitizer->filename($input->id);
+
+    // find order
+    $order = rockcommerce()->getOrderByPaymentID($paymentID);
+    if (!$order) {
+      $log->echo('No order found for payment ' . $paymentID);
+      return;
+    }
+
+    // all good, continue
+    $log->echo("Found order $order for payment $paymentID");
+
+    // update order status
+    // get order status from mollie and then write it to the order
+    // note: you might wonder why mollie does not send the status with the webhook.
+    // The reason is security. In that way it is impossible to manipulate the
+    // order status from a manipulated webhook request.
+    $api = wire()->modules->get('RockMollie')->api();
+    $payment = $api->payments->get($paymentID);
+    if ($payment instanceof Payment) {
+      $log->echo("Updating payment status to '$payment->status'");
+      $order->setPaymentStatus($payment->status);
+    } else {
+      $log->echo("Payment not found: " . $paymentID);
+    }
+  }
+
+  public function handleWebhookHook(HookEvent $event)
   {
     $method = $this->wire->input->requestMethod();
     if ($method !== 'POST') return; // 404
 
+    // we never need tracy on webhooks
+    \Tracy\Debugger::$showBar = false;
+
     // create webhook log page
-    $log = $this->wire->pages->new("template=" . Webhook::tpl
-      . ",parent=" . $this->webhooksPage());
+    $webhook = $this->wire->pages->new([
+      "template" => Webhook::tpl,
+      "parent" => $this->webhooksPage(),
+    ]);
 
     // cleanup old webhook pages
     $this->cleanupOldWebhookPages();
 
-    // save received input
-    $inputdata = $this->wire->input->post->getArray();
-    $log->meta(Webhook::meta_input, json_encode($inputdata));
-    ob_start();
+    // save request input
+    $input = wire()->input->post;
+    $webhook->meta(Webhook::meta_input, $input->getArray());
 
-    // we never need tracy on webhooks
-    \Tracy\Debugger::$showBar = false;
+    // save request info
+    $info = $webhook->requestInfo();
+    $webhook->meta(Webhook::meta_info, $info);
 
-    echo "RockCommerce Rocks!\n\n";
+    // trigger hookable method
+    $this->handleWebhook($webhook, $input, $info);
 
-    $actual_link = "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $webhook->echo("done");
 
-    echo "$actual_link\n\n";
-
-    // get payment and update order status
-    $paymentid = $this->wire->input->post('id', 'string');
-    if (!$paymentid) return true;
-    try {
-      $this->callWebhook($paymentid);
-    } catch (\Throwable $th) {
-      $this->debug($th->getMessage(), true);
-    }
-
-    // save output to log
-    $output = ob_get_clean();
-    $log->meta(Webhook::meta_output, $output);
-
-    // dont render any html
-    echo $output;
     return true;
   }
 
