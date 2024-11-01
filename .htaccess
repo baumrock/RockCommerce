@@ -9,6 +9,9 @@
     # allow access to files in /lib folder
     RewriteCond %{REQUEST_FILENAME} !^.*/lib/.*\.(js|css)$
 
+    # allow access to files in /site/modules/RockCommerce/RockGrid folder
+    RewriteCond %{REQUEST_FILENAME} !^.*/RockGrid/.*\.(js|css)$
+
     # 403 forbidden
     RewriteRule ^ - [F,L]
 </IfModule>
