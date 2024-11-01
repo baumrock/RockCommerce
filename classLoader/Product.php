@@ -2,11 +2,13 @@
 
 namespace RockCommerce;
 
+use ProcessWire\FieldsetPage;
 use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use ProcessWire\RepeaterPageArray;
+use ProcessWire\RockCommerceFields;
 use ProcessWire\WireData;
 use RockGrid\RockGridField;
 use RockMoney\Money;
@@ -28,7 +30,6 @@ trait Product
   const field_minoptions            = self::_prefix . "minoptions";
   const field_variationcomment      = self::_prefix . "variationcomment";
   const field_price                 = self::_prefix . "price";
-  const field_customfields          = self::_prefix . "customfields";
 
   public function _init(): void
   {
@@ -54,6 +55,11 @@ trait Product
     //     'collapsed' => Inputfield::collapsedBlank,
     //   ], $f);
     // }
+  }
+
+  public function custom(): FieldsetPage
+  {
+    return $this->getFormatted(RockCommerceFields::product_customfields);
   }
 
   public function maxamount(): int
