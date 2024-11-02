@@ -8,6 +8,9 @@ use ProcessWire\Page;
 use ProcessWire\RockMigrations;
 use RockMigrations\MagicPage;
 
+use function ProcessWire\rockcommerce;
+use function ProcessWire\wire;
+
 class Carts extends Page
 {
   use MagicPage;
@@ -21,7 +24,28 @@ class Carts extends Page
   const field_removefilled = self::prefix . "removefilled";
   const field_removeempty = self::prefix . "removeempty";
 
-  /** magic */
+  private bool $noHook = false;
+
+  public function init(): void
+  {
+    wire()->addHookAfter('Pages::saved', $this, 'deleteUnusedCarts');
+  }
+
+  protected function deleteUnusedCarts(): void
+  {
+    $cartsPage = rockcommerce()->cartsPage();
+    $days = $cartsPage->removeEmptyDays();
+    if ($days === false) return;
+    if ($this->noHook) return;
+    $this->noHook = true;
+    $old = wire()->pages->find([
+      'parent' => $cartsPage,
+      'created<' => $days . " days ago",
+      'children.count' => 0,
+    ]);
+    // no need to put them in the trash!
+    foreach ($old as $p) $p->delete();
+  }
 
   public function editForm(InputfieldWrapper $form): void
   {
@@ -32,9 +56,6 @@ class Carts extends Page
       $f->notes = "0 = Never; Default: " . self::removeempty;
     }
   }
-
-  /** frontend */
-  /** backend */
 
   public function migrate()
   {
@@ -87,5 +108,13 @@ class Carts extends Page
         ],
       ],
     ]);
+  }
+
+  public function removeEmptyDays(): int|false
+  {
+    $days = $this->getFormatted(self::field_removeempty);
+    if ($days === '') return 1;
+    if ($days === 0) return false;
+    return (int)$days;
   }
 }

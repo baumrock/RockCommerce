@@ -349,7 +349,7 @@ class Cart extends Page
 
   public function pageListLabel()
   {
-    return $this->name;
+    return date("Y-m-d H:i:s", $this->created) . " - " . $this->name;
   }
 
   /**
