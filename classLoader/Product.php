@@ -23,7 +23,6 @@ trait Product
   const _prefix = "rc_product_";
 
   const field_rctab                 = self::_prefix . "rctab";
-  const field_canbebought           = self::_prefix . "canbebought";
   const field_variation             = self::_prefix . "variation";
   const field_variations            = self::_prefix . "variations";
   const field_maxoptions            = self::_prefix . "maxoptions";
@@ -77,10 +76,6 @@ trait Product
         'type' => 'FieldsetTabOpen',
         'label' => 'Shop',
         'collapsed' => Inputfield::collapsedYesAjax,
-      ],
-      self::field_canbebought => [
-        'type' => 'checkbox',
-        'label' => 'Product can be bought',
       ],
       self::field_price => [
         'type' => 'RockMoney',
