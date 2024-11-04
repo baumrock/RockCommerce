@@ -142,6 +142,14 @@ class Order extends Page
       'icon' => 'money',
       'collapsed' => Inputfield::collapsedNo,
     ]);
+    rockcommerce()->apiNote(
+      $form->get(self::field_payment),
+      '$order->paymentID()',
+    );
+    rockcommerce()->apiNote(
+      $form->get('payment-details'),
+      '$order->paymentData()',
+    );
 
     // ----- cart section -----
 
@@ -187,10 +195,10 @@ class Order extends Page
       $url = rockcommerce()->url(
         rockcommerce()->publicOrderPageUrl . "?id=" . $this->name
       );
-      $editlink = $rc->processUrl("edit-status/?id=$this");
-      $f->entityEncodeText = false;
-      $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
-        <a href=$editlink>Edit Status</a>";
+      // $editlink = $rc->processUrl("edit-status/?id=$this");
+      // $f->entityEncodeText = false;
+      // $f->notes = "<a href=$url target=_blank>Public Status-Page</a>
+      //   <a href=$editlink>Edit Status</a>";
       rockcommerce()->apiNote($f, '$order->paymentStatus()');
     }
   }
@@ -564,6 +572,15 @@ class Order extends Page
   public function paymentStatus(): string
   {
     return $this->getFormatted(self::field_paymentstatus);
+  }
+
+  public function paymentData(): array
+  {
+    try {
+      return json_decode($this->meta('payment'), true);
+    } catch (\Throwable $th) {
+      return [];
+    }
   }
 
   public function redirectUrl($url): string
