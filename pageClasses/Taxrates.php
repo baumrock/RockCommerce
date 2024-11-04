@@ -30,7 +30,7 @@ class Taxrates extends Page
 
     // otherwise we return the first taxrate that we find
     $taxrate = $this->children()->first();
-    if ($taxrate->id) return $taxrate;
+    if ($taxrate && $taxrate->id) return $taxrate;
 
     // otherwise we return 0
     return new NullPage();
