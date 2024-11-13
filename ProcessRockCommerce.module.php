@@ -72,6 +72,8 @@ class ProcessRockCommerce extends Process
    */
   public function execute()
   {
+    return "The dashboard is still being built and will be available soon.";
+
     $this->headline('RockCommerce Dashboard');
     $this->browserTitle('RockCommerce Dashboard');
     /** @var InputfieldForm $form */

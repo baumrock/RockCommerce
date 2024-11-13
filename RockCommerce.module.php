@@ -128,6 +128,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       // priority 200 means RC assets are loaded after RF assets which have 100
       ['priority' => 200]
     );
+    wire()->addHookAfter('Page::render', $this, 'tweakRockCommercePageList');
 
     // now that the module is ready we init the productpage
     // to attach hooks from the product trait
@@ -1075,6 +1076,31 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function toUrl(string $path, $cachebuster = false): string
   {
     return rockfrontend()->toUrl($path, $cachebuster);
+  }
+
+  protected function tweakRockCommercePageList(HookEvent $event): void
+  {
+    if (wire()->config->ajax) return;
+    $id = wire()->input->get('id', 'int');
+
+    // only execute hook if ?id=XXX matches RC RootPage ID
+    if ($id !== $this->rootPage()->id) return;
+
+    // prevent double rendering of page list if ?id=XX&open=XX
+    if ($id === wire()->input->get('open', 'int')) {
+      $url = wire()->pages->get(2)->url . "page/";
+      wire()->session->redirect("$url?id=$id");
+      return;
+    }
+
+    $event->return = str_replace(
+      "<div id='PageListContainer'",
+      "<style>
+        #PageListContainer .PageListItem { --rock-muted-background: none; }
+      </style>
+      <div id='PageListContainer'",
+      $event->return
+    );
   }
 
   /**
