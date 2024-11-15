@@ -2,10 +2,10 @@
 
 namespace RockCommerce;
 
-use ProcessWire\FieldtypePage;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\RockCommerce;
 use RockFrontend\FieldMethod;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
@@ -24,11 +24,6 @@ class Item extends Page
   use FieldMethod;
 
   const tpl = "rockcommerce_item";
-  const prefix = "rockcommerce_item_";
-
-  const field_product = self::prefix . "product";
-  const field_amount = self::prefix . "amount";
-  const field_variation = self::prefix . "variation";
 
   public function __construct($parent = false)
   {
@@ -44,7 +39,7 @@ class Item extends Page
 
   public function editForm(InputfieldWrapper $form): void
   {
-    if ($f = $form->get(self::field_product)) {
+    if ($f = $form->get(RockCommerce::field_product)) {
       $product = $f->value;
       if ($product && $product->id) {
         $f->entityEncodeText = false;
@@ -189,28 +184,6 @@ class Item extends Page
   {
     $rm = rockmigrations();
     $rm->migrate([
-      'fields' => [
-        self::field_product => [
-          'type' => 'page',
-          'label' => 'Product',
-          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
-          'inputfield' => 'InputfieldPageAutocomplete',
-          'findPagesSelector' => 'id>0,template!=admin',
-          'labelFieldName' => 'title',
-          'collapsed' => Inputfield::collapsedNo,
-          'icon' => 'link',
-        ],
-        self::field_amount => [
-          'type' => 'integer',
-          'label' => 'Amount',
-          'icon' => 'list-ol',
-        ],
-        self::field_variation => [
-          'type' => 'text',
-          'label' => 'Variation',
-          'icon' => 'cubes',
-        ],
-      ],
       'templates' => [
         self::tpl => [
           'fields' => [
@@ -219,9 +192,9 @@ class Item extends Page
             'title' => [
               'collapsed' => Inputfield::collapsedHidden,
             ],
-            self::field_product => ['columnWidth' => 50],
-            self::field_amount => ['columnWidth' => 50],
-            self::field_variation,
+            RockCommerce::field_product => ['columnWidth' => 50],
+            RockCommerce::field_amount => ['columnWidth' => 50],
+            RockCommerce::field_variationstr,
           ],
           'parentTemplates' => [
             Cart::tpl,
@@ -251,7 +224,7 @@ class Item extends Page
    */
   public function setAmount(int $amount): void
   {
-    $this->setAndSave(self::field_amount, $amount);
+    $this->setAndSave(RockCommerce::field_amount, $amount);
   }
 
   public function shortUrl(): string
@@ -296,7 +269,7 @@ class Item extends Page
    */
   public function variationString(): string
   {
-    return (string)$this->field('variation', 'string');
+    return (string)$this->getFormatted(RockCommerce::field_variationstr);
   }
 
   /**
