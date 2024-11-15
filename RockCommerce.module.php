@@ -2,12 +2,11 @@
 
 namespace ProcessWire;
 
+use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Payment;
 use RockCommerce\Cart;
 use RockCommerce\Carts;
 use RockCommerce\Frontend;
-use RockCommerce\InvoiceGroup;
-use RockCommerce\Invoices;
 use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\ProductPage;
@@ -17,7 +16,6 @@ use RockCommerce\Settings;
 use RockCommerce\Taxrates;
 use RockCommerce\TaxratesArray;
 use RockCommerce\TaxSelect;
-use RockCommerce\Variation;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
@@ -41,6 +39,8 @@ function rockcommerce(): RockCommerce
  */
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
+  use \RockCommerce\RockMigrationsConstants;
+
   const prefix = 'rockcommerce_';
   const maintenance = 'rockcommerce_maintenance';
   const permission_variations = 'rockcommerce-variations';
@@ -275,9 +275,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $money = rockmoney();
     $order = $this->wire->pages->newPage('template=' . Order::tpl);
     $order->set('title', $subject);
-    $order->set(Order::field_net, $money->parse($net));
-    $order->set(Order::field_vat, $money->parse($vat));
-    $order->set(Order::field_total, $money->parse($total));
+    $order->set(RockCommerce::field_net, $money->parse($net));
+    $order->set(RockCommerce::field_vat, $money->parse($vat));
+    $order->set(RockCommerce::field_total, $money->parse($total));
     $order->set(RockMigrations::field_email, $email);
     foreach ($pageProperties as $k => $v) {
       $order->set(Order::prefix . $k, $v);
@@ -355,14 +355,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       ['parent' => $this->variationsPage()],
       [
         'title',
-        Variation::field_options . '.title',
+        RockCommerce::field_variationoptions . '.title',
       ],
       ['nulls' => true]
     );
 
     $result = [];
     foreach ($arr as $varid => $fields) {
-      foreach ($fields[Variation::field_options] as $optid => $data) {
+      foreach ($fields[RockCommerce::field_variationoptions] as $optid => $data) {
         $result[] = [
           'id' => $optid,
           'varid' => $varid,
@@ -454,7 +454,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $order = $this->wire->pages->get([
       'template' => Order::tpl,
-      Order::field_payment => $paymentid,
+      RockCommerce::field_paymentid => $paymentid,
     ]);
     if (!$order->id) return false;
     return $order;
@@ -478,7 +478,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $templates = new WireArray();
     foreach ($this->wire->templates as $tpl) {
-      if (!$tpl->fields->has("name=" . ProductPage::field_price)) continue;
+      if (!$tpl->fields->has("name=" . RockCommerce::field_productfields)) continue;
       $templates->add($tpl);
     }
     return $templates;
@@ -533,6 +533,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // note: you might wonder why mollie does not send the status with the webhook.
     // The reason is security. In that way it is impossible to manipulate the
     // order status from a manipulated webhook request.
+    /** @var MollieApiClient $api */
     $api = wire()->modules->get('RockMollie')->api();
     $payment = $api->payments->get($paymentID);
     if ($payment instanceof Payment) {
@@ -637,14 +638,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->wire->cache->get(self::maintenance, $expire, function () {
       $this->maintenance();
     });
-  }
-
-  public function invoicesPage(): Invoices
-  {
-    return $this->wire->pages->get([
-      'parent' => $this->rootPage(),
-      'template' => Invoices::tpl,
-    ]);
   }
 
   public function isInstalled(): bool
@@ -801,20 +794,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       parent: $rootPage,
       name: "webhooks",
       title: "Webhooks",
-      status: ["hidden"],
-    );
-    $invoicesPage = $rm->createPage(
-      template: Invoices::tpl,
-      parent: $rootPage,
-      name: "invoices",
-      title: "Invoices",
-      status: ["hidden", "locked"],
-    );
-    $rm->createPage(
-      template: InvoiceGroup::tpl,
-      parent: $invoicesPage,
-      name: "rockcommerce",
-      title: "RockCommerce",
       status: ["hidden"],
     );
     $rm->createPage(

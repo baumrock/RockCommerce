@@ -8,6 +8,7 @@ use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use ProcessWire\RepeaterPageArray;
+use ProcessWire\RockCommerce;
 use ProcessWire\RockCommerceFields;
 use ProcessWire\WireData;
 use RockGrid\RockGridField;
@@ -58,7 +59,7 @@ trait Product
 
   public function custom(): FieldsetPage
   {
-    return $this->getFormatted(RockCommerceFields::product_customfields);
+    return $this->getFormatted(RockCommerce::field_productfields);
   }
 
   public function maxamount(): int

@@ -4,6 +4,6 @@ namespace ProcessWire;
 
 return [
   'type' => 'FieldtypeFieldsetPage',
-  'label' => 'Custom Fields',
+  'label' => '[DONE] Custom Fields',
   'icon' => 'cubes',
 ];
