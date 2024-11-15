@@ -35,7 +35,6 @@ class Order extends Page
   const field_price = self::prefix . "price";
   const field_payment = self::prefix . "payment";
   const field_paymentstatus = self::prefix . "paymentstatus";
-  const field_invoice = self::prefix . "invoice";
   const field_cart = self::prefix . "cart";
 
   const field_net = self::prefix . "net";
@@ -75,19 +74,7 @@ class Order extends Page
 
   public function editFormContent(InputfieldWrapper $form): void
   {
-    // create invoice manually
-    if ($this->wire->input->get('createinvoice')) {
-      $this->createInvoice();
-      $this->wire->session->redirect($this->editUrl());
-    }
-    // send invoice manually
-    if ($this->wire->input->get('sendinvoice')) {
-      $this->sendInvoice();
-      $this->wire->session->redirect($this->editUrl());
-    }
-
     $rm = $this->rockmigrations();
-    $rc = rockcommerce();
 
     // ----- header section -----
     $f = $rm->inputfield([
@@ -152,25 +139,6 @@ class Order extends Page
     );
 
     // ----- cart section -----
-
-    // ----- invoice section -----
-    $invoice = $this->invoice(1);
-    $url = $invoice ? $invoice->editUrl() : '';
-    $mail = $this->email(1);
-    $f = $rm->inputfield([
-      'type' => 'markup',
-      'label' => 'Invoice',
-      'value' => "<a href='$url'>$url</a>",
-      'icon' => 'file-pdf-o',
-      'entityEncodeText' => false,
-      'notes' => "Usually the invoice is created when the webhook is triggered.
-      Manual actions:
-      <a href='./?id=$this&createinvoice=1'>Create invoice manually</a>
-      <a href='./?id=$this&sendinvoice=1'>Send invoice to client $mail</a>",
-      'collapsed' => $url ? Inputfield::collapsedNo : Inputfield::collapsedYes,
-    ]);
-    $form->insertAfter($f, $form->get(self::field_cart));
-    rockcommerce()->apiNote($f, '$order->createInvoice()');
 
     // ----- custom fields section -----
     if ($f = $form->get(self::field_customfields)) {
@@ -293,40 +261,6 @@ class Order extends Page
     return false;
   }
 
-  /**
-   * Create an invoice page for this order
-   * If an invoice already exists we exit early.
-   * This can happen if the webhook is triggered multiple times.
-   */
-  public function createInvoice($parentName = "rockcommerce"): Invoice
-  {
-    $invoice = $this->getInvoice();
-    if ($invoice) return $invoice;
-
-    $parent = $this->wire->pages->get([
-      'parent' => rockcommerce()->invoicesPage(),
-      'name' => $parentName,
-    ]);
-    /** @var Invoice $invoice */
-    $invoice = $this->wire->pages->newPage([
-      'template' => Invoice::tpl,
-      'parent' => $parent,
-    ]);
-
-    // save invoice so that we can add the reference to this order
-    $invoice->save();
-
-    // add reference to invoice
-    $this->setAndSave(self::field_invoice, $invoice);
-
-    // create the PDF now that the reference is in place
-    // we flush the cache to make sure that all references are correct
-    $this->wire->pages->uncacheAll();
-    $invoice->createPdf();
-
-    return $invoice;
-  }
-
   public function createPayment(
     $redirectUrl,
   ): Payment|false {
@@ -365,13 +299,6 @@ class Order extends Page
     $info = $this->meta('details');
     if (is_array($info)) $details->setArray($info);
     return $details;
-  }
-
-  public function getInvoice(): Invoice|false
-  {
-    // use bracket syntax to make sure we get the single page object
-    // see https://github.com/processwire/processwire-issues/issues/1795
-    return $this->getFormatted(self::field_invoice . "[0]");
   }
 
   public function migrate()
@@ -438,16 +365,6 @@ class Order extends Page
           'collapsed' => Inputfield::collapsedNoLocked,
           'icon' => 'money',
         ],
-        self::field_invoice => [
-          'type' => 'page',
-          'label' => 'Invoice',
-          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
-          'inputfield' => 'InputfieldPageListSelect',
-          'findPagesSelector' => 'template=' . Invoice::tpl,
-          'labelFieldName' => 'title',
-          'collapsed' => Inputfield::collapsedHidden,
-          'icon' => 'file-pdf-o',
-        ],
         self::field_paymentdate => [
           'type' => 'datetime',
           'label' => 'Payment-Date',
@@ -512,9 +429,6 @@ class Order extends Page
             ],
             self::field_cart,
             self::field_customfields,
-
-            // hidden
-            self::field_invoice,
           ],
           'parentTemplates' => [
             Orders::tpl,
@@ -589,57 +503,6 @@ class Order extends Page
   }
 
   /**
-   * Send invoice and order attachments to client
-   */
-  public function ___sendInvoice()
-  {
-    try {
-      $html = $this->wire->files->fileGetContents(__DIR__ . "/../mails/rockcommerce.html");
-      $html = str_replace('{{host}}', $this->wire->input->httpHostUrl(true), $html);
-
-      $licenseName = "";
-      $license = $this->wire->pages->get("id=" . $this->details('license'));
-      if ($license->id) $licenseName = " (" . $license->name() . ")";
-
-      $content = "<p>Thank you for your order!</p>
-        <h2>Your License Key: {$this->name}</h2>
-        <h3>Download here: <a href=https://www.baumrock.com/rc/download>https://www.baumrock.com/rc/download</a></h3>
-
-        <p style='margin-top:20px;'>Please find your invoice attached to this email.</p>
-        <p>Keep rocking and see you in the ProcessWire stratosphere! 🚀<br>
-        Bernhard</p>";
-      $html = str_replace('{{body}}', $content, $html);
-
-      $mail = new WireMail();
-      $rc = rockcommerce();
-      $mail->from($rc->mailfrom(), $rc->mailfromName());
-      $mail->to($this->email(1));
-      $mail->to('office@baumrock.com');
-      $mail->subject("Thank you for your order!$licenseName");
-      $mail->bodyHTML($html);
-
-      // attach the invoice to this mail
-      // we rename it to the plain number as the random hash is useless here
-      $invoice = $this->getInvoice();
-      $mail->attachment(
-        $invoice->pdf(1)->filename,
-        "invoice-" . $invoice->number() . ".pdf"
-      );
-
-      // attach terms of service
-      $attachments = $this->getFormatted(self::field_attachments . "[]");
-      foreach ($attachments as $file) $mail->attachment($file->filename);
-
-      // send mail
-      $mail->send();
-
-      return $html;
-    } catch (\Throwable $th) {
-      $this->log("sendInvoice: " . $th->getMessage());
-    }
-  }
-
-  /**
    * Hookable method that defines what happens if an order is marked as paid
    */
   public function ___setPaid(): void
@@ -647,8 +510,6 @@ class Order extends Page
     if (!$this->paymentdate(2)) {
       $this->setAndSave(self::field_paymentdate, time());
     }
-    $this->createInvoice();
-    $this->sendInvoice();
   }
 
   public function setPaymentData(
