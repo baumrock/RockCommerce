@@ -3,31 +3,30 @@
 namespace RockCommerce;
 
 use ProcessWire\RepeaterPage;
+use ProcessWire\RockCommerce;
 use ProcessWire\WireArray;
 use ProcessWire\WireData;
-use ProcessWire\WireException;
 use RockGrid\RockGridField;
 
 use function ProcessWire\rockcommerce;
-use function ProcessWire\wire;
 
 class ProductVariation extends RepeaterPage
 {
-  const field = 'rc_product_variations';
+  const field = 'rockcommerce_variations';
 
   public function comment(): string
   {
-    return $this->getFormatted(ProductPage::field_variationcomment);
+    return $this->getFormatted(RockCommerce::field_variationcomment);
   }
 
   public function minoptions(): int
   {
-    return (int)$this->getFormatted(ProductPage::field_minoptions);
+    return (int)$this->getFormatted(RockCommerce::field_minoptions);
   }
 
   public function maxoptions(): int
   {
-    return (int)$this->getFormatted(ProductPage::field_maxoptions);
+    return (int)$this->getFormatted(RockCommerce::field_maxoptions);
   }
 
   /**
@@ -36,7 +35,7 @@ class ProductVariation extends RepeaterPage
    */
   public function options()
   {
-    $grid = $this->getFormatted(ProductPage::field_variation);
+    $grid = $this->getFormatted(RockCommerce::field_variation);
     if (!$grid instanceof RockGridField) return;
     $options = [];
     $json = $grid->json ?: new WireData();
@@ -78,7 +77,7 @@ class ProductVariation extends RepeaterPage
 
   public function title()
   {
-    $grid = $this->getFormatted(ProductPage::field_variation);
+    $grid = $this->getFormatted(RockCommerce::field_variation);
     if (!$grid instanceof RockGridField) return;
     $first = $grid->getSelectedPages()->first();
     if (!$first instanceof RepeaterPage) return;
