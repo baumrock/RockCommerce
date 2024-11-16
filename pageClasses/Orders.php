@@ -17,47 +17,17 @@ class Orders extends Page
   const tpl = "rockcommerce_orders";
   const prefix = "rockcommerce_orders_";
 
-  const allowedAttachmentExtensions = 'pdf zip';
-
-  const field_attachmentextensions = self::prefix . "attachmentextensions";
-
-  public function allowedAttachmentExtensions(): string
-  {
-    return $this->getFormatted(self::field_attachmentextensions);
-  }
-
-  public function editForm($form): void
-  {
-    if ($f = $form->get(self::field_attachmentextensions)) {
-      $f->collapsed = wire()->user->isSuperuser()
-        ? Inputfield::collapsedNo
-        : Inputfield::collapsedNoLocked;
-    }
-  }
-
   public function migrate()
   {
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->migrate([
-      'fields' => [
-        self::field_attachmentextensions => [
-          'type' => 'text',
-          'label' => 'Allowed Attachment Extensions',
-          'icon' => 'file-pdf-o',
-          'textformatters' => [
-            'TextformatterEntities',
-          ],
-          'notes' => 'Default is: ' . self::allowedAttachmentExtensions,
-        ],
-      ],
       'templates' => [
         self::tpl => [
           'fields' => [
             'title' => [
               'collapsed' => Inputfield::collapsedHidden,
             ],
-            self::field_attachmentextensions,
           ],
           'childTemplates' => [
             RockCommerce::template_order,
