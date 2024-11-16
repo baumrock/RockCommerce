@@ -797,7 +797,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       status: ["hidden"],
     );
     $rm->createPage(
-      template: Carts::tpl,
+      template: RockCommerce::template_carts,
       parent: $rootPage,
       title: 'Carts',
       name: 'carts',
@@ -856,7 +856,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function newCart(): Cart
   {
     return $this->wire->pages->new([
-      'template' => Cart::tpl,
+      'template' => RockCommerce::template_cart,
     ]);
   }
 

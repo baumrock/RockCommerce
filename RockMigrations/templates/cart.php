@@ -2,7 +2,6 @@
 
 namespace ProcessWire;
 
-use RockCommerce\Carts;
 use RockCommerce\Item;
 
 return [
@@ -15,7 +14,7 @@ return [
     RockCommerce::field_taxid,
   ],
   'parentTemplates' => [
-    Carts::tpl,
+    RockCommerce::template_carts,
   ],
   'childTemplates' => [
     Item::tpl,

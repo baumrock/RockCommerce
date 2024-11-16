@@ -2,13 +2,10 @@
 
 namespace RockCommerce;
 
-use ProcessWire\FieldtypePage;
-use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\NullPage;
 use ProcessWire\Page;
 use ProcessWire\RockCommerce;
-use ProcessWire\RockMigrations;
 use ProcessWire\WireData;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
@@ -21,8 +18,6 @@ use function ProcessWire\wire;
 class Cart extends Page
 {
   use MagicPage;
-
-  const tpl = "rockcommerce_cart";
 
   private $cachedItems;
 

@@ -15,6 +15,8 @@ trait RockMigrationsConstants
   const field_order = 'rockcommerce_order';
   const field_product = 'rockcommerce_product';
   const field_productfields = 'rockcommerce_productfields';
+  const field_removeempty = 'rockcommerce_removeempty';
+  const field_removefilled = 'rockcommerce_removefilled';
   const field_shoptab = 'rockcommerce_shoptab';
   const field_taxid = 'rockcommerce_taxid';
   const field_variation = 'rockcommerce_variation';
@@ -23,6 +25,7 @@ trait RockMigrationsConstants
   const field_variations = 'rockcommerce_variations';
   const field_variationstr = 'rockcommerce_variationstr';
   const template_cart = 'rockcommerce_cart';
+  const template_carts = 'rockcommerce_carts';
   const template_variation = 'rockcommerce_variation';
   const template_variations = 'rockcommerce_variations';
 }
