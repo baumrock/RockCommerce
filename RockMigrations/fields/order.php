@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'page',
-  'label' => '[DONE] Order',
+  'label' => 'Order',
   'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
   'inputfield' => 'InputfieldPageAutocomplete',
   'findPagesSelector' => 'id>0,template!=admin',

@@ -4,6 +4,6 @@ namespace ProcessWire;
 
 return [
   'type' => 'text',
-  'label' => '[DONE] Variation String',
+  'label' => 'Variation String',
   'icon' => 'cubes',
 ];

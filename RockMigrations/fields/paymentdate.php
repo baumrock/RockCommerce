@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'datetime',
-  'label' => '[DONE] Payment-Date',
+  'label' => 'Payment-Date',
   'dateOutputFormat' => 'd.m.Y',
   'inputType' => 'text',
   'dateSelectFormat' => 'yMd',

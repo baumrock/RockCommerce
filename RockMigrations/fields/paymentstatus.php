@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'text',
-  'label' => '[DONE] Payment-Status',
+  'label' => 'Payment-Status',
   'icon' => '',
   'textformatters' => [
     'TextformatterEntities',

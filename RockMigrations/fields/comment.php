@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'text',
-  'label' => '[DONE] Comment',
+  'label' => 'Comment',
   'icon' => 'comment-o',
   'textformatters' => [
     'TextformatterEntities',

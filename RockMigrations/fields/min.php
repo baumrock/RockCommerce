@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'integer',
-  'label' => '[DONE] Minimum',
+  'label' => 'Minimum',
   'icon' => 'list-ol',
   'collapsed' => Inputfield::collapsedNo,
 ];

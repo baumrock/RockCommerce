@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'integer',
-  'label' => '[DONE] Maximum',
+  'label' => 'Maximum',
   'icon' => 'list-ol',
   'collapsed' => Inputfield::collapsedNo,
 ];

@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'page',
-  'label' => '[DONE] Taxrate',
+  'label' => 'Taxrate',
   'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
   'inputfield' => 'InputfieldPageListSelect',
   'findPagesSelector' => 'id>0,template!=admin',

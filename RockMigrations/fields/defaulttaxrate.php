@@ -6,7 +6,7 @@ use RockCommerce\Taxrate;
 
 return [
   'type' => 'page',
-  'label' => '[DONE] Default Taxrate',
+  'label' => 'Default Taxrate',
   'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
   'inputfield' => 'InputfieldSelect',
   'findPagesSelector' => 'template=' . RockCommerce::template_taxrate,

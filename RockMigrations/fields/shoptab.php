@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'FieldsetTabOpen',
-  'label' => '[DONE] Shop',
+  'label' => 'Shop',
   'collapsed' => Inputfield::collapsedYesAjax,
   'icon' => 'list',
 ];

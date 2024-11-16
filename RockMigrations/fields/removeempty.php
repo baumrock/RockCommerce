@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'integer',
-  'label' => '[DONE] Remove empty carts after ... days',
+  'label' => 'Remove empty carts after ... days',
   'icon' => 'trash-o',
   'inputType' => 'number',
   'size' => 3,

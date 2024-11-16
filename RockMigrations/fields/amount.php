@@ -4,6 +4,6 @@ namespace ProcessWire;
 
 return [
   'type' => 'integer',
-  'label' => '[DONE] Amount',
+  'label' => 'Amount',
   'icon' => 'list-ol',
 ];

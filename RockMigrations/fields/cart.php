@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'page',
-  'label' => '[DONE] Cart',
+  'label' => 'Cart',
   'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
   'inputfield' => 'InputfieldPageAutocomplete',
   'findPagesSelector' => 'id>0,template!=admin',

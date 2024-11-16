@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 return [
   'type' => 'FieldtypeRepeater',
-  'label' => '[DONE] Variations',
+  'label' => 'Variations',
   'icon' => 'cubes',
   'fields-' => [
     RockCommerce::field_variationcomment,

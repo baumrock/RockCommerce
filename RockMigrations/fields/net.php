@@ -4,6 +4,6 @@ namespace ProcessWire;
 
 return [
   'type' => 'RockMoney',
-  'label' => '[DONE] Net Price',
+  'label' => 'Net Price',
   'icon' => 'money',
 ];

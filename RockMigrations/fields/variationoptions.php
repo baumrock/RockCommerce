@@ -7,7 +7,7 @@ namespace ProcessWire;
 // ];
 
 return [
-  'label' => '[DONE] Options',
+  'label' => 'Options',
   'type' => 'FieldtypeRepeater',
   'fields' => [
     'title' => [
