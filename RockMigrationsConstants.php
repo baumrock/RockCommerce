@@ -38,4 +38,6 @@ trait RockMigrationsConstants
   const template_rootpage = 'rockcommerce_rootpage';
   const template_variation = 'rockcommerce_variation';
   const template_variations = 'rockcommerce_variations';
+  const template_webhook = 'rockcommerce_webhook';
+  const template_webhooks = 'rockcommerce_webhooks';
 }

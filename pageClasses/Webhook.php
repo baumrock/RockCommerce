@@ -15,7 +15,6 @@ class Webhook extends Page
 {
   use MagicPage;
 
-  const tpl = "rockcommerce_webhook";
   const prefix = "rockcommerce_webhook_";
 
   const meta_info = self::prefix . "info";
@@ -92,30 +91,6 @@ class Webhook extends Page
   public function getPageListLabel()
   {
     return rockcommerce()->badge($this->title);
-  }
-
-  public function migrate()
-  {
-    $rm = $this->rockmigrations();
-    $rm->migrate([
-      'fields' => [],
-      'templates' => [
-        self::tpl => [
-          'fields' => [
-            'title' => [
-              'collapsed' => Inputfield::collapsedHidden,
-            ],
-          ],
-          'parentTemplates' => [
-            Webhooks::tpl,
-          ],
-          'noLang' => true, // only english
-          'noChildren' => true,
-          'noSettings' => true,
-          'icon' => 'anchor',
-        ],
-      ],
-    ]);
   }
 
   public function requestInfo(): array

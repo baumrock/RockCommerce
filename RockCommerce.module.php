@@ -249,12 +249,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $max = $this->webhooksPage()->max();
     $keep = $this->wire->pages->findIDs([
-      'template' => Webhook::tpl,
+      'template' => RockCommerce::template_webhook,
       'sort' => '-id',
       'limit' => $max,
     ]);
     $selector = [
-      "template" => Webhook::tpl,
+      "template" => RockCommerce::template_webhook,
       "id!=" => $keep,
     ];
     while ($p = $this->wire->pages->get($selector) and $p->id) {
@@ -554,7 +554,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     // create webhook log page
     $webhook = $this->wire->pages->new([
-      "template" => Webhook::tpl,
+      "template" => RockCommerce::template_webhook,
       "parent" => $this->webhooksPage(),
     ]);
 
@@ -790,7 +790,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: "Orders",
     );
     $rm->createPage(
-      template: Webhooks::tpl,
+      template: RockCommerce::template_webhooks,
       parent: $rootPage,
       name: "webhooks",
       title: "Webhooks",
@@ -1208,7 +1208,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function webhooksPage(): Webhooks
   {
     return $this->wire->pages->get([
-      'template' => Webhooks::tpl,
+      'template' => RockCommerce::template_webhooks,
       'parent' => $this->rootPage(),
     ]);
   }
