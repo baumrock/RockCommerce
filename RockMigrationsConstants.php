@@ -8,6 +8,7 @@ namespace RockCommerce;
 trait RockMigrationsConstants
 {
   const field_amount = 'rockcommerce_amount';
+  const field_comment = 'rockcommerce_comment';
   const field_maxoptions = 'rockcommerce_maxoptions';
   const field_minoptions = 'rockcommerce_minoptions';
   const field_net = 'rockcommerce_net';
@@ -19,4 +20,6 @@ trait RockMigrationsConstants
   const field_variationoptions = 'rockcommerce_variationoptions';
   const field_variations = 'rockcommerce_variations';
   const field_variationstr = 'rockcommerce_variationstr';
+  const template_variation = 'rockcommerce_variation';
+  const template_variations = 'rockcommerce_variations';
 }

@@ -64,7 +64,6 @@ class ProductVariations extends Grid
   {
     // find repeater items
     $options = RockCommerce::field_variationoptions . '.title';
-    $price = RockCommerce::field_variationoptions . '.' . Variation::field_price;
     $raw = wire()->pages->findRaw(
       [
         'parent' => rockcommerce()->variationsPage(),
@@ -78,9 +77,8 @@ class ProductVariations extends Grid
       ],
       [
         'title',
-        Variation::field_comment => 'comment',
+        RockCommerce::field_variationcomment => 'comment',
         $options, // options.title
-        $price,
       ],
       [
         'flat' => true,
@@ -92,7 +90,6 @@ class ProductVariations extends Grid
     $data = [];
     foreach ($raw as $varID => $variation) {
       $opts = $variation[$options];
-      $prices = $variation[$price];
       if (!is_array($opts)) $opts = [];
       foreach ($opts as $optID => $opt) {
         $data[] = [
@@ -100,7 +97,6 @@ class ProductVariations extends Grid
           'varID' => $varID,
           'variation' => $variation['title'],
           'option' => $opt,
-          'gprice' => $prices[$optID],
           'comment' => $variation['comment'],
         ];
       }

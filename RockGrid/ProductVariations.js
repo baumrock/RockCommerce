@@ -19,14 +19,14 @@ document.addEventListener("RockGrid:init", (e) => {
     layout: "fitData",
     autoColumns: true, //create columns from data field names
     autoColumnsDefinitions: function (defs) {
-      defs = grid.addAfter(defs, "gprice", {
+      defs = grid.addAfter(defs, "option", {
         field: "price",
         title: "price",
         editor: "calc",
         width: 120,
         editorParams: {
           vars: {
-            p: "#Inputfield_rc_product_price",
+            p: "#Inputfield_rockcommerce_net",
           },
         },
         formatter: "money",
@@ -99,15 +99,6 @@ document.addEventListener("RockGrid:init", (e) => {
               "<i class='fa fa-comment-o' title='" + value + "' uk-tooltip></i>"
             );
           };
-        } else if (col.field == "gprice") {
-          col.width = 120;
-          col.formatter = "money";
-          col.formatterParams = {
-            decimal: ",",
-            thousand: ".",
-          };
-          col.hozAlign = "right";
-          col.visible = false;
         }
       });
 
@@ -208,7 +199,7 @@ document.addEventListener("RockGrid:init", (e) => {
     // prices
     let prices = grid.sleepValue.prices || {};
     let basePrice = 0;
-    let priceEl = document.getElementById("Inputfield_rc_product_price");
+    let priceEl = document.getElementById("Inputfield_rockcommerce_net");
     if (priceEl) basePrice = currency(priceEl.value);
     for (let [id, price] of Object.entries(prices)) {
       table.updateRow(id, {
@@ -230,7 +221,7 @@ document.addEventListener("RockGrid:init", (e) => {
   // ### calc/watch total input
   table.on("cellEdited", (cell) => {
     let basePrice = 0;
-    let priceEl = document.getElementById("Inputfield_rc_product_price");
+    let priceEl = document.getElementById("Inputfield_rockcommerce_net");
     if (priceEl) basePrice = currency(priceEl.value);
     let val = cell.getValue();
     let data = cell.getRow().getData();

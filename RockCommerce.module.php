@@ -804,7 +804,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       status: [],
     );
     $rm->createPage(
-      template: Variations::tpl,
+      template: RockCommerce::template_variations,
       parent: $rootPage,
       title: 'Variations',
       name: 'variations',
