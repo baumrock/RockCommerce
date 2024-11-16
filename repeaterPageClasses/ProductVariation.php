@@ -50,7 +50,6 @@ class ProductVariation extends RepeaterPage
       $p->wakeup($json, $id);
 
       // get sort order from variation repeater options
-      bd($p->variation);
       if (!$sorted) $sorted = $p->variation->options()->each('id');
 
       $key = array_search($id, $sorted);

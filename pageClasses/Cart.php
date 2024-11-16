@@ -41,7 +41,7 @@ class Cart extends Page
       $item = new Item($this);
       $item->set(RockCommerce::field_product, $product);
       $item->set(RockCommerce::field_amount, $amount);
-      $item->set(RockCommerce::field_variation, $variation);
+      $item->set(RockCommerce::field_variationstr, $variation);
     }
     $item->save();
 
@@ -71,7 +71,7 @@ class Cart extends Page
       pageProperties: $pageProperties,
       details: $mergedDetails,
     );
-    $order->setAndSave(Order::field_cart, $this);
+    $order->setAndSave(RockCommerce::field_cart, $this);
     return $order;
   }
 
@@ -156,8 +156,10 @@ class Cart extends Page
     ]);
   }
 
-  public function item(int|string|Page $product, string $variation = null): Page|false
-  {
+  public function item(
+    int|string|Page $product,
+    string $variation = null,
+  ): Page|false {
     // create selector as string
     // this is to make it match pipes in the value and not treat them as OR
     $selector = [
