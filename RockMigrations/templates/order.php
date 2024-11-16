@@ -46,7 +46,7 @@ return [
     RockCommerce::field_orderfields,
   ],
   'parentTemplates' => [
-    Orders::tpl,
+    RockCommerce::template_orders,
   ],
   'childTemplates' => [
     Item::tpl,

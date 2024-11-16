@@ -10,8 +10,8 @@ trait RockMigrationsConstants
   const field_amount = 'rockcommerce_amount';
   const field_cart = 'rockcommerce_cart';
   const field_comment = 'rockcommerce_comment';
-  const field_maxoptions = 'rockcommerce_maxoptions';
-  const field_minoptions = 'rockcommerce_minoptions';
+  const field_max = 'rockcommerce_max';
+  const field_min = 'rockcommerce_min';
   const field_net = 'rockcommerce_net';
   const field_order = 'rockcommerce_order';
   const field_orderfields = 'rockcommerce_orderfields';
@@ -34,6 +34,7 @@ trait RockMigrationsConstants
   const template_cart = 'rockcommerce_cart';
   const template_carts = 'rockcommerce_carts';
   const template_order = 'rockcommerce_order';
+  const template_orders = 'rockcommerce_orders';
   const template_rootpage = 'rockcommerce_rootpage';
   const template_variation = 'rockcommerce_variation';
   const template_variations = 'rockcommerce_variations';

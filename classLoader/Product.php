@@ -58,6 +58,7 @@ trait Product
     // bd($f->name, 'preload rockgrid');
     foreach ($f->hasField->fields as $fname) {
       $field = wire()->fields->get($fname);
+      if (!$field) continue;
       $inputfield = $field->getInputfield($event->process->getPage());
       $inputfield->renderReady();
     }

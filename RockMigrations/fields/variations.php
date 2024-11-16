@@ -6,11 +6,19 @@ return [
   'type' => 'FieldtypeRepeater',
   'label' => '[DONE] Variations',
   'icon' => 'cubes',
-  'fields' => [
+  'fields-' => [
     RockCommerce::field_variationcomment,
     RockCommerce::field_variation,
-    RockCommerce::field_minoptions,
-    RockCommerce::field_maxoptions,
+    RockCommerce::field_min => [
+      'label' => 'Minimum number of selected options',
+      'columnWidth' => 50,
+      'notes' => 'Empty means no minimum',
+    ],
+    RockCommerce::field_max => [
+      'label' => 'Maximum number of selected options',
+      'columnWidth' => 50,
+      'notes' => 'Empty means 1',
+    ],
   ],
   'repeaterTitle' => '{variationRepeaterLabel}',
   'familyFriendly' => 1,

@@ -273,11 +273,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     array $details = [],
   ): Order {
     $money = rockmoney();
-    $order = $this->wire->pages->newPage('template=' . RockCommerce::template_order);
+    $order = $this->wire->pages->newPage('template=' . self::template_order);
     $order->set('title', $subject);
-    $order->set(RockCommerce::field_net, $money->parse($net));
-    $order->set(RockCommerce::field_vat, $money->parse($vat));
-    $order->set(RockCommerce::field_total, $money->parse($total));
+    $order->set(self::field_net, $money->parse($net));
+    $order->set(self::field_vat, $money->parse($vat));
+    $order->set(self::field_total, $money->parse($total));
     $order->set(RockMigrations::field_email, $email);
     foreach ($pageProperties as $k => $v) $order->set($k, $v);
     $order->save();
@@ -353,14 +353,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       ['parent' => $this->variationsPage()],
       [
         'title',
-        RockCommerce::field_variationoptions . '.title',
+        self::field_variationoptions . '.title',
       ],
       ['nulls' => true]
     );
 
     $result = [];
     foreach ($arr as $varid => $fields) {
-      foreach ($fields[RockCommerce::field_variationoptions] as $optid => $data) {
+      foreach ($fields[self::field_variationoptions] as $optid => $data) {
         $result[] = [
           'id' => $optid,
           'varid' => $varid,
@@ -437,7 +437,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     if ($orderid === null) $orderid = $this->wire->input->get('id', 'string');
     $order = $this->wire->pages->get([
-      'template' => RockCommerce::template_order,
+      'template' => self::template_order,
       'name' => $orderid,
     ]);
     if (!$order->id) return false;
@@ -451,8 +451,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function getOrderByPaymentID(string $paymentid): Order|false
   {
     $order = $this->wire->pages->get([
-      'template' => RockCommerce::template_order,
-      RockCommerce::field_paymentid => $paymentid,
+      'template' => self::template_order,
+      self::field_paymentid => $paymentid,
     ]);
     if (!$order->id) return false;
     return $order;
@@ -476,7 +476,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $templates = new WireArray();
     foreach ($this->wire->templates as $tpl) {
-      if (!$tpl->fields->has("name=" . RockCommerce::field_productfields)) continue;
+      if (!$tpl->fields->has("name=" . self::field_productfields)) continue;
       $templates->add($tpl);
     }
     return $templates;
@@ -777,14 +777,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
 
     $rootPage = $rm->createPage(
-      template: RockCommerce::template_rootpage,
+      template: self::template_rootpage,
       parent: 2,
       name: "rockcommerce",
       title: "RockCommerce",
       status: ["hidden"],
     );
     $rm->createPage(
-      template: Orders::tpl,
+      template: self::template_orders,
       parent: $rootPage,
       name: "orders",
       title: "Orders",
@@ -797,14 +797,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       status: ["hidden"],
     );
     $rm->createPage(
-      template: RockCommerce::template_carts,
+      template: self::template_carts,
       parent: $rootPage,
       title: 'Carts',
       name: 'carts',
       status: [],
     );
     $rm->createPage(
-      template: RockCommerce::template_variations,
+      template: self::template_variations,
       parent: $rootPage,
       title: 'Variations',
       name: 'variations',
@@ -856,7 +856,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function newCart(): Cart
   {
     return $this->wire->pages->new([
-      'template' => RockCommerce::template_cart,
+      'template' => self::template_cart,
     ]);
   }
 
@@ -864,7 +864,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     return $this->wire->pages->get([
       'parent' => $this->rootPage(),
-      'template' => Orders::tpl,
+      'template' => self::template_orders,
     ]);
   }
 
@@ -900,7 +900,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if (!$open) return;
     $p = wire()->pages->get($open);
     $isRockCommerce = $p
-      ->closest('template=' . RockCommerce::template_rootpage)
+      ->closest('template=' . self::template_rootpage)
       ->id > 0;
     if (!$isRockCommerce) return;
 
@@ -943,7 +943,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     return $this->wire->pages->get([
       // 'parent' => 2,
-      'template' => RockCommerce::template_rootpage,
+      'template' => self::template_rootpage,
     ]);
   }
 

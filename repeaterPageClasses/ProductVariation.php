@@ -22,12 +22,12 @@ class ProductVariation extends RepeaterPage
 
   public function minoptions(): int
   {
-    return (int)$this->getFormatted(RockCommerce::field_minoptions);
+    return (int)$this->getFormatted(RockCommerce::field_min);
   }
 
   public function maxoptions(): int
   {
-    return (int)$this->getFormatted(RockCommerce::field_maxoptions);
+    return (int)$this->getFormatted(RockCommerce::field_max);
   }
 
   /**
