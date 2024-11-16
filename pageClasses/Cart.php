@@ -23,10 +23,6 @@ class Cart extends Page
   use MagicPage;
 
   const tpl = "rockcommerce_cart";
-  const prefix = "rockcommerce_cart_";
-
-  const field_order = self::prefix . "order";
-  const field_taxid = self::prefix . "taxid";
 
   private $cachedItems;
 
@@ -109,7 +105,7 @@ class Cart extends Page
     // }
 
     // add info field
-    if ($f = $form->get(self::field_order)) {
+    if ($f = $form->get(RockCommerce::field_order)) {
       $f->columnWidth = 50;
       $form->insertBefore($rm->inputfield([
         'type' => 'markup',
@@ -272,71 +268,6 @@ class Cart extends Page
     return $pages->sort("modified")->last()->modified;
   }
 
-  public function migrate()
-  {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    $rm->migrate([
-      'fields' => [
-        // self::field_items => [
-        //   'type' => 'RockGrid',
-        //   'label' => 'Cart Items',
-        //   'grid' => 'Cartitems',
-        //   'icon' => 'shopping-cart',
-        // ],
-        self::field_order => [
-          'type' => 'page',
-          'label' => 'Order',
-          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
-          'inputfield' => 'InputfieldPageAutocomplete',
-          'findPagesSelector' => 'id>0,template!=admin',
-          'labelFieldName' => 'title',
-          'collapsed' => Inputfield::collapsedNoLocked,
-          'icon' => 'shopping-bag',
-        ],
-        self::field_taxid => [
-          'type' => 'page',
-          'label' => 'Taxrate',
-          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
-          'inputfield' => 'InputfieldPageListSelect',
-          'findPagesSelector' => 'id>0,template!=admin',
-          'labelFieldName' => 'title',
-          'collapsed' => Inputfield::collapsedNoLocked,
-          'icon' => 'percent',
-        ],
-      ],
-      'templates' => [
-        self::tpl => [
-          'fields' => [
-            self::field_order,
-            'title' => [
-              'collapsed' => Inputfield::collapsedHidden,
-            ],
-            self::field_taxid,
-            // self::field_items,
-          ],
-          'parentTemplates' => [
-            Carts::tpl,
-          ],
-          'childTemplates' => [
-            Item::tpl,
-          ],
-          'noLang' => 1, // single language
-          'noChildren' => 0, // may have children
-          'noMove' => 1,
-          'noChangeTemplate' => 1,
-          'noParents' => 1,
-          // sort by id
-          // this is to make sure items are always in the same order
-          // and later added items are further down in the list
-          'sortfield' => 'id',
-          'icon' => 'shopping-basket',
-          'noSettings' => 1,
-        ],
-      ],
-    ]);
-  }
-
   public function onCreate(): void
   {
     // set random pagename
@@ -383,7 +314,7 @@ class Cart extends Page
       'template' => Taxrate::tpl,
       'parent' => rockcommerce()->taxratesPage(),
     ]);
-    $this->setAndSave(self::field_taxid, $taxrate);
+    $this->setAndSave(RockCommerce::field_taxid, $taxrate);
   }
 
   /**
@@ -414,7 +345,7 @@ class Cart extends Page
 
   public function taxID(): int
   {
-    return (int)$this->getFormatted(self::field_taxid . ".first")?->id;
+    return (int)$this->getFormatted(RockCommerce::field_taxid . ".first")?->id;
   }
 
   /**

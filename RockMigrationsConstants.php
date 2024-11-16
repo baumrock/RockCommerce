@@ -12,14 +12,17 @@ trait RockMigrationsConstants
   const field_maxoptions = 'rockcommerce_maxoptions';
   const field_minoptions = 'rockcommerce_minoptions';
   const field_net = 'rockcommerce_net';
+  const field_order = 'rockcommerce_order';
   const field_product = 'rockcommerce_product';
   const field_productfields = 'rockcommerce_productfields';
   const field_shoptab = 'rockcommerce_shoptab';
+  const field_taxid = 'rockcommerce_taxid';
   const field_variation = 'rockcommerce_variation';
   const field_variationcomment = 'rockcommerce_variationcomment';
   const field_variationoptions = 'rockcommerce_variationoptions';
   const field_variations = 'rockcommerce_variations';
   const field_variationstr = 'rockcommerce_variationstr';
+  const template_cart = 'rockcommerce_cart';
   const template_variation = 'rockcommerce_variation';
   const template_variations = 'rockcommerce_variations';
 }
