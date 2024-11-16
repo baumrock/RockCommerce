@@ -810,7 +810,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       name: 'variations',
     );
     $rm->createPage(
-      template: Taxrates::tpl,
+      template: RockCommerce::template_taxrates,
       parent: $rootPage,
       title: 'Taxrates',
       name: 'taxrates',
@@ -1045,7 +1045,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function taxratesPage(): Taxrates
   {
     return wire()->pages->get([
-      'template' => Taxrates::tpl,
+      'template' => RockCommerce::template_taxrates,
       'parent' => $this->rootPage(),
     ]);
   }

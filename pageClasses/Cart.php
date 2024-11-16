@@ -308,7 +308,7 @@ class Cart extends Page
   {
     $taxrate = wire()->pages->get([
       'id' => $id,
-      'template' => Taxrate::tpl,
+      'template' => RockCommerce::template_taxrate,
       'parent' => rockcommerce()->taxratesPage(),
     ]);
     $this->setAndSave(RockCommerce::field_taxid, $taxrate);
