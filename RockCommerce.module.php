@@ -551,7 +551,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if ($method !== 'POST') return; // 404
 
     // we never need tracy on webhooks
-    \Tracy\Debugger::$showBar = false;
+    try {
+      \Tracy\Debugger::$showBar = false;
+    } catch (\Throwable $th) {
+    }
 
     // create webhook log page
     $webhook = $this->wire->pages->new([
