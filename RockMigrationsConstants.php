@@ -34,6 +34,7 @@ trait RockMigrationsConstants
   const template_cart = 'rockcommerce_cart';
   const template_carts = 'rockcommerce_carts';
   const template_order = 'rockcommerce_order';
+  const template_rootpage = 'rockcommerce_rootpage';
   const template_variation = 'rockcommerce_variation';
   const template_variations = 'rockcommerce_variations';
 }

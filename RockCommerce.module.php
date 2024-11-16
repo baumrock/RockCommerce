@@ -777,7 +777,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
 
     $rootPage = $rm->createPage(
-      template: RootPage::tpl,
+      template: RockCommerce::template_rootpage,
       parent: 2,
       name: "rockcommerce",
       title: "RockCommerce",
@@ -899,7 +899,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $open = wire()->input->get('open', 'int');
     if (!$open) return;
     $p = wire()->pages->get($open);
-    $isRockCommerce = $p->closest('template=' . RootPage::tpl)->id > 0;
+    $isRockCommerce = $p
+      ->closest('template=' . RockCommerce::template_rootpage)
+      ->id > 0;
     if (!$isRockCommerce) return;
 
     // redirect to rockcommerce settings page
@@ -941,7 +943,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     return $this->wire->pages->get([
       // 'parent' => 2,
-      'template' => RootPage::tpl,
+      'template' => RockCommerce::template_rootpage,
     ]);
   }
 
