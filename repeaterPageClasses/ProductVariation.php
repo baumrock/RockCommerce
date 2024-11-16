@@ -9,6 +9,7 @@ use ProcessWire\WireData;
 use RockGrid\RockGridField;
 
 use function ProcessWire\rockcommerce;
+use function ProcessWire\wire;
 
 class ProductVariation extends RepeaterPage
 {
@@ -79,8 +80,15 @@ class ProductVariation extends RepeaterPage
   {
     $grid = $this->getFormatted(RockCommerce::field_variation);
     if (!$grid instanceof RockGridField) return;
-    $first = $grid->getSelectedPages()->first();
+
+    $forField = wire()->fields->get(Variation::field_options)->id;
+    $hasParent = wire()->pages->get(2)->url . "repeaters/for-field-$forField";
+    $first = $grid->getSelectedPages([
+      'has_parent' => $hasParent,
+      'include' => 'all',
+    ])->first();
     if (!$first instanceof RepeaterPage) return;
+
     return $first->getForPage()->title;
   }
 }
