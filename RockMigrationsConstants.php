@@ -8,24 +8,32 @@ namespace RockCommerce;
 trait RockMigrationsConstants
 {
   const field_amount = 'rockcommerce_amount';
+  const field_cart = 'rockcommerce_cart';
   const field_comment = 'rockcommerce_comment';
   const field_maxoptions = 'rockcommerce_maxoptions';
   const field_minoptions = 'rockcommerce_minoptions';
   const field_net = 'rockcommerce_net';
   const field_order = 'rockcommerce_order';
+  const field_orderfields = 'rockcommerce_orderfields';
+  const field_paymentdate = 'rockcommerce_paymentdate';
+  const field_paymentid = 'rockcommerce_paymentid';
+  const field_paymentstatus = 'rockcommerce_paymentstatus';
   const field_product = 'rockcommerce_product';
   const field_productfields = 'rockcommerce_productfields';
   const field_removeempty = 'rockcommerce_removeempty';
   const field_removefilled = 'rockcommerce_removefilled';
   const field_shoptab = 'rockcommerce_shoptab';
   const field_taxid = 'rockcommerce_taxid';
+  const field_total = 'rockcommerce_total';
   const field_variation = 'rockcommerce_variation';
   const field_variationcomment = 'rockcommerce_variationcomment';
   const field_variationoptions = 'rockcommerce_variationoptions';
   const field_variations = 'rockcommerce_variations';
   const field_variationstr = 'rockcommerce_variationstr';
+  const field_vat = 'rockcommerce_vat';
   const template_cart = 'rockcommerce_cart';
   const template_carts = 'rockcommerce_carts';
+  const template_order = 'rockcommerce_order';
   const template_variation = 'rockcommerce_variation';
   const template_variations = 'rockcommerce_variations';
 }

@@ -4,6 +4,7 @@ namespace RockCommerce;
 
 use ProcessWire\Inputfield;
 use ProcessWire\Page;
+use ProcessWire\RockCommerce;
 use ProcessWire\RockMigrations;
 use RockMigrations\MagicPage;
 
@@ -59,7 +60,7 @@ class Orders extends Page
             self::field_attachmentextensions,
           ],
           'childTemplates' => [
-            Order::tpl,
+            RockCommerce::template_order,
           ],
           'noLang' => 1, // single language
           'noChildren' => 1, // add orders only via api

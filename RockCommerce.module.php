@@ -273,15 +273,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     array $details = [],
   ): Order {
     $money = rockmoney();
-    $order = $this->wire->pages->newPage('template=' . Order::tpl);
+    $order = $this->wire->pages->newPage('template=' . RockCommerce::template_order);
     $order->set('title', $subject);
     $order->set(RockCommerce::field_net, $money->parse($net));
     $order->set(RockCommerce::field_vat, $money->parse($vat));
     $order->set(RockCommerce::field_total, $money->parse($total));
     $order->set(RockMigrations::field_email, $email);
-    foreach ($pageProperties as $k => $v) {
-      $order->set(Order::prefix . $k, $v);
-    }
+    foreach ($pageProperties as $k => $v) $order->set($k, $v);
     $order->save();
     $order->meta('details', $details);
     return $order;
@@ -439,7 +437,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     if ($orderid === null) $orderid = $this->wire->input->get('id', 'string');
     $order = $this->wire->pages->get([
-      'template' => Order::tpl,
+      'template' => RockCommerce::template_order,
       'name' => $orderid,
     ]);
     if (!$order->id) return false;
@@ -453,7 +451,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function getOrderByPaymentID(string $paymentid): Order|false
   {
     $order = $this->wire->pages->get([
-      'template' => Order::tpl,
+      'template' => RockCommerce::template_order,
       RockCommerce::field_paymentid => $paymentid,
     ]);
     if (!$order->id) return false;
@@ -534,7 +532,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // The reason is security. In that way it is impossible to manipulate the
     // order status from a manipulated webhook request.
     /** @var MollieApiClient $api */
-    $api = wire()->modules->get('RockMollie')->api();
+    /** @var RockMollie $mollie */
+    $mollie = wire()->modules->get('RockMollie');
+    $api = $mollie->api();
     $payment = $api->payments->get($paymentID);
     if ($payment instanceof Payment) {
       $log->echo("Updating payment status to '$payment->status'");

@@ -3,14 +3,10 @@
 namespace RockCommerce;
 
 use Mollie\Api\Resources\Payment;
-use ProcessWire\FieldtypeFile;
-use ProcessWire\FieldtypePage;
-use ProcessWire\HookEvent;
 use ProcessWire\Inputfield;
-use ProcessWire\InputfieldDatetime;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
-use ProcessWire\RockMigrations;
+use ProcessWire\RockCommerce;
 use ProcessWire\RockMollie;
 use ProcessWire\WireData;
 use ProcessWire\WireException;
@@ -26,27 +22,14 @@ class Order extends Page
 {
   use MagicPage;
 
-  const tpl = "rockcommerce_order";
-  const prefix = "rockcommerce_order_";
-
   const status_paid = 'paid';
   const status_open = 'open';
-
-  const field_price = self::prefix . "price";
-  const field_payment = self::prefix . "payment";
-  const field_paymentstatus = self::prefix . "paymentstatus";
-  const field_cart = self::prefix . "cart";
-
-  const field_net = self::prefix . "net";
-  const field_vat = self::prefix . "vat";
-  const field_total = self::prefix . "total";
-  const field_paymentdate = self::prefix . "paymentdate";
-  const field_customfields = self::prefix . "customfields";
 
   public function __construct()
   {
     try {
-      $this->template = $this->rockmigrations()->getTemplate(self::tpl, true);
+      $this->template = $this->rockmigrations()
+        ->getTemplate(RockCommerce::template_order, true);
       $this->parent = rockcommerce()->ordersPage();
     } catch (\Throwable $th) {
     }
@@ -62,7 +45,7 @@ class Order extends Page
     }
 
     // show cart name and link to it
-    if ($f = $form->get(self::field_cart)) {
+    if ($f = $form->get(RockCommerce::field_cart)) {
       $id = $f->value;
       $url = wire()->pages->get(2)->url . "page/edit/?id=$id";
       $f->collapsed = Inputfield::collapsedYesLocked;
@@ -91,9 +74,9 @@ class Order extends Page
 
     // ----- totals section -----
     $rm->wrapFields($form, [
-      self::field_net,
-      self::field_vat,
-      self::field_total,
+      RockCommerce::field_net,
+      RockCommerce::field_vat,
+      RockCommerce::field_total,
     ], [
       'label' => 'Totals',
       'icon' => 'shopping-basket',
@@ -101,7 +84,7 @@ class Order extends Page
 
     // ----- payment section -----
     // payment notes
-    if ($f = $form->get(self::field_paymentdate)) {
+    if ($f = $form->get(RockCommerce::field_paymentdate)) {
       if ($f->value) $f->notes .= date('Y-m-d H:i:s', (int)$f->value) . "\n";
       $f->notes .= "You can change the payment date here. Note that the status will automatically be set to paid when the payment date is changed.";
     }
@@ -113,9 +96,9 @@ class Order extends Page
     }
     // payment wrapper
     $rm->wrapFields($form, [
-      self::field_payment,
-      self::field_paymentstatus,
-      self::field_paymentdate,
+      RockCommerce::field_paymentid,
+      RockCommerce::field_paymentstatus,
+      RockCommerce::field_paymentdate,
       [
         'type' => 'markup',
         'name' => 'payment-details',
@@ -130,7 +113,7 @@ class Order extends Page
       'collapsed' => Inputfield::collapsedNo,
     ]);
     rockcommerce()->apiNote(
-      $form->get(self::field_payment),
+      $form->get(RockCommerce::field_paymentid),
       '$order->paymentID()',
     );
     rockcommerce()->apiNote(
@@ -141,8 +124,8 @@ class Order extends Page
     // ----- cart section -----
 
     // ----- custom fields section -----
-    if ($f = $form->get(self::field_customfields)) {
-      $fieldname = self::field_customfields;
+    if ($f = $form->get(RockCommerce::field_orderfields)) {
+      $fieldname = RockCommerce::field_orderfields;
       rockcommerce()->helpNote($f, "You can edit the field $fieldname and add custom fields as you need.");
     }
 
@@ -159,7 +142,7 @@ class Order extends Page
     $form->add($f);
     rockcommerce()->apiNote($f, '$order->details() or $order->details("item")');
 
-    if ($f = $form->get(self::field_paymentstatus)) {
+    if ($f = $form->get(RockCommerce::field_paymentstatus)) {
       $url = rockcommerce()->url(
         rockcommerce()->publicOrderPageUrl . "?id=" . $this->name
       );
@@ -183,7 +166,7 @@ class Order extends Page
   public function onSaveReady(): void
   {
     $paid = $this->paymentdate(2);
-    if ($paid) $this->set(self::field_paymentstatus, self::status_paid);
+    if ($paid) $this->set(RockCommerce::field_paymentstatus, self::status_paid);
   }
 
   /** frontend */
@@ -301,149 +284,6 @@ class Order extends Page
     return $details;
   }
 
-  public function migrate()
-  {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-
-    // cleanup
-    $rm->deleteField('rockcommerce_order_attachments');
-
-    $rm->migrate([
-      'fields' => [
-        self::field_price => [
-          'type' => 'RockMoney',
-          'label' => 'Price',
-          'icon' => 'money',
-          'collapsed' => Inputfield::collapsedNoLocked,
-          'tags' => 'RockCommerce',
-          'notes' => 'The final amount that you charge the client including all taxes.',
-        ],
-        self::field_net => [
-          'type' => 'RockMoney',
-          'label' => 'Net',
-          'icon' => '',
-          'collapsed' => Inputfield::collapsedNoLocked,
-          'tags' => 'RockCommerce',
-          'icon' => 'money',
-        ],
-        self::field_vat => [
-          'type' => 'RockMoney',
-          'label' => 'VAT',
-          'icon' => '',
-          'collapsed' => Inputfield::collapsedNoLocked,
-          'tags' => 'RockCommerce',
-          'icon' => 'percent',
-        ],
-        self::field_total => [
-          'type' => 'RockMoney',
-          'label' => 'Total',
-          'icon' => '',
-          'collapsed' => Inputfield::collapsedNoLocked,
-          'tags' => 'RockCommerce',
-          'notes' => '',
-          'icon' => 'money',
-        ],
-        self::field_payment => [
-          'type' => 'text',
-          'label' => 'Payment',
-          'icon' => '',
-          'textformatters' => [
-            'TextformatterEntities',
-          ],
-          'collapsed' => Inputfield::collapsedNoLocked,
-          'notes' => 'The id of the payment of the payment provider.',
-          'icon' => 'money',
-        ],
-        self::field_paymentstatus => [
-          'type' => 'text',
-          'label' => 'Payment-Status',
-          'icon' => '',
-          'textformatters' => [
-            'TextformatterEntities',
-          ],
-          'collapsed' => Inputfield::collapsedNoLocked,
-          'icon' => 'money',
-        ],
-        self::field_paymentdate => [
-          'type' => 'datetime',
-          'label' => 'Payment-Date',
-          'dateOutputFormat' => 'd.m.Y',
-          'inputType' => 'text',
-          'dateSelectFormat' => 'yMd',
-          'datepicker' => InputfieldDatetime::datepickerFocus,
-          'dateInputFormat' => 'j.n.y',
-          'timeInputFormat' => '',
-          'defaultToday' => 0,
-          'icon' => 'calendar',
-        ],
-        self::field_cart => [
-          'type' => 'page',
-          'label' => 'Cart',
-          'derefAsPage' => FieldtypePage::derefAsPageOrFalse,
-          'inputfield' => 'InputfieldPageAutocomplete',
-          'findPagesSelector' => 'id>0,template!=admin',
-          'labelFieldName' => 'title',
-          'collapsed' => Inputfield::collapsedBlankLocked,
-          'icon' => 'shopping-cart',
-        ],
-
-        // field that allows users to add custom fields
-        self::field_customfields => [
-          'label' => 'Custom Fields',
-          'type' => 'FieldtypeFieldsetPage',
-          'icon' => 'cubes',
-        ],
-      ],
-      'templates' => [
-        self::tpl => [
-          'fields-' => [
-            'title' => [
-              'required' => false,
-              'collapsed' => Inputfield::collapsedHidden,
-              'columnWidth' => 50,
-            ],
-            RockMigrations::field_email => [
-              'collapsed' => Inputfield::collapsedNoLocked,
-              'columnWidth' => 50,
-            ],
-
-            self::field_net => [
-              'columnWidth' => 33,
-            ],
-            self::field_vat => [
-              'columnWidth' => 33,
-            ],
-            self::field_total => [
-              'columnWidth' => 33,
-            ],
-
-            self::field_payment => [
-              'columnWidth' => 33,
-            ],
-            self::field_paymentstatus => [
-              'columnWidth' => 33,
-            ],
-            self::field_paymentdate => [
-              'columnWidth' => 33,
-            ],
-            self::field_cart,
-            self::field_customfields,
-          ],
-          'parentTemplates' => [
-            Orders::tpl,
-          ],
-          'childTemplates' => [
-            Item::tpl,
-          ],
-          'noParents' => 1,
-          'noLang' => 1, // single language
-          'icon' => 'shopping-bag',
-        ],
-      ],
-    ]);
-  }
-
   public function ___notifyAdmin()
   {
     $mailto = rockcommerce()->adminmail;
@@ -480,12 +320,12 @@ class Order extends Page
    */
   public function paymentId(): string
   {
-    return $this->getFormatted(self::field_payment);
+    return $this->getFormatted(RockCommerce::field_paymentid);
   }
 
   public function paymentStatus(): string
   {
-    return $this->getFormatted(self::field_paymentstatus);
+    return $this->getFormatted(RockCommerce::field_paymentstatus);
   }
 
   public function paymentData(): array
@@ -508,7 +348,7 @@ class Order extends Page
   public function ___setPaid(): void
   {
     if (!$this->paymentdate(2)) {
-      $this->setAndSave(self::field_paymentdate, time());
+      $this->setAndSave(RockCommerce::field_paymentdate, time());
     }
   }
 
@@ -518,9 +358,9 @@ class Order extends Page
     int $date = 0,
     mixed $details = null,
   ): void {
-    if ($id) $this->setAndSave(self::field_payment, $id);
-    if ($status) $this->setAndSave(self::field_paymentstatus, $status);
-    if ($date) $this->setAndSave(self::field_paymentdate, $date);
+    if ($id) $this->setAndSave(RockCommerce::field_paymentid, $id);
+    if ($status) $this->setAndSave(RockCommerce::field_paymentstatus, $status);
+    if ($date) $this->setAndSave(RockCommerce::field_paymentdate, $date);
     if ($details) $this->meta('payment', json_encode($details, JSON_PRETTY_PRINT));
   }
 
@@ -529,14 +369,14 @@ class Order extends Page
    */
   public function setPayment(Payment $payment): void
   {
-    $this->setAndSave(self::field_payment, $payment->id);
+    $this->setAndSave(RockCommerce::field_paymentid, $payment->id);
     $this->meta('payment', json_encode($payment));
     $this->setPaymentStatus($payment->status);
   }
 
   public function setPaymentStatus(string $status): void
   {
-    $this->setAndSave(self::field_paymentstatus, $status);
+    $this->setAndSave(RockCommerce::field_paymentstatus, $status);
     if ($status === 'paid') $this->setPaid();
   }
 
@@ -568,6 +408,6 @@ class Order extends Page
 
   public function total(): Money
   {
-    return $this->getFormatted(self::field_total);
+    return $this->getFormatted(RockCommerce::field_total);
   }
 }

@@ -4,6 +4,7 @@ namespace RockCommerce;
 
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\RockCommerce;
 use RockMigrations\MagicPage;
 
 class Variation extends Page
@@ -11,8 +12,6 @@ class Variation extends Page
   use MagicPage;
 
   private $optionsArray;
-
-  /** magic */
 
   public function editForm(InputfieldWrapper $form): void
   {
@@ -23,13 +22,6 @@ class Variation extends Page
     }
   }
 
-  public function onCreate(): void
-  {
-    $this->status = 1;
-  }
-
-  /** frontend */
-
   /**
    * Get label for this option
    * Falls back to ID if title is not set.
@@ -37,5 +29,15 @@ class Variation extends Page
   public function label(): string
   {
     return $this->title ?: $this->variationID();
+  }
+
+  public function onCreate(): void
+  {
+    $this->status = 1;
+  }
+
+  public function options()
+  {
+    return $this->getFormatted(RockCommerce::field_variationoptions);
   }
 }

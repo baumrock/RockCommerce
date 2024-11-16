@@ -198,7 +198,7 @@ class Item extends Page
           ],
           'parentTemplates' => [
             RockCommerce::template_cart,
-            Order::tpl,
+            RockCommerce::template_order,
           ],
           'noLang' => 1, // single language
           'noChildren' => 1,

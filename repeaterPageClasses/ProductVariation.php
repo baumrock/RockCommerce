@@ -44,20 +44,17 @@ class ProductVariation extends RepeaterPage
     $sorted = false;
     $selected = $json->selected ?: [];
     foreach ($selected as $id) {
-      try {
-        $p = new VariationOption($id);
-        $p->product = $this;
-        $p->title = $p->option->title;
-        $p->wakeup($json, $id);
+      $p = new VariationOption($id);
+      $p->product = $this;
+      $p->title = $p->option->title;
+      $p->wakeup($json, $id);
 
-        // get sort order from variation repeater options
-        if (!$sorted) $sorted = $p->variation->options()->each('id');
+      // get sort order from variation repeater options
+      bd($p->variation);
+      if (!$sorted) $sorted = $p->variation->options()->each('id');
 
-        $key = array_search($id, $sorted);
-        $options[$key] = $p;
-      } catch (\Throwable $th) {
-        $this->log($th->getMessage());
-      }
+      $key = array_search($id, $sorted);
+      $options[$key] = $p;
     }
     ksort($options);
     return $this->wire(new WireArray())->import($options);
