@@ -63,15 +63,15 @@ class ProductVariations extends Grid
   public function getData(): array
   {
     // find repeater items
-    $options = Variation::field_options . '.title';
-    $price = Variation::field_options . '.' . Variation::field_price;
+    $options = RockCommerce::field_variationoptions . '.title';
+    $price = RockCommerce::field_variationoptions . '.' . Variation::field_price;
     $raw = wire()->pages->findRaw(
       [
         'parent' => rockcommerce()->variationsPage(),
 
         // workaround to select only pages that have options
         // findRaw() fails if this check is removed!
-        Variation::field_options . '.count>' => 0,
+        RockCommerce::field_variationoptions . '.count>' => 0,
 
         // if this is missing, non-superusers will get an empty grid
         'include' => 'all',

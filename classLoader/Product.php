@@ -157,11 +157,17 @@ trait Product
     try {
       $var = $page->getFormatted(RockCommerce::field_variation);
       if (!$var instanceof RockGridField) return;
-      $options = $var->getSelectedPages();
+
+      $forField = wire()->fields->get(RockCommerce::field_variationoptions)->id;
+      $hasParent = wire()->pages->get(2)->url . "repeaters/for-field-$forField";
+      $options = $var->getSelectedPages([
+        'has_parent' => $hasParent,
+        'include' => 'all',
+      ]);
       if (!$options->count()) return;
       $option = $options->first();
       $variation = $option->getForPage();
-      $all = $variation->getFormatted(Variation::field_options)->count();
+      $all = $variation->getFormatted(RockCommerce::field_variationoptions)->count();
       $event->return = $variation->title . " ({$options->count()}/$all)";
     } catch (\Throwable $th) {
       $event->return = $th->getMessage();

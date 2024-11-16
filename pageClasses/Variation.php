@@ -2,9 +2,9 @@
 
 namespace RockCommerce;
 
-use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\RockCommerce;
 use RockMigrations\MagicPage;
 
 class Variation extends Page
@@ -14,7 +14,6 @@ class Variation extends Page
   const tpl = "rockcommerce_variation";
   const prefix = "rockcommerce_variation_";
 
-  const field_options = self::prefix . "options";
   const field_comment = self::prefix . "comment";
   const field_price   = self::prefix . "price";
 
@@ -59,32 +58,6 @@ class Variation extends Page
           'label' => 'Price',
           'icon' => 'money',
         ],
-        self::field_options => [
-          'label' => 'Options',
-          'type' => 'FieldtypeRepeater',
-          'fields' => [
-            'title' => [
-              'label' => 'Option Name',
-              'notes' => '',
-              'required' => true,
-              // 'columnWidth' => 70,
-              'columnWidth' => 100,
-              'rpb-nolabel' => false, // hide label in backend
-            ],
-            self::field_price => [
-              'columnWidth' => 30,
-              'collapsed' => Inputfield::collapsedHidden,
-            ],
-          ],
-          // 'repeaterTitle' => '{title} - {' . self::field_price . '}',
-          'repeaterTitle' => '{title}',
-          'familyFriendly' => 1,
-          'repeaterDepth' => 0,
-          'tags' => 'RockCommerce',
-          'repeaterAddLabel' => 'Add New Option',
-          'columnWidth' => 100,
-          'icon' => 'cubes',
-        ],
         self::field_comment => [
           'type' => 'text',
           'label' => 'Internal Comment',
@@ -104,7 +77,7 @@ class Variation extends Page
             self::field_comment => [
               'columnWidth' => 50,
             ],
-            self::field_options,
+            RockCommerce::field_variationoptions,
           ],
           'noChildren' => 1,
           'noUnpublish' => 1,

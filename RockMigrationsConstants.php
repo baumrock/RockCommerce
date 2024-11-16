@@ -16,6 +16,7 @@ trait RockMigrationsConstants
   const field_shoptab = 'rockcommerce_shoptab';
   const field_variation = 'rockcommerce_variation';
   const field_variationcomment = 'rockcommerce_variationcomment';
+  const field_variationoptions = 'rockcommerce_variationoptions';
   const field_variations = 'rockcommerce_variations';
   const field_variationstr = 'rockcommerce_variationstr';
 }

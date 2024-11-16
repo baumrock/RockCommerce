@@ -81,7 +81,7 @@ class ProductVariation extends RepeaterPage
     $grid = $this->getFormatted(RockCommerce::field_variation);
     if (!$grid instanceof RockGridField) return;
 
-    $forField = wire()->fields->get(Variation::field_options)->id;
+    $forField = wire()->fields->get(RockCommerce::field_variationoptions)->id;
     $hasParent = wire()->pages->get(2)->url . "repeaters/for-field-$forField";
     $first = $grid->getSelectedPages([
       'has_parent' => $hasParent,
