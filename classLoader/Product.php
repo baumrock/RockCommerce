@@ -64,12 +64,12 @@ trait Product
 
   public function ___maxamount(): int
   {
-    return 1;
+    return 10;
   }
 
   public function ___minamount(): int
   {
-    return 10;
+    return 1;
   }
 
   /**

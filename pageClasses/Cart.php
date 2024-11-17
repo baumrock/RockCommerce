@@ -163,11 +163,12 @@ class Cart extends Page
     // create selector as string
     // this is to make it match pipes in the value and not treat them as OR
     $selector = [
-      'parent' => $this,
+      'parent' => (string)$this,
       RockCommerce::field_product => (string)$product,
     ];
-    if ($variation) $selector[RockCommerce::field_variation] = $variation;
-    $item = $this->wire->pages->get($selector);
+    if ($variation) $selector[RockCommerce::field_variationstr] = $variation;
+    // bd($selector, 'item selector');
+    $item = wire()->pages->get($selector);
     if (!$item->id) return false;
     return $item;
   }

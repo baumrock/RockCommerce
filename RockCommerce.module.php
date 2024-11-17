@@ -664,8 +664,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   private function jsConfig(): void
   {
     $this->jsConfig = new WireData();
-    $this->js('minamount', 1); // todo: make this hookable per product
-    $this->js('maxamount', 10); // todo: make this hookable per product
     $this->js('root', wire()->config->urls->root);
     $this->js('taxrates', $this->taxrates()->getJsonArray());
     $this->js('defaultTaxID', $this->taxratesPage()->getDefaultTaxID());
@@ -762,11 +760,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function migrate()
   {
     $rm = rockmigrations();
-
-    $rm->installModule('ProcessRockCommerce');
-    $rm->installModule('InputfieldRcPricing');
-    $rm->installModule('FieldtypeRcVariations');
-    $rm->installModule('InputfieldRcVariations');
 
     // add permissions
     $rm->createPermission(

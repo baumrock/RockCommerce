@@ -19,14 +19,10 @@ RockCommerce.addComponent("RcProduct", {
 
   ready() {
     this.money = new RockMoney(this.$el.getAttribute("rc-price"));
-    this.minamount = parseInt(
-      this.$rcattr("rc-minamount") || RockCommerce.config.minamount
-    );
+    this.minamount = parseInt(this.$rcattr("rc-minamount") || 1);
     this.initAmount();
     this.$watch("amount", this.update.bind(this));
-    this.maxamount = parseInt(
-      this.$rcattr("rc-maxamount") || RockCommerce.config.maxamount
-    );
+    this.maxamount = parseInt(this.$rcattr("rc-maxamount") || 10);
 
     // wait for all variations and options to be ready
     // then load product config from url hash
