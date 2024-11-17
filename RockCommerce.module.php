@@ -138,7 +138,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function ready()
   {
-    rockloaders()->add('dots');
+    if (wire()->modules->isInstalled('RockLoaders')) rockloaders()->add('dots');
     $this->addBackendAssets();
   }
 

@@ -12,7 +12,6 @@ $info = [
   // PHP8.2 for constants in traits
   // PW 3.0.234 for repeater classes
   // RockFrontend for AJAX endpoints
-  // RockLoaders 1.1.0 for add() short syntax
   // Note: RockAssets is only needed for development, no global requirement
   'requires' => [
     'PHP>=8.2',
@@ -21,7 +20,6 @@ $info = [
     'RockFrontend>=3.22.0',
     'RockMoney>=2.0.3',
     'RockGrid>=1.0.2',
-    'RockLoaders>=1.1.0',
     'RockJavaScriptHooks>=1.0.0',
   ],
   'installs' => [
