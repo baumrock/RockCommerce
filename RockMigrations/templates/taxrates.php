@@ -11,6 +11,9 @@ return [
   'childTemplates' => [
     RockCommerce::template_taxrate,
   ],
-  'noParents' => 1,
+  'childNameFormat' => 'title',
+  'noParents' => -1,
+  'noChildren' => false,
   'icon' => 'percent',
+  'noSettings' => true,
 ];

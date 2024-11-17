@@ -5,44 +5,31 @@ namespace RockCommerce;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
+use ProcessWire\RockCommerce;
 use RockMigrations\MagicPage;
 
-use function ProcessWire\rockmigrations;
 use function ProcessWire\wire;
 
 class Settings extends Page
 {
   use MagicPage;
 
-  const tpl = 'rockcommerce_settings';
-  const prefix = 'rockcommerce_settings_';
-
-  public function editForm(InputfieldWrapper $form): void
+  public function editFormContent(InputfieldWrapper $form): void
   {
     if ($f = $form->get('title')) {
       $f->collapsed = Inputfield::collapsedHidden;
-      if (wire()->user->isSuperuser()) {
-        $f->collapsed = Inputfield::collapsedNoLocked;
-        $f->notes = 'You can add your own settings fields as needed.';
-      }
+    }
+
+    if (wire()->user->isSuperuser()) {
+      $url = wire()->pages->get(2)->url;
+      $id = wire()->templates->get(RockCommerce::template_settings)->id;
+      $form->add([
+        'type' => 'markup',
+        'label' => 'Help',
+        'icon' => 'life-ring',
+        'value' => "This settings page can be used to add custom configuration options as needed. RockCommerce will not use this data for anything and will never add or remove any fields. You can edit the template <a href='{$url}setup/template/edit?id={$id}'>rockcommerce_settings</a> to add new fields - either via GUI or via RockMigrations.",
+        'notes' => 'This note is only shown to superusers.',
+      ]);
     }
   }
-
-  public function migrate()
-  {
-    $rm = rockmigrations();
-    $rm->migrate([
-      'templates' => [
-        self::tpl => [
-          'icon' => 'cogs',
-        ],
-      ],
-    ]);
-    $this->migrateDone();
-  }
-
-  /**
-   * Hookable method to use to modify the settings page via RockMigrations
-   */
-  public function ___migrateDone(): void {}
 }

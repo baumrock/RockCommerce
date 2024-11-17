@@ -28,18 +28,22 @@ class Carts extends Page
 
   protected function deleteUnusedCarts(): void
   {
-    $cartsPage = rockcommerce()->cartsPage();
-    $days = $cartsPage->removeEmptyDays();
-    if ($days === false) return;
-    if ($this->noHook) return;
-    $this->noHook = true;
-    $old = wire()->pages->find([
-      'parent' => $cartsPage,
-      'created<' => $days . " days ago",
-      'children.count' => 0,
-    ]);
-    // no need to put them in the trash!
-    foreach ($old as $p) $p->delete();
+    try {
+      $cartsPage = rockcommerce()->cartsPage();
+      $days = $cartsPage->removeEmptyDays();
+      if ($days === false) return;
+      if ($this->noHook) return;
+      $this->noHook = true;
+      $old = wire()->pages->find([
+        'parent' => $cartsPage,
+        'created<' => $days . " days ago",
+        'children.count' => 0,
+      ]);
+      // no need to put them in the trash!
+      foreach ($old as $p) $p->delete();
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+    }
   }
 
   public function editForm(InputfieldWrapper $form): void

@@ -3,14 +3,17 @@
 namespace ProcessWire;
 
 return [
+  'pageClass' => '\RockCommerce\RootPage',
   'fields' => [
     'title' => [
       'collapsed' => Inputfield::collapsedHidden,
     ],
   ],
-  'noChildren' => 1, // no children allowed
-  'noLang' => 0,
+  'noChildren' => true, // no children allowed
+  'noLang' => false,
   'noSettings' => true,
   'icon' => 'shopping-cart',
-  'noParents' => 1,
+  'noParents' => true,
+  'noMove' => true,
+  // 'sortfield' => 'title',
 ];

@@ -3,6 +3,7 @@
 namespace ProcessWire;
 
 return [
+  'pageClass' => '\RockCommerce\Orders',
   'fields' => [
     'title' => [
       'collapsed' => Inputfield::collapsedHidden,
@@ -11,11 +12,11 @@ return [
   'childTemplates' => [
     RockCommerce::template_order,
   ],
-  'noLang' => 1, // single language
-  'noChildren' => 1, // add orders only via api
-  'noMove' => 1,
-  'noChangeTemplate' => 1,
-  'noParents' => 1,
+  'noLang' => true, // single language
+  'noChildren' => true, // add orders only via api
+  'noMove' => true,
+  'noChangeTemplate' => true,
+  'noParents' => true,
   'sortfield' => '-id',
   'icon' => 'check',
 ];

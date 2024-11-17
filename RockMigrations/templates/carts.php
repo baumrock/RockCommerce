@@ -14,11 +14,11 @@ return [
   'childTemplates' => [
     RockCommerce::template_cart,
   ],
-  'noLang' => 1, // single language
-  'noChildren' => 1, // add orders only via api
-  'noMove' => 1,
-  'noChangeTemplate' => 1,
-  'noParents' => 1,
+  'noLang' => true, // single language
+  'noChildren' => true, // add orders only via api
+  'noMove' => true,
+  'noChangeTemplate' => true,
+  'noParents' => true,
   'sortfield' => '-id',
   'icon' => 'shopping-cart',
 ];

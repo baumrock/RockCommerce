@@ -12,7 +12,7 @@ use RockMoney\Money;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockfrontend;
-use function ProcessWire\rockmigrations;
+use function ProcessWire\wire;
 
 /**
  * RockCommerce Cart or Order Item
@@ -23,12 +23,10 @@ class Item extends Page
   use MagicPage;
   use FieldMethod;
 
-  const tpl = "rockcommerce_item";
-
   public function __construct($parent = false)
   {
     try {
-      $this->template = $this->wire->templates->get(self::tpl);
+      $this->template = wire()->templates->get(RockCommerce::template_item);
       $this->parent = $parent;
     } catch (\Throwable $th) {
     }
@@ -51,7 +49,7 @@ class Item extends Page
 
   public function onCreate(): void
   {
-    $this->name = $this->wire->pages->names->uniqueRandomPageName([
+    $this->name = wire()->pages->names->uniqueRandomPageName([
       'min' => 10,
       'max' => 15,
     ]);
@@ -74,7 +72,7 @@ class Item extends Page
   {
     if ($this->isTrash()) {
       $cartID = $this->meta('rockcommerce-cart');
-      return $this->wire->pages->get($cartID);
+      return wire()->pages->get($cartID);
     }
     return $this->parent;
   }
@@ -178,39 +176,6 @@ class Item extends Page
   public function itemGross(): Money
   {
     return $this->itemNet()->plus($this->itemVat());
-  }
-
-  public function migrate()
-  {
-    $rm = rockmigrations();
-    $rm->migrate([
-      'templates' => [
-        self::tpl => [
-          'fields' => [
-            // hide the title field
-            // removing it causes an error even when flag system is set :(
-            'title' => [
-              'collapsed' => Inputfield::collapsedHidden,
-            ],
-            RockCommerce::field_product => ['columnWidth' => 50],
-            RockCommerce::field_amount => ['columnWidth' => 50],
-            RockCommerce::field_variationstr,
-          ],
-          'parentTemplates' => [
-            RockCommerce::template_cart,
-            RockCommerce::template_order,
-          ],
-          'noLang' => 1, // single language
-          'noChildren' => 1,
-          'noMove' => 1,
-          'noChangeTemplate' => 1,
-          'noParents' => 1,
-          'sortfield' => '-id',
-          'icon' => 'cube',
-          'noSettings' => 1,
-        ],
-      ],
-    ]);
   }
 
   public function product(): Page|false

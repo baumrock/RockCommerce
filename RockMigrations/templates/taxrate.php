@@ -17,7 +17,9 @@ return [
   'parentTemplates' => [
     RockCommerce::template_taxrates,
   ],
-  'noUnpublish' => '1', // Don't allow unpublished pages
+  'noUnpublish' => true, // Don't allow unpublished pages
   'pageLabelField' => "{" . RockCommerce::field_taxrate . "}% ({title})",
   'icon' => 'percent',
+  'noSettings' => true,
+  'noChildren' => true,
 ];

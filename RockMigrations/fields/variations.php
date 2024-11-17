@@ -21,7 +21,7 @@ return [
     ],
   ],
   'repeaterTitle' => '{variationRepeaterLabel}',
-  'familyFriendly' => 1,
+  'familyFriendly' => true,
   'repeaterDepth' => 0,
   'repeaterCollapse' => '0', // New items open, existing items collapsed (recommended for most cases)
   'repeaterAddLabel' => 'Add New Variation',

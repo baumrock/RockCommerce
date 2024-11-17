@@ -15,6 +15,6 @@ return [
   ],
   'sortfield' => '-id',
   'noChildren' => true,
-  'noParents' => 1,
+  'noParents' => true,
   'icon' => 'anchor',
 ];

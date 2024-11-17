@@ -16,7 +16,7 @@ return [
     ],
   ],
   'repeaterTitle' => '{title}',
-  'familyFriendly' => 1,
+  'familyFriendly' => true,
   'repeaterDepth' => 0,
   'repeaterAddLabel' => 'Add New Option',
   'columnWidth' => 100,

@@ -11,7 +11,8 @@ return [
     RockCommerce::template_variation,
   ],
   'sortfield' => 'title',
-  'noChildren' => 0,
+  'noChildren' => false,
+  'childNameFormat' => 'title',
   'noParents' => -1, // only one page allowed
   'icon' => 'cubes',
 ];

@@ -227,7 +227,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
   }
 
-  public function cartsPage(): Carts
+  public function cartsPage(): Carts|Nullpage
   {
     return $this->wire->pages->get([
       'parent' => $this->rootPage(),
@@ -766,7 +766,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function migrate()
   {
-    $this->migrateCleanup();
     $rm = rockmigrations();
 
     $rm->installModule('ProcessRockCommerce');
@@ -794,7 +793,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: "Orders",
     );
     $rm->createPage(
-      template: RockCommerce::template_webhooks,
+      template: self::template_webhooks,
       parent: $rootPage,
       name: "webhooks",
       title: "Webhooks",
@@ -814,23 +813,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       name: 'variations',
     );
     $rm->createPage(
-      template: RockCommerce::template_taxrates,
+      template: self::template_taxrates,
       parent: $rootPage,
       title: 'Taxrates',
       name: 'taxrates',
     );
     $rm->createPage(
-      template: Settings::tpl,
+      template: self::template_settings,
       parent: $rootPage,
       title: 'Settings',
       name: 'settings',
     );
-
-    // set tags for all fields
-    foreach ($this->wire->fields as $field) {
-      if (!str_starts_with($field->name, "rockcommerce_")) continue;
-      $rm->setFieldData($field, ['tags' => 'RockCommerce']);
-    }
 
     // migrate all products
     $fired = false;
@@ -846,12 +839,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       $fired = true;
       $p->_migrate();
     }
-  }
-
-  public function migrateCleanup(): void
-  {
-    $rm = rockmigrations();
-    // nothing to do yet
   }
 
   /**
@@ -945,7 +932,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function rootPage(): RootPage|NullPage
   {
-    return $this->wire->pages->get([
+    return wire()->pages->get([
       // 'parent' => 2,
       'template' => self::template_rootpage,
     ]);
@@ -1003,7 +990,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function settings(): Settings
   {
     return wire()->pages->get([
-      'template' => Settings::tpl,
+      'template' => self::template_settings,
       'parent' => $this->rootPage(),
     ]);
   }
@@ -1068,6 +1055,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if (wire()->config->ajax) return;
     $id = wire()->input->get('id', 'int');
 
+    // to prevent endless loops if id is not set for whatever reason
+    if (!$id) return;
+
     // only execute hook if ?id=XXX matches RC RootPage ID
     if ($id !== $this->rootPage()->id) return;
 
@@ -1086,6 +1076,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       <div id='PageListContainer'",
       $event->return
     );
+  }
+
+  public function ___uninstall(): void
+  {
+    rockmigrations()->deleteFields('tags=RockCommerce');
+    rockmigrations()->deleteTemplates('tags=RockCommerce');
+    rockmigrations()->deletePermission(ProcessRockCommerce::permission);
   }
 
   /**
@@ -1224,11 +1221,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function ___install(): void
   {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    $rm->log("Installing RockCommerce");
+    rockmigrations()->log("Installing RockCommerce");
     $this->init();
-    $rm->migrateModule($this);
+    rockmigrations()->runConfigMigrations(__DIR__ . '/RockMigrations/');
+    $this->migrate();
+    rockmigrations()->log("Installing RockCommerce DONE");
   }
 
   /**
@@ -1262,16 +1259,16 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
         </ul>",
     ]);
 
-    $inputfields->add([
-      'type' => 'markup',
-      'label' => 'Config Settings Override',
-      'value' => "You can override any setting in your config.php file:<br>
-        <pre class=uk-margin-small-top><code>\$config->rockcommerce['setting'] = 'newvalue';</code></pre>
-        <p>Active Overrides from \$config:</p>"
-        . rockmigrations()->dump(wire()->config->rockcommerce),
-      'icon' => 'life-ring',
-      'notes' => 'Use Shilft+Click on any field label to copy fieldname to clipboard.',
-    ]);
+    // $inputfields->add([
+    //   'type' => 'markup',
+    //   'label' => 'Config Settings Override',
+    //   'value' => "You can override any setting in your config.php file:<br>
+    //     <pre class=uk-margin-small-top><code>\$config->rockcommerce['setting'] = 'newvalue';</code></pre>
+    //     <p>Active Overrides from \$config:</p>"
+    //     . rockmigrations()->dump(wire()->config->rockcommerce),
+    //   'icon' => 'life-ring',
+    //   'notes' => 'Use Shilft+Click on any field label to copy fieldname to clipboard.',
+    // ]);
 
     $inputfields->add([
       'type' => 'checkbox',

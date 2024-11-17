@@ -2,8 +2,6 @@
 
 namespace ProcessWire;
 
-use RockCommerce\Order;
-
 /**
  * @author Bernhard Baumrock, 10.11.2023
  * @license COMMERCIAL DO NOT DISTRIBUTE
@@ -59,7 +57,7 @@ class ProcessRockCommerce extends Process
     parent::init(); // always remember to call the parent init
 
     /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
+    $rm = wire()->modules->get('RockMigrations');
     if ($rm) $rm->saveCSS(
       __DIR__ . "/ProcessRockCommerce.less",
       minify: true,
@@ -72,23 +70,23 @@ class ProcessRockCommerce extends Process
    */
   public function execute()
   {
-    return "The dashboard is still being built and will be available soon.";
+    return wire()->files->render(__DIR__ . "/stubs/chart.php");
 
     $this->headline('RockCommerce Dashboard');
     $this->browserTitle('RockCommerce Dashboard');
     /** @var InputfieldForm $form */
-    $form = $this->wire->modules->get('InputfieldForm');
+    $form = wire()->modules->get('InputfieldForm');
 
     /** @var RockFrontend $rf */
-    $rf = $this->wire->modules->get('RockFrontend');
+    $rf = wire()->modules->get('RockFrontend');
     $style = $rf->toUrl(__DIR__ . "/ProcessRockCommerce.min.css");
-    $this->wire->config->styles->add($style);
+    wire()->config->styles->add($style);
 
     // add echarts library
-    $this->wire->config->scripts->add($rf->toUrl(__DIR__ . "/lib/echarts.min.js"));
+    wire()->config->scripts->add($rf->toUrl(__DIR__ . "/lib/echarts.min.js"));
 
     /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
+    $rm = wire()->modules->get('RockMigrations');
     $form->add([
       'type' => 'markup',
       'label' => 'Net Revenue',
@@ -146,51 +144,51 @@ class ProcessRockCommerce extends Process
     return $form->render();
   }
 
-  public function executeEditStatus(): string
-  {
-    $id = $this->wire->input->post->id ?: $this->wire->input->get->id;
-    $order = $this->wire->pages->get($id);
-    if (!$order instanceof Order) throw new WireException("Invalid ID $id");
+  // public function executeEditStatus(): string
+  // {
+  //   $id = wire()->input->post->id ?: wire()->input->get->id;
+  //   $order = wire()->pages->get($id);
+  //   if (!$order instanceof Order) throw new WireException("Invalid ID $id");
 
-    $setStatus = $this->wire->input->post('status', Order::statuses());
-    if ($setStatus) {
-      $order->setAndSave(Order::field_paymentstatus, $setStatus);
-      $this->wire->session->redirect($order->editUrl());
-    }
+  //   $setStatus = wire()->input->post('status', Order::statuses());
+  //   if ($setStatus) {
+  //     $order->setAndSave(Order::field_paymentstatus, $setStatus);
+  //     wire()->session->redirect($order->editUrl());
+  //   }
 
-    $this->headline("Edit Status of Order #$order ({$order->title})");
-    $this->browserTitle("Edit Status of Order #$order ({$order->title})");
+  //   $this->headline("Edit Status of Order #$order ({$order->title})");
+  //   $this->browserTitle("Edit Status of Order #$order ({$order->title})");
 
-    /** @var InputfieldForm $form */
-    $form = $this->wire->modules->get('InputfieldForm');
+  //   /** @var InputfieldForm $form */
+  //   $form = wire()->modules->get('InputfieldForm');
 
-    $f = new InputfieldSelect();
-    $f->name = 'status';
-    $f->label = "Status";
-    $f->value = $order->paymentstatus();
-    $f->required = true;
-    foreach (Order::statuses() as $status) {
-      $f->addOption($status);
-    }
-    $form->add($f);
+  //   $f = new InputfieldSelect();
+  //   $f->name = 'status';
+  //   $f->label = "Status";
+  //   $f->value = $order->paymentstatus();
+  //   $f->required = true;
+  //   foreach (Order::statuses() as $status) {
+  //     $f->addOption($status);
+  //   }
+  //   $form->add($f);
 
-    $form->add([
-      'type' => 'hidden',
-      'name' => 'id',
-      'value' => $id,
-    ]);
+  //   $form->add([
+  //     'type' => 'hidden',
+  //     'name' => 'id',
+  //     'value' => $id,
+  //   ]);
 
-    $form->add([
-      'type' => 'submit',
-    ]);
+  //   $form->add([
+  //     'type' => 'submit',
+  //   ]);
 
-    return $form->render();
-  }
+  //   return $form->render();
+  // }
 
   public function executeSettings()
   {
-    $url = $this->wire->pages->get(2)->url;
+    $url = wire()->pages->get(2)->url;
     $p = rockcommerce()->rootPage();
-    $this->wire->session->redirect($url . "page/?id=$p");
+    wire()->session->redirect($url . "page/?id=$p");
   }
 }

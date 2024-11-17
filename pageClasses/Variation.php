@@ -17,7 +17,11 @@ class Variation extends Page
   {
     // add API hint to title field
     if ($f = $form->get('title')) {
-      $f->notes = "API: \$rockcommerce->variations('{$this->name}')->title";
+      if ($f->value) {
+        $f->notes = "API: \$rockcommerce->variations('{$this->name}')->title";
+      } else {
+        $f->notes = "Enter a label. A unique ID based on the label will be generated on the first save.";
+      }
       $f->columnWidth = 50;
     }
   }

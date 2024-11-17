@@ -3,7 +3,6 @@
 namespace ProcessWire;
 
 use RockCommerce\Item;
-use RockCommerce\Orders;
 
 return [
   'pageClass' => '\RockCommerce\Order',
@@ -49,9 +48,9 @@ return [
     RockCommerce::template_orders,
   ],
   'childTemplates' => [
-    Item::tpl,
+    RockCommerce::template_item,
   ],
-  'noParents' => 1,
-  'noLang' => 1, // single language
+  'noParents' => true,
+  'noLang' => true, // single language
   'icon' => 'shopping-bag',
 ];

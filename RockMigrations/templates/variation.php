@@ -14,12 +14,12 @@ return [
     ],
     RockCommerce::field_variationoptions,
   ],
-  'noChildren' => 1,
-  'noUnpublish' => 1,
+  'noChildren' => true,
+  'noUnpublish' => true,
   'parentTemplates' => [
     RockCommerce::template_variations,
   ],
   'nameContentTab' => 0,
-  'noSettings' => 1,
+  'noSettings' => true,
   'icon' => 'cube',
 ];

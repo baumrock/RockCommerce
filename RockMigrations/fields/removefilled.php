@@ -10,5 +10,5 @@ return [
   'size' => 3,
   'min' => 0,
   'max' => 365,
-  'zeroNotEmpty' => 1, // 0 != blank
+  'zeroNotEmpty' => true, // 0 != blank
 ];

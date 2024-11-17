@@ -17,17 +17,17 @@ return [
     RockCommerce::template_carts,
   ],
   'childTemplates' => [
-    Item::tpl,
+    RockCommerce::template_item,
   ],
-  'noLang' => 1, // single language
+  'noLang' => true, // single language
   'noChildren' => 0, // may have children
-  'noMove' => 1,
-  'noChangeTemplate' => 1,
-  'noParents' => 1,
+  'noMove' => true,
+  'noChangeTemplate' => true,
+  'noParents' => true,
   // sort by id
   // this is to make sure items are always in the same order
   // and later added items are further down in the list
   'sortfield' => 'id',
   'icon' => 'shopping-basket',
-  'noSettings' => 1,
+  'noSettings' => true,
 ];
