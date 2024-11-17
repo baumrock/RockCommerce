@@ -1,3 +1,12 @@
+# [0.4.0](https://github.com/baumrock/RockCommerce/compare/v0.3.0...v0.4.0) (2024-11-17)
+
+
+### Features
+
+* refactor to use wire() and bump version ([b4224a2](https://github.com/baumrock/RockCommerce/commit/b4224a2ad703480f91de1ac858c15ff51f55c1cd))
+
+
+
 # [0.3.0](https://github.com/baumrock/RockCommerce/compare/v0.2.0...v0.3.0) (2024-11-17)
 
 
