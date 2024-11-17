@@ -44,7 +44,10 @@ trait Product
       if (!$tpl->fields->count()) {
         // for superusers we show setup notes
         $f->addHookAfter('render', function (HookEvent $e) {
-          $e->return = 'No custom product fields are defined.';
+          $id = wire()->templates->get("repeater_" . RockCommerce::field_productfields)->id;
+          $url = wire()->pages->get(2)->url . "setup/template/edit?id=$id";
+          $e->return = "No custom product fields are defined. You can set them up
+          <a href=$url>here</a>.";
         });
         $f->notes = "This note is only shown to superusers.";
         $f->collapsed = wire()->user->isSuperuser()
