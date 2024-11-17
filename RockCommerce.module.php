@@ -477,7 +477,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $templates = new WireArray();
     foreach ($this->wire->templates as $tpl) {
-      if (!$tpl->fields->has("name=" . self::field_productfields)) continue;
+      $p = wire()->pages->newPage("template=$tpl");
+      if (!$p->isProduct) continue;
       $templates->add($tpl);
     }
     return $templates;
@@ -826,18 +827,16 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
 
     // migrate all products
-    $fired = false;
-    foreach ($this->wire->templates as $tpl) {
-      $p = $this->wire->pages->newPage("template=$tpl");
-      if (!$p->isProduct) continue;
-
-      // trigger _migrate only once for the whole project
-      // this is so that when using multiple templates using the product trait
-      // we don't end up getting the _migrate() of the trait being triggered
-      // more than once
-      if ($fired) continue;
-      $fired = true;
-      $p->_migrate();
+    foreach ($this->productTemplates as $tpl) {
+      $fields = [
+        RockCommerce::field_shoptab,
+        RockCommerce::field_net,
+        RockCommerce::field_variations,
+        RockCommerce::field_productfields,
+        RockCommerce::field_shoptab . '_END',
+      ];
+      $rm->addFieldsToTemplate($fields, $tpl);
+      $rm->setFieldOrder($fields, $tpl);
     }
   }
 

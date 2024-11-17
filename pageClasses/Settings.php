@@ -27,7 +27,8 @@ class Settings extends Page
         'type' => 'markup',
         'label' => 'Help',
         'icon' => 'life-ring',
-        'value' => "This settings page can be used to add custom configuration options as needed. RockCommerce will not use this data for anything and will never add or remove any fields. You can edit the template <a href='{$url}setup/template/edit?id={$id}'>rockcommerce_settings</a> to add new fields - either via GUI or via RockMigrations.",
+        'value' => "<p>This settings page can be used to add custom configuration options as needed. RockCommerce will not use this data for anything and will never add or remove any fields. You can edit the template <a href='{$url}setup/template/edit?id={$id}'>rockcommerce_settings</a> to add new fields - either via GUI or via RockMigrations.</p>
+        <p>RockCommerce Module Settings can be changed <a href='{$url}module/edit?name=RockCommerce'>here</a>.</p>",
         'notes' => 'This note is only shown to superusers.',
       ]);
     }

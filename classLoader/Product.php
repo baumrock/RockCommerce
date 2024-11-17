@@ -4,7 +4,7 @@ namespace RockCommerce;
 
 use ProcessWire\FieldsetPage;
 use ProcessWire\HookEvent;
-use ProcessWire\InputfieldWrapper;
+use ProcessWire\Inputfield;
 use ProcessWire\Page;
 use ProcessWire\RepeaterPageArray;
 use ProcessWire\RockCommerce;
@@ -23,6 +23,35 @@ trait Product
   {
     wire()->addHookProperty('Page::variationRepeaterLabel', $this, 'variationRepeaterLabel');
     wire()->addHookAfter('Inputfield::render',              $this, 'preloadRockGrid');
+    wire()->addHookAfter('ProcessPageEdit::buildForm',      $this, '_buildForm');
+  }
+
+  protected function _buildForm(HookEvent $event): void
+  {
+    $form = $event->return;
+
+    // are variations disabled? then hide the field
+    if ($f = $form->get(RockCommerce::field_variations)) {
+      $f->collapsed = rockcommerce()->noComplexPricing
+        ? Inputfield::collapsedHidden
+        : Inputfield::collapsedNo;
+    }
+
+    // hide productfields fieldset if no custom user fields are defined
+    // for superusers we always show it
+    if ($f = $form->get(RockCommerce::field_productfields)) {
+      $tpl = wire()->templates->get("repeater_" . RockCommerce::field_productfields);
+      if (!$tpl->fields->count()) {
+        // for superusers we show setup notes
+        $f->addHookAfter('render', function (HookEvent $e) {
+          $e->return = 'No custom product fields are defined.';
+        });
+        $f->notes = "This note is only shown to superusers.";
+        $f->collapsed = wire()->user->isSuperuser()
+          ? Inputfield::collapsedYes
+          : Inputfield::collapsedHidden;
+      }
+    }
   }
 
   public function custom(): FieldsetPage
@@ -33,11 +62,6 @@ trait Product
   public function maxamount(): int
   {
     return rockcommerce()->maxamount;
-  }
-
-  public function _migrate(): void
-  {
-    // TODO: add fields to template on migrate
   }
 
   public function minamount(): int
