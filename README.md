@@ -6,3 +6,7 @@
   - dashboard
   - site-profile
   - invoicing
+
+## Issues
+
+- cart maxamount is not limited to the product maxamount
