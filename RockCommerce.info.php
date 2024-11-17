@@ -26,7 +26,6 @@ $info = [
     'RockJavaScriptHooks>=1.0.0',
   ],
   'installs' => [
-    'RockCountries',
     'ProcessRockCommerce',
     'InputfieldRcPricing',
     'FieldtypeRcVariations',
