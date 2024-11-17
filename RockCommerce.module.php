@@ -310,6 +310,10 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   /**
    * This method will only be executed if debug mode is enabled
    * and $config->RockCommerceDev = true;
+   *
+   * // TODO: find a better way to do this
+   * Assets are pulled from other modules, but what if these modules are used
+   * already? Maybe add all files as single files and not a bundle?
    */
   private function dev(): void
   {
