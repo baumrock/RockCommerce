@@ -51,6 +51,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     '/site/templates/RockCommerce/frontend',
     '/site/modules/RockCommerce/frontend',
   ];
+
+  // webhook url without trailing slash
   const webhookurl = '/rockcommerce/webhook';
 
   const pricetype_net = 1;
@@ -113,8 +115,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // register AJAX endpoints
     rockfrontend()->addAjaxFolder('rockcommerce', __DIR__ . '/ajax');
 
+    // payment status webhook
+    // For the webhook we allow both slash and no slash urls!
+    // This is because different payment providers might add/remove slashes.
+    wire()->addHookAfter(self::webhookurl . "/?", $this, "handleWebhookHook");
+
     // hooks
-    wire()->addHookAfter(self::webhookurl, $this, "handleWebhookHook");
     wire()->addHookAfter('ProcessPageList::execute', $this, 'redirectPageList');
     wire()->addHookAfter(
       'Page::render',
@@ -542,16 +548,16 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function handleWebhookHook(HookEvent $event)
   {
-    $method = $this->wire->input->requestMethod();
-    if ($method !== 'POST') return; // 404
+    // NOTE: We allow all requests (GET/POST)
+    // This is to get maximum compatibility with all possible payment providers
 
-    // we never need tracy on webhooks
+    // disable tracy markup on webhooks (if it is installed)
     try {
       \Tracy\Debugger::$showBar = false;
     } catch (\Throwable $th) {
     }
 
-    // create webhook log page
+    // log this request to a processwire page
     $webhook = $this->wire->pages->new([
       "template" => RockCommerce::template_webhook,
       "parent" => $this->webhooksPage(),

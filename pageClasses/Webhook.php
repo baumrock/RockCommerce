@@ -49,7 +49,7 @@ class Webhook extends Page
       'type' => 'markup',
       'label' => 'Debug Output',
       'value' => $rm->dump($this->meta(self::meta_debugoutput)),
-      'notes' => 'The debug output as if \$config->debug was enabled.',
+      'notes' => 'The debug output as if $config->debug was enabled.',
     ]);
   }
 
