@@ -893,20 +893,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->wire->session->redirect($url . "page/?id=$p&open=$open");
   }
 
-  public function ___renderAddress($data, $lang = 'en'): string
+  public function ___renderAddress($data): string
   {
     $parts = [];
-
-    // get country via hookable method to make them translatable
-    $country = rockcountries()
-      ->countries($lang)
-      ->getWireData("alpha2=" . $data->country);
-
     if ($data->company) $parts[] = "$data->company";
     $parts[] = "{$data->firstname} {$data->lastname} {$data->fullname}";
     $parts[] = "$data->street";
     $parts[] = "$data->zip $data->city";
-    $parts[] = "$country->name";
+    $parts[] = "$data->countryName";
 
     $addr = array_filter(array_map('trim', $parts));
     return implode('<br>', $addr);

@@ -24,7 +24,6 @@ $info = [
     'Less>=0.0.5',
     'RockLoaders>=1.1.0',
     'RockJavaScriptHooks>=1.0.0',
-    'RockCountries>=1.0.0',
   ],
   'installs' => [
     'RockCountries',
