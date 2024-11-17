@@ -67,8 +67,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   private $jsConfig;
   private $jsFiles = [];
 
-  public $maxamount;
-  public $minamount;
   public $noComplexPricing = false;
 
   public $priceType = self::pricetype_net;
@@ -91,10 +89,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // attach hooks from rockcommerce.php
     $hookFile = wire()->config->paths->site . 'rockcommerce.php';
     if (is_file($hookFile)) require_once $hookFile;
-
-    // set default values
-    if ($this->minamount === null) $this->minamount = 1;
-    if ($this->maxamount === null) $this->maxamount = 10;
 
     // initialize module and api
     $this->loadConfig();
@@ -670,8 +664,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   private function jsConfig(): void
   {
     $this->jsConfig = new WireData();
-    $this->js('minamount', $this->minamount);
-    $this->js('maxamount', $this->maxamount);
+    $this->js('minamount', 1); // todo: make this hookable per product
+    $this->js('maxamount', 10); // todo: make this hookable per product
     $this->js('root', wire()->config->urls->root);
     $this->js('taxrates', $this->taxrates()->getJsonArray());
     $this->js('defaultTaxID', $this->taxratesPage()->getDefaultTaxID());
@@ -1276,30 +1270,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'label' => 'Show help and API notes to superusers',
     ]);
     $inputfields->children->last()->notes = '$config->rockcommerce["showHelp"] = true/false;';
-
-    // Products
-    $fs = new InputfieldFieldset();
-    $fs->label = 'Products';
-    $fs->icon = 'cubes';
-    $fs->collapsed = Inputfield::collapsedYes;
-    $inputfields->add($fs);
-
-    $fs->add([
-      'type' => 'integer',
-      'name' => 'minamount',
-      'label' => 'Minimum Amount',
-      'value' => $this->minamount,
-      'columnWidth' => 50,
-      'notes' => 'Defaults to 1 if empty.',
-    ]);
-    $fs->add([
-      'type' => 'integer',
-      'name' => 'maxamount',
-      'label' => 'Maximum Amount',
-      'value' => $this->maxamount,
-      'columnWidth' => 50,
-      'notes' => 'Defaults to 10 if empty.',
-    ]);
 
     // Pricing
     $fs = new InputfieldFieldset();

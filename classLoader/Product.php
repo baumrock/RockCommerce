@@ -62,14 +62,14 @@ trait Product
     return $this->getFormatted(RockCommerce::field_productfields);
   }
 
-  public function maxamount(): int
+  public function ___maxamount(): int
   {
-    return rockcommerce()->maxamount;
+    return 1;
   }
 
-  public function minamount(): int
+  public function ___minamount(): int
   {
-    return rockcommerce()->minamount;
+    return 10;
   }
 
   /**
