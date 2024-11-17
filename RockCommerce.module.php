@@ -106,11 +106,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->watch($this);
-    $rm->watch(
-      what: __DIR__ . "/classLoader/Product.php",
-      // migrate: 50,
-      options: ['trigger' => $this],
-    );
 
     // register AJAX endpoints
     rockfrontend()->addAjaxFolder('rockcommerce', __DIR__ . '/ajax');
@@ -709,17 +704,20 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   /**
    * Populate $rockcommerce->productTemplates on module init()
    */
-  private function loadProductTemplates(): void
+  private function loadProductTemplates($reset = false): void
   {
     $cache = "rc-product-templates";
 
     // reset cache on modules refresh
-    $this->wire->addHookAfter("Modules::refresh", function () use ($cache) {
-      $this->wire->cache->delete($cache);
+    wire()->addHookAfter("Modules::refresh", function () use ($cache) {
+      wire()->cache->delete($cache);
     });
 
+    // reset cache?
+    if ($reset) wire()->cache->delete($cache);
+
     // populate templates from cache
-    $templates = $this->wire->cache->get($cache, function () {
+    $templates = wire()->cache->get($cache, function () {
       return (string)$this->getProductTemplates();
     });
     $templates = (new WireArray())->setArray(explode("|", $templates));
@@ -728,7 +726,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function mailfrom(): string
   {
-    $host = $this->wire->config->httpHost;
+    $host = wire()->config->httpHost;
     return $this->mailfrom ?: "RockCommerce@$host";
   }
 
@@ -831,6 +829,9 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
 
     // migrate all products
+    // reset product templates cache to make sure we catch all templates
+    // where the trait might have just been added!
+    $this->loadProductTemplates(true);
     foreach ($this->productTemplates as $tpl) {
       $fields = [
         RockCommerce::field_shoptab,
