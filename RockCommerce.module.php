@@ -307,6 +307,13 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     echo "$str\n\n";
   }
 
+  public function __debugInfo()
+  {
+    return [
+      'productTemplates' => $this->productTemplates,
+    ];
+  }
+
   /**
    * This method will only be executed if debug mode is enabled
    * and $config->RockCommerceDev = true;
@@ -1226,16 +1233,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $name = strtolower($this);
 
-    if (!wire()->config->usePageClasses) {
-      $inputfields->add([
-        'type' => 'markup',
-        'label' => 'WARNING',
-        'value' => "<div class='uk-alert uk-alert-warning uk-margin-remove'>
-          This module requires the use of page classes. Please set <code>\$config->usePageClasses = true;</code> in your config.php file.
-        </div>",
-      ]);
-    }
-
     $inputfields->add([
       'type' => 'markup',
       'label' => 'Documentation & Updates',
@@ -1248,6 +1245,27 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
           <li><a class=uk-text-bold href=https://paypal.me/baumrockcom>Support my work with a donation</a>, and together, we'll keep rocking the coding world! 💖💻💰</li>
         </ul>",
     ]);
+
+    if (!wire()->config->usePageClasses) {
+      $inputfields->add([
+        'type' => 'markup',
+        'label' => 'WARNING',
+        'value' => "<div class='uk-alert uk-alert-warning uk-margin-remove'>
+          This module requires the use of page classes. Please set <code>\$config->usePageClasses = true;</code> in your config.php file.
+        </div>",
+      ]);
+    }
+
+    if (!wire()->modules->isInstalled('TracyDebugger')) {
+      $inputfields->add([
+        'type' => 'markup',
+        'label' => 'TracyDebugger is not installed',
+        'value' => "<div class='uk-alert uk-alert-info uk-margin-remove'>
+          We recommend to install TracyDebugger to make several dumps of RockCommerce more pretty!
+        </div>",
+        'icon' => 'exclamation-triangle',
+      ]);
+    }
 
     // $inputfields->add([
     //   'type' => 'markup',
