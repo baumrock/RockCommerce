@@ -2,8 +2,6 @@
 
 namespace ProcessWire;
 
-use RockCommerce\Order;
-
 /**
  * @author Bernhard Baumrock, 10.11.2023
  * @license COMMERCIAL DO NOT DISTRIBUTE
@@ -11,6 +9,7 @@ use RockCommerce\Order;
  */
 class ProcessRockCommerce extends Process
 {
+  const dashboardPageName = 'rc-dashboard';
 
   const permission = 'rockcommerce-dashboard';
 
@@ -18,7 +17,7 @@ class ProcessRockCommerce extends Process
   {
     return [
       'title' => 'RockCommerce',
-      'version' => '0.0.1',
+      'version' => json_decode(file_get_contents(__DIR__ . '/package.json'))->version,
       'summary' => 'Dashboard for the RockCommerce Shop',
       'icon' => 'bar-chart',
       'requires' => [
@@ -31,7 +30,7 @@ class ProcessRockCommerce extends Process
 
       // page that you want created to execute this module
       'page' => [
-        'name' => 'rockcommerce',
+        'name' => self::dashboardPageName,
         'parent' => 2,
         'title' => 'Shop'
       ],
@@ -45,9 +44,9 @@ class ProcessRockCommerce extends Process
           'icon' => 'bar-chart',
         ],
         [
-          'url' => '/prices',
-          'label' => 'Price Editor',
-          'icon' => 'table',
+          'url' => 'settings/',
+          'label' => 'Settings',
+          'icon' => 'cogs',
         ],
       ],
     ];
@@ -58,7 +57,7 @@ class ProcessRockCommerce extends Process
     parent::init(); // always remember to call the parent init
 
     /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
+    $rm = wire()->modules->get('RockMigrations');
     if ($rm) $rm->saveCSS(
       __DIR__ . "/ProcessRockCommerce.less",
       minify: true,
@@ -71,21 +70,23 @@ class ProcessRockCommerce extends Process
    */
   public function execute()
   {
+    return wire()->files->render(__DIR__ . "/stubs/chart.php");
+
     $this->headline('RockCommerce Dashboard');
     $this->browserTitle('RockCommerce Dashboard');
     /** @var InputfieldForm $form */
-    $form = $this->wire->modules->get('InputfieldForm');
+    $form = wire()->modules->get('InputfieldForm');
 
     /** @var RockFrontend $rf */
-    $rf = $this->wire->modules->get('RockFrontend');
+    $rf = wire()->modules->get('RockFrontend');
     $style = $rf->toUrl(__DIR__ . "/ProcessRockCommerce.min.css");
-    $this->wire->config->styles->add($style);
+    wire()->config->styles->add($style);
 
     // add echarts library
-    $this->wire->config->scripts->add($rf->toUrl(__DIR__ . "/lib/echarts.min.js"));
+    wire()->config->scripts->add($rf->toUrl(__DIR__ . "/lib/echarts.min.js"));
 
     /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
+    $rm = wire()->modules->get('RockMigrations');
     $form->add([
       'type' => 'markup',
       'label' => 'Net Revenue',
@@ -143,69 +144,51 @@ class ProcessRockCommerce extends Process
     return $form->render();
   }
 
-  public function executeEditStatus(): string
+  // public function executeEditStatus(): string
+  // {
+  //   $id = wire()->input->post->id ?: wire()->input->get->id;
+  //   $order = wire()->pages->get($id);
+  //   if (!$order instanceof Order) throw new WireException("Invalid ID $id");
+
+  //   $setStatus = wire()->input->post('status', Order::statuses());
+  //   if ($setStatus) {
+  //     $order->setAndSave(Order::field_paymentstatus, $setStatus);
+  //     wire()->session->redirect($order->editUrl());
+  //   }
+
+  //   $this->headline("Edit Status of Order #$order ({$order->title})");
+  //   $this->browserTitle("Edit Status of Order #$order ({$order->title})");
+
+  //   /** @var InputfieldForm $form */
+  //   $form = wire()->modules->get('InputfieldForm');
+
+  //   $f = new InputfieldSelect();
+  //   $f->name = 'status';
+  //   $f->label = "Status";
+  //   $f->value = $order->paymentstatus();
+  //   $f->required = true;
+  //   foreach (Order::statuses() as $status) {
+  //     $f->addOption($status);
+  //   }
+  //   $form->add($f);
+
+  //   $form->add([
+  //     'type' => 'hidden',
+  //     'name' => 'id',
+  //     'value' => $id,
+  //   ]);
+
+  //   $form->add([
+  //     'type' => 'submit',
+  //   ]);
+
+  //   return $form->render();
+  // }
+
+  public function executeSettings()
   {
-    $id = $this->wire->input->post->id ?: $this->wire->input->get->id;
-    $order = $this->wire->pages->get($id);
-    if (!$order instanceof Order) throw new WireException("Invalid ID $id");
-
-    $setStatus = $this->wire->input->post('status', Order::statuses());
-    if ($setStatus) {
-      $order->setAndSave(Order::field_paymentstatus, $setStatus);
-      $this->wire->session->redirect($order->editUrl());
-    }
-
-    $this->headline("Edit Status of Order #$order ({$order->title})");
-    $this->browserTitle("Edit Status of Order #$order ({$order->title})");
-
-    /** @var InputfieldForm $form */
-    $form = $this->wire->modules->get('InputfieldForm');
-
-    $f = new InputfieldSelect();
-    $f->name = 'status';
-    $f->label = "Status";
-    $f->value = $order->paymentstatus();
-    $f->required = true;
-    foreach (Order::statuses() as $status) {
-      $f->addOption($status);
-    }
-    $form->add($f);
-
-    $form->add([
-      'type' => 'hidden',
-      'name' => 'id',
-      'value' => $id,
-    ]);
-
-    $form->add([
-      'type' => 'submit',
-    ]);
-
-    return $form->render();
-  }
-
-  /**
-   * Manage Prices
-   */
-  public function executePrices()
-  {
-    $this->headline('Price Editor');
-    $this->browserTitle('Price Editor');
-    /** @var InputfieldForm $form */
-    $form = $this->wire->modules->get('InputfieldForm');
-
-    $form->add([
-      'type' => 'RockGrid',
-      'name' => 'price-editor',
-      'label' => false,
-      'icon' => 'pencil-square-o',
-      'grid' => 'Prices',
-      'themeBorder' => 'none',
-      'skipLabel' => Inputfield::skipLabelBlank,
-      // 'description' => "<div class='uk-alert uk-alert-warning'>WARNING: Changes will instantly be saved!</div>",
-      // 'entityEncodeText' => false,
-    ]);
-
-    return $form->render();
+    $url = wire()->pages->get(2)->url;
+    $p = rockcommerce()->rootPage();
+    wire()->session->redirect($url . "page/?id=$p");
   }
 }

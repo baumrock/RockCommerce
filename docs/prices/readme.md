@@ -39,3 +39,16 @@ $wire->addHookAfter("PriceMulti::toString", function ($event) {
 });
 // from 120,00€
 ```
+
+## Price Hooks (Frontend)
+
+This section explains how to use hooks to modify price rendering in RockCommerce. Hooks allow you to customize the behavior of price calculations and display. The following examples demonstrate how to double the price and add a fixed amount to it.
+
+```js
+RockCommerce.before("ProductPriceTotal", (event) => {
+  let price = event.return;
+  event.return = price.times(1.2);
+});
+```
+
+Note: You can add this code to your site's JS - just make sure that this is loaded before alpineJS has been loaded.

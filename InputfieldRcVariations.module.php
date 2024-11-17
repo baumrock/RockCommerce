@@ -14,7 +14,7 @@ class InputfieldRcVariations extends InputfieldTextarea
   {
     return [
       'title' => 'RcVariations Inputfield',
-      'version' => '0.0.1',
+      'version' => json_decode(file_get_contents(__DIR__ . '/package.json'))->version,
       'summary' => 'Your module description',
       'icon' => 'cubes',
       'requires' => [

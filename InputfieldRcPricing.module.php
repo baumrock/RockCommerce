@@ -14,7 +14,7 @@ class InputfieldRcPricing extends InputfieldTextarea implements InputfieldHasTex
   {
     return [
       'title' => 'RockCommerce Pricing',
-      'version' => '0.0.1',
+      'version' => json_decode(file_get_contents(__DIR__ . '/package.json'))->version,
       'summary' => 'Inputfield to manage variation pricing',
       'icon' => 'cubes',
       'requires' => [

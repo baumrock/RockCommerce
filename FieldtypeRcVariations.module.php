@@ -14,7 +14,7 @@ class FieldtypeRcVariations extends FieldtypeTextarea
   {
     return [
       'title' => 'RcVariations',
-      'version' => '0.0.1',
+      'version' => json_decode(file_get_contents(__DIR__ . '/package.json'))->version,
       'summary' => '',
       'icon' => 'cubes',
       'requires' => [

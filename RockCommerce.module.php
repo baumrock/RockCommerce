@@ -2,17 +2,24 @@
 
 namespace ProcessWire;
 
+use Mollie\Api\MollieApiClient;
+use Mollie\Api\Resources\Payment;
 use RockCommerce\Cart;
 use RockCommerce\Carts;
-use RockCommerce\InvoiceGroup;
-use RockCommerce\Invoices;
+use RockCommerce\Frontend;
 use RockCommerce\Order;
 use RockCommerce\Orders;
 use RockCommerce\ProductPage;
+use RockCommerce\ProductVariation;
 use RockCommerce\RootPage;
+use RockCommerce\Settings;
+use RockCommerce\Taxrates;
+use RockCommerce\TaxratesArray;
+use RockCommerce\TaxSelect;
 use RockCommerce\Variations;
 use RockCommerce\Webhook;
 use RockCommerce\Webhooks;
+use RockForms\MultiStepForm;
 use RockMoney\Money;
 
 /**
@@ -27,21 +34,40 @@ function rockcommerce(): RockCommerce
  * @author Bernhard Baumrock, 24.07.2023
  * @license COMMERCIAL PLEASE DO NOT DISTRIBUTE
  * @link https://www.baumrock.com
+ *
+ * @method Order createOrder(string $subject, Money|float $net, Money|float $vat, Money|float $total, string $email, array $pageProperties = [], array $meta = []) Hookable method to create an order
  */
+require_once __DIR__ . '/RockMigrationsConstants.php';
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
-  const prefix = "rockcommerce_";
+  use \RockCommerce\RockMigrationsConstants;
+
+  const prefix = 'rockcommerce_';
+  const maintenance = 'rockcommerce_maintenance';
+  const permission_variations = 'rockcommerce-variations';
 
   const session_cart = 'rockcommerce_cart';
   const viewFolders = [
     '/site/templates/RockCommerce/frontend',
     '/site/modules/RockCommerce/frontend',
   ];
-  const webhookurl = "/rockcommerce/webhook";
+
+  // webhook url without trailing slash
+  const webhookurl = '/rockcommerce/webhook';
 
   const pricetype_net = 1;
   const pricetype_gross = 0;
   const pricetype_runtime = 2; // not yet implemented
+
+  private $checkout = false;
+
+  /** @var array */
+  public $findRawVariationOptions;
+
+  public $frontend;
+
+  private $jsConfig;
+  private $jsFiles = [];
 
   public $noComplexPricing = false;
 
@@ -50,40 +76,60 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   /** @var WireArray */
   public $productTemplates = false;
 
+  public $showHelp = false;
+
   private $taxrates = false;
+
+  public $taxselect;
 
   public function init()
   {
+    // add classloader
+    // should be done by rockmigrations but does not work during installation
+    wire()->classLoader->addNamespace('RockCommerce', __DIR__ . '/pageClasses');
+
+    // attach hooks from rockcommerce.php
+    $hookFile = wire()->config->paths->site . 'rockcommerce.php';
+    if (is_file($hookFile)) require_once $hookFile;
+
     // initialize module and api
     $this->loadConfig();
     $this->wire('rockcommerce', $this);
     $this->loadProductTemplates();
+
+    // load submodules
+    $this->frontend = new Frontend();
+    $this->taxselect = new TaxSelect();
+
+    $this->initWhenInstalled();
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $rm->watch($this);
     $rm->watch(
       what: __DIR__ . "/classLoader/Product.php",
+      // migrate: 50,
       options: ['trigger' => $this],
     );
 
-    /** @var RockGrid $grid */
-    $grid = $this->wire->modules->get('RockGrid');
-    $grid->addDir(__DIR__ . "/RockGrid");
+    // register AJAX endpoints
+    rockfrontend()->addAjaxFolder('rockcommerce', __DIR__ . '/ajax');
 
-    // create assets
-    $rm->minify(__DIR__ . "/RockCommerceBackend.js");
-    $rm->minify(__DIR__ . "/RockCommerceFrontend.js");
-    $rm->minify(__DIR__ . "/RockCommerceSite.js");
-    $rm->minify(__DIR__ . "/Cart.js");
-
-    // HTMX+AJAX
-    $this->addHTMX(); // frontend endpoints
-    $this->addAJAX(); // backend endpoints
+    // payment status webhook
+    // For the webhook we allow both slash and no slash urls!
+    // This is because different payment providers might add/remove slashes.
+    wire()->addHookAfter(self::webhookurl . "/?", $this, "handleWebhookHook");
 
     // hooks
-    wire()->addHookAfter(self::webhookurl, $this, "handleWebhook");
-    wire()->addHookAfter("Page::render",   $this, "initRockCommerceSite");
+    wire()->addHookAfter('ProcessPageList::execute', $this, 'redirectPageList');
+    wire()->addHookAfter(
+      'Page::render',
+      $this,
+      'addMarkupHook',
+      // priority 200 means RC assets are loaded after RF assets which have 100
+      ['priority' => 200]
+    );
+    wire()->addHookAfter('Page::render', $this, 'tweakRockCommercePageList');
 
     // now that the module is ready we init the productpage
     // to attach hooks from the product trait
@@ -92,103 +138,78 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function ready()
   {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    $admin = $this->wire->page->template == 'admin';
-    $ajax = $this->wire->config->ajax;
-    if ($admin and !$ajax) {
-      $rm->addStyles(__DIR__ . "/less/backend.less");
-      $rm->addScripts(__DIR__ . "/RockCommerceBackend.min.js");
-    }
+    if (wire()->modules->isInstalled('RockLoaders')) rockloaders()->add('dots');
+    $this->addBackendAssets();
   }
 
-  /** regular methods */
-
-  /**
-   * Add ajax endpoints for the RockCommerce backend (eg Price Editor)
-   * Endpoints are located in /site/modules/RockCommerce/ajax.
-   * Results will sent be returned as json encoded string.
-   */
-  public function addAJAX(): void
+  private function addBackendAssets(): void
   {
-    // attach hooks only for ajax requests or superusers
-    $sudo = $this->wire->user->isSuperuser();
-    $ajax = $this->wire->config->ajax;
-    if (!($ajax or $sudo)) return;
-
-    $files = $this->wire->files->find(__DIR__ . "/ajax", ['extensions' => 'php']);
-    foreach ($files as $file) {
-      $name = substr(basename($file), 0, -4);
-      $this->wire->addHook("/rockcommerce/$name", function (HookEvent $event) use ($file, $name) {
-        try {
-          return json_encode($this->wire->files->render($file));
-        } catch (\Throwable $th) {
-          return json_encode([
-            'error' => $th->getMessage(),
-          ]);
-        }
-      });
-    }
+    $p = wire()->page;
+    if ($p->template != 'admin') return;
+    if (wire()->config->ajax) return;
+    if (wire()->config->external) return;
+    $rm = rockmigrations();
+    // currency for variation inputs
+    $rm->addScripts(__DIR__ . '/../RockMoney/lib/currency.min.js');
   }
 
   /**
-   * Scan /htmx folder for endpoints and add them via hook
+   * Add markup to frontend pages
    */
-  public function addHTMX(): void
+  public function ___addMarkup($page, $html)
   {
-    foreach ($this->viewFolders(absolute: true, reverse: true) as $folder) {
-      $endpoints = $this->wire->files->find(
-        "$folder/htmx",
-        ['extensions' => ['php']]
-      );
-      foreach ($endpoints as $endpoint) {
-        $base = substr(basename($endpoint), 0, -4);
-        $this->wire->addHook("/$base", function (HookEvent $event) use ($base) {
-          // make htmx endpoints only available via ajax
-          // superusers are allowed to access them directly (for debugging)
-          $sudo = $this->wire->user->isSuperuser();
-          $ajax = $this->wire->config->ajax;
-          if (!$ajax && !$sudo) throw new WireException("No direct access");
+    $config = $this->wire->config;
+    if ($config->ajax) return;
+    if ($config->external) return;
+    if (!$page->viewable()) return;
+    if ($page->template == 'admin') return;
+    if (!strpos($html, '</head>')) return;
 
-          // render endpoint
-          try {
-            $view = $this->view("htmx/$base");
-          } catch (\Throwable $th) {
-            $msg = $th->getMessage();
-            $view = "<div class='uk-alert uk-alert-danger'>$msg</div>";
-          }
+    // this is to support disabling rockcommerce markup via hook
+    if ($config->noRockCommerceMarkup) return;
 
-          $swap = $this->wire->input->post('swap', 'string');
-          if ($swap) $view .= $this->swap(explode(",", $swap));
+    // first we add the body, because there some scripts are added
+    $html = str_replace(
+      '</body>',
+      $this->markupBody($page) . '</body>',
+      $html
+    );
 
-          // return response
-          return $view;
-        });
-      }
-    }
+    return $html;
+  }
+
+  protected function addMarkupHook(HookEvent $event): void
+  {
+    $newHtml = $this->addMarkup($event->object, $event->return);
+    if (!$newHtml) return;
+    $event->return = $newHtml;
+  }
+
+  public function addVariationsUrl(): string
+  {
+    return $this->wire->pages->get(2)->url
+      . 'page/add/?parent_id='
+      . $this->variationsPage();
+  }
+
+  public function apiNote(Inputfield $field, $note, $nl = true): void
+  {
+    $this->helpNote($field, $note, 'API', $nl);
+  }
+
+  public function attrs($name, $attrs): string
+  {
+    $this->loadJS($name);
+    return "
+      x-data=$name
+      $attrs
+    ";
   }
 
   public function badge($str, $cls = '')
   {
     if (!"$str") return;
     return "<span class='uk-alert $cls rc-badge'>$str</span>";
-  }
-
-  /**
-   * Logic triggered by mollie webhook
-   * Hookable if custom actions should be needed.
-   */
-  public function ___callWebhook(string $paymentid): void
-  {
-    $this->debug("Payment ID: $paymentid");
-    $payment = $this->rockmollie()->api()->payments->get($paymentid);
-    $order = $this->getOrder($payment->metadata->orderid);
-    if ($order) {
-      $this->debug("Order: " . $order);
-      $order->setPaymentStatus($payment->status);
-    } else {
-      throw new WireException("No order found");
-    }
   }
 
   /**
@@ -206,12 +227,18 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     );
   }
 
-  public function cartsPage(): Carts
+  public function cartsPage(): Carts|Nullpage
   {
     return $this->wire->pages->get([
       'parent' => $this->rootPage(),
       'name' => 'carts',
     ]);
+  }
+
+  public function checkout(): MultiStepForm
+  {
+    if ($this->checkout) return $this->checkout;
+    return $this->checkout = new MultiStepForm();
   }
 
   /**
@@ -223,12 +250,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $max = $this->webhooksPage()->max();
     $keep = $this->wire->pages->findIDs([
-      'template' => Webhook::tpl,
+      'template' => RockCommerce::template_webhook,
       'sort' => '-id',
       'limit' => $max,
     ]);
     $selector = [
-      "template" => Webhook::tpl,
+      "template" => RockCommerce::template_webhook,
       "id!=" => $keep,
     ];
     while ($p = $this->wire->pages->get($selector) and $p->id) {
@@ -244,21 +271,27 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     Money|float $total,
     string $email,
     array $pageProperties = [],
-    array $meta = [],
+    array $details = [],
   ): Order {
     $money = rockmoney();
-    $order = $this->wire->pages->newPage('template=' . Order::tpl);
+    $order = $this->wire->pages->newPage('template=' . self::template_order);
     $order->set('title', $subject);
-    $order->set(Order::field_net, $money->parse($net));
-    $order->set(Order::field_vat, $money->parse($vat));
-    $order->set(Order::field_total, $money->parse($total));
+    $order->set(self::field_net, $money->parse($net));
+    $order->set(self::field_vat, $money->parse($vat));
+    $order->set(self::field_total, $money->parse($total));
     $order->set(RockMigrations::field_email, $email);
-    foreach ($pageProperties as $k => $v) {
-      $order->set(Order::prefix . $k, $v);
-    }
+    foreach ($pageProperties as $k => $v) $order->set($k, $v);
     $order->save();
-    $order->meta('details', $meta);
+    $order->meta('details', $details);
     return $order;
+  }
+
+  public function dashboardPage(): Page
+  {
+    return wire()->pages->get([
+      'template' => 'admin',
+      'name' => ProcessRockCommerce::dashboardPageName,
+    ]);
   }
 
   /**
@@ -272,6 +305,76 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     if ($log) $this->wire->log($str);
     if (!$this->debug) return;
     echo "$str\n\n";
+  }
+
+  /**
+   * This method will only be executed if debug mode is enabled
+   * and $config->RockCommerceDev = true;
+   *
+   * // TODO: find a better way to do this
+   * Assets are pulled from other modules, but what if these modules are used
+   * already? Maybe add all files as single files and not a bundle?
+   */
+  private function dev(): void
+  {
+    $config = wire()->config;
+    if (!$config->debug) return;
+    if ($config->ajax) return;
+    if ($config->external) return;
+    if (!$config->RockCommerceDev) return;
+
+    // we compile via RockAssets module, so if that does not exist, we exit
+    /** @var RockAssets $assets */
+    $assets = wire()->modules->get('RockAssets');
+    if (!$assets) return;
+
+    // compile all alpine js components to one JS file
+    // wire()->config->debug = false;
+    // wire()->config->rockassetsForceRecompile = true;
+    $assets
+      ->add('/site/modules/RockJavaScriptHooks/Hooks.js')
+      ->add('/site/modules/RockMoney/RockMoney.min.js')
+      ->add('/site/modules/RockMoney/lib/currency.min.js')
+
+      // load alpine components, with main component first
+      ->add(__DIR__ . '/alpine/RockCommerce.js')
+      // then load all other components from alpine folder
+      ->addAll(__DIR__ . '/alpine')
+      // finally load alpinejs
+      ->add(__DIR__ . '/lib/alpine.min.js', preventMinify: true)
+      ->saveTo(
+        __DIR__ . '/dst/RockCommerce.min.js',
+        minify: true,
+      );
+  }
+
+  public function findRawVariationOptions(): array
+  {
+    // get options from cache if already loaded
+    if ($this->findRawVariationOptions) return $this->findRawVariationOptions;
+
+    // find raw variations
+    $arr = wire()->pages->findRaw(
+      ['parent' => $this->variationsPage()],
+      [
+        'title',
+        self::field_variationoptions . '.title',
+      ],
+      ['nulls' => true]
+    );
+
+    $result = [];
+    foreach ($arr as $varid => $fields) {
+      foreach ($fields[self::field_variationoptions] as $optid => $data) {
+        $result[] = [
+          'id' => $optid,
+          'varid' => $varid,
+          'variation' => $fields['title'],
+          'option' => $data['title'],
+        ];
+      }
+    }
+    return $result;
   }
 
   /**
@@ -298,24 +401,63 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $cart;
   }
 
-  public function getJsConfig($json = false): array|string
+  /**
+   * Get file either from templates/rockcommerce
+   * or from module frontend folder
+   */
+  public function getFile(string $file): string
   {
-    $config = [
-      'debug' => $this->wire->config->debug,
-      'currency' => rockmoney()->currencyStr ?: 'EUR',
-      'locale' => $this->frontendLocale ?: 'de-DE',
-      'priceType' => $this->priceType() ?: 'net',
+    $paths = [
+      wire()->config->paths->templates . 'RockCommerce/frontend',
+      __DIR__ . '/frontend',
     ];
-    if ($json) return json_encode($config);
-    return $config;
+
+    $file = Paths::normalizeSeparators($file);
+    foreach ($paths as $path) {
+      $path = Paths::normalizeSeparators($path);
+      $f = rtrim($path, '/') . '/' . ltrim($file, '/');
+      if (file_exists($f)) return $f;
+    }
+
+    return '';
   }
 
+  // public function getJsConfig($json = false): array|string
+  // {
+  //   $config = [
+  //     'debug' => $this->wire->config->debug,
+  //     'currency' => rockmoney()->currencyStr ?: 'EUR',
+  //     'locale' => $this->frontendLocale ?: 'de-DE',
+  //     'priceType' => $this->priceType() ?: 'net',
+  //   ];
+  //   if ($json) return json_encode($config);
+  //   return $config;
+  // }
+
+  /**
+   * Get order by id or name
+   * returns false if order is not found
+   */
   public function getOrder(string $orderid = null): Order|false
   {
     if ($orderid === null) $orderid = $this->wire->input->get('id', 'string');
     $order = $this->wire->pages->get([
-      'template' => Order::tpl,
+      'template' => self::template_order,
       'name' => $orderid,
+    ]);
+    if (!$order->id) return false;
+    return $order;
+  }
+
+  /**
+   * Get order by payment ID
+   * returns false if order is not found
+   */
+  public function getOrderByPaymentID(string $paymentid): Order|false
+  {
+    $order = $this->wire->pages->get([
+      'template' => self::template_order,
+      self::field_paymentid => $paymentid,
     ]);
     if (!$order->id) return false;
     return $order;
@@ -339,7 +481,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     $templates = new WireArray();
     foreach ($this->wire->templates as $tpl) {
-      if (!$tpl->fields->has("name=" . ProductPage::field_available)) continue;
+      $p = wire()->pages->newPage("template=$tpl");
+      if (!$p->isProduct) continue;
       $templates->add($tpl);
     }
     return $templates;
@@ -367,75 +510,173 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $this->taxrates = $arr;
   }
 
-  public function handleWebhook(HookEvent $event)
-  {
-    $method = $this->wire->input->requestMethod();
-    if ($method !== 'POST') return; // 404
+  /**
+   * Hookable method to attach actions after webhook is received
+   * @return void
+   */
+  public function ___handleWebhook(
+    Webhook $log,
+    $input,
+    $info,
+  ) {
+    // get payment ID from input
+    $paymentID = wire()->sanitizer->filename($input->id);
 
-    // create webhook log page
-    $log = $this->wire->pages->new("template=" . Webhook::tpl
-      . ",parent=" . $this->webhooksPage());
+    // find order
+    $order = rockcommerce()->getOrderByPaymentID($paymentID);
+    if (!$order) {
+      $log->echo('No order found for payment ' . $paymentID);
+      return;
+    }
+
+    // all good, continue
+    $log->echo("Found order $order for payment $paymentID");
+
+    // update order status
+    // get order status from mollie and then write it to the order
+    // note: you might wonder why mollie does not send the status with the webhook.
+    // The reason is security. In that way it is impossible to manipulate the
+    // order status from a manipulated webhook request.
+    /** @var MollieApiClient $api */
+    /** @var RockMollie $mollie */
+    $mollie = wire()->modules->get('RockMollie');
+    $api = $mollie->api();
+    $payment = $api->payments->get($paymentID);
+    if ($payment instanceof Payment) {
+      $log->echo("Updating payment status to '$payment->status'");
+      $order->setPaymentStatus($payment->status);
+    } else {
+      $log->echo("Payment not found: " . $paymentID);
+    }
+  }
+
+  public function handleWebhookHook(HookEvent $event)
+  {
+    // NOTE: We allow all requests (GET/POST)
+    // This is to get maximum compatibility with all possible payment providers
+
+    // disable tracy markup on webhooks (if it is installed)
+    try {
+      \Tracy\Debugger::$showBar = false;
+    } catch (\Throwable $th) {
+    }
+
+    // log this request to a processwire page
+    $webhook = $this->wire->pages->new([
+      "template" => RockCommerce::template_webhook,
+      "parent" => $this->webhooksPage(),
+    ]);
 
     // cleanup old webhook pages
     $this->cleanupOldWebhookPages();
 
-    // save received input
-    $inputdata = $this->wire->input->post->getArray();
-    $log->meta(Webhook::meta_input, json_encode($inputdata));
-    ob_start();
+    // save request input
+    $input = wire()->input->post;
+    $webhook->meta(Webhook::meta_input, $input->getArray());
 
-    // we never need tracy on webhooks
-    \Tracy\Debugger::$showBar = false;
+    // save request info
+    $info = $webhook->requestInfo();
+    $webhook->meta(Webhook::meta_info, $info);
 
-    echo "RockCommerce Rocks!\n\n";
+    // trigger hookable method
+    $this->handleWebhook($webhook, $input, $info);
 
-    $actual_link = "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $webhook->echo("done");
 
-    echo "$actual_link\n\n";
-
-    // get payment and update order status
-    $paymentid = $this->wire->input->post('id', 'string');
-    if (!$paymentid) return true;
-    try {
-      $this->callWebhook($paymentid);
-    } catch (\Throwable $th) {
-      $this->debug($th->getMessage(), true);
-    }
-
-    // save output to log
-    $output = ob_get_clean();
-    $log->meta(Webhook::meta_output, $output);
-
-    // dont render any html
-    echo $output;
     return true;
+  }
+
+  public function helpNote(Inputfield $field, $note, $prefix = '', $nl = true): void
+  {
+    if (!$this->showHelp) return;
+    if (!$this->wire->user->isSuperuser()) return;
+    $notes = array_filter([
+      $field->notes,
+      $prefix ? "$prefix: $note" : $note,
+    ]);
+    $field->notes = $nl
+      ? implode("\n", $notes)
+      : implode(" ", $notes);
+  }
+
+  /**
+   * Host without trailing slash
+   */
+  public function host(): string
+  {
+    return rtrim('https://' . $_SERVER['HTTP_HOST'], '/');
   }
 
   /**
    * Add JS tag on frontend to init RCSite object
    */
-  public function initRockCommerceSite(HookEvent $event): void
+  // public function initRockCommerceSite(HookEvent $event): void
+  // {
+  //   /** @var Page $page */
+  //   $page = $event->object;
+  //   if ($page->template == 'admin') return;
+  //   if ($this->wire->config->ajax) return;
+  //   if (!$page->viewable()) return;
+  //   $event->return = str_replace(
+  //     "</body>",
+  //     "<script>document.addEventListener('DOMContentLoaded', function() {
+  //       RockCommerceSite.init({$this->getJsConfig(true)});
+  //     });</script></body>",
+  //     $event->return
+  //   );
+  // }
+
+  /**
+   * Things to do only when the module is installed
+   *
+   * These operations throw an error if the module is not yet completely
+   * installed, eg the RootPage does not exist yet etc;
+   */
+  public function initWhenInstalled(): void
   {
-    /** @var Page $page */
-    $page = $event->object;
-    if ($page->template == 'admin') return;
-    if ($this->wire->config->ajax) return;
-    if (!$page->viewable()) return;
-    $event->return = str_replace(
-      "</body>",
-      "<script>document.addEventListener('DOMContentLoaded', function() {
-        RockCommerceSite.init({$this->getJsConfig(true)});
-      });</script></body>",
-      $event->return
-    );
+    if (!$this->isInstalled()) return;
+
+    // js config for the frontend
+    $this->jsConfig();
+
+    // things to do while developing
+    $this->dev();
+
+    // trigger maintenance from time to time
+    $expire = 60 * 60 * 1; // every hour
+    $this->wire->cache->get(self::maintenance, $expire, function () {
+      $this->maintenance();
+    });
   }
 
-  public function invoicesPage(): Invoices
+  public function isInstalled(): bool
   {
-    return $this->wire->pages->get([
-      'template' => Invoices::tpl,
-      'parent' => $this->rootPage(),
-    ]);
+    try {
+      return $this->rootPage()->id > 0;
+    } catch (\Throwable $th) {
+      return false;
+    }
+  }
+
+  /**
+   * Set JS config value
+   */
+  public function js(string $prop, mixed $val): void
+  {
+    $this->jsConfig->set($prop, $val);
+  }
+
+  /**
+   * js config
+   * will be available in fronend via RockCommerce.config
+   * as soon as the RockCommerce:ready event has been fired
+   */
+  private function jsConfig(): void
+  {
+    $this->jsConfig = new WireData();
+    $this->js('root', wire()->config->urls->root);
+    $this->js('taxrates', $this->taxrates()->getJsonArray());
+    $this->js('defaultTaxID', $this->taxratesPage()->getDefaultTaxID());
   }
 
   /**
@@ -445,9 +686,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   private function loadConfig(): void
   {
-    $overrides = $this->wire->config->rockcommerce;
+    $overrides = wire()->config->rockcommerce;
     if (!is_array($overrides)) return;
-    foreach ($overrides as $k => $v) $this->set($k, $v);
+    // note: $this->set($k, $v) does not work here
+    foreach ($overrides as $k => $v) $this->$k = $v;
+  }
+
+  public function loadJS($jsfile): void
+  {
+    $load = $this->jsFiles;
+    $load[$jsfile] = true;
+    $this->jsFiles = $load;
   }
 
   /**
@@ -481,80 +730,110 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $this->mailfromName ?: "RockCommerce";
   }
 
+  public function maintenance(): void
+  {
+    // remove unused variations
+    $oldVariations = $this->wire->pages->find([
+      'parent' => $this->variationsPage(),
+      'title' => '',
+      'created<' => time() - 60 * 60, // older than 1h
+    ]);
+    foreach ($oldVariations as $p) $p->delete();
+  }
+
+  public function ___markupBody(): string
+  {
+    $conf = json_encode($this->jsConfig->getArray());
+    $conf = $this->wire->sanitizer->entities($conf);
+    $out = '<div id="rockcommerce">';
+
+    // load cart component
+    // this hidden element makes sure that we load the component even
+    // if there is no cart element in the DOM. If there is one, the init()
+    // method will take care of loading the cart only once.
+    // data-ajax=false tells RockCommerce not to load items via ajax
+    $this->loadJS('RcCart');
+    $out .= "<div x-data=RcCart data-noajax hidden></div>";
+
+    // load other alpine components
+    $out .= "<div x-data=RcTaxrates hidden></div>";
+
+    // rockcommerce has to be the last alpine element
+    // this is to ensure that all other components are ready at this point
+    $out .= "<div x-data=RockCommerce data-config='$conf' hidden></div>";
+
+    $out .= "</div>";
+
+    return $out;
+  }
+
   public function migrate()
   {
     $rm = rockmigrations();
-    $rm->installModule("InputfieldRcPricing");
-    $rm->installModule("FieldtypeRcVariations");
-    $rm->installModule("InputfieldRcVariations");
+
+    // add permissions
+    $rm->createPermission(
+      self::permission_variations,
+      'User can manage product variations'
+    );
 
     $rootPage = $rm->createPage(
-      template: RootPage::tpl,
-      parent: 1,
-      name: "rc",
-      title: "RockCommerce",
-      status: ["hidden"],
-    );
-    $rm->createPage(
-      template: Orders::tpl,
-      parent: $rootPage,
-      name: "orders",
-      title: "Orders",
-    );
-    $rm->createPage(
-      template: Webhooks::tpl,
-      parent: $rootPage,
-      name: "webhooks",
-      title: "Webhooks",
-      status: ["hidden"],
-    );
-    $invoicesPage = $rm->createPage(
-      template: Invoices::tpl,
-      parent: $rootPage,
-      name: "invoices",
-      title: "Invoices",
-      status: ["hidden", "locked"],
-    );
-    $rm->createPage(
-      template: InvoiceGroup::tpl,
-      parent: $invoicesPage,
+      template: self::template_rootpage,
+      parent: 2,
       name: "rockcommerce",
       title: "RockCommerce",
       status: ["hidden"],
     );
     $rm->createPage(
-      template: Carts::tpl,
+      template: self::template_orders,
+      parent: $rootPage,
+      name: "orders",
+      title: "Orders",
+    );
+    $rm->createPage(
+      template: self::template_webhooks,
+      parent: $rootPage,
+      name: "webhooks",
+      title: "Webhooks",
+      status: ["hidden"],
+    );
+    $rm->createPage(
+      template: self::template_carts,
       parent: $rootPage,
       title: 'Carts',
       name: 'carts',
       status: [],
     );
     $rm->createPage(
-      template: Variations::tpl,
+      template: self::template_variations,
       parent: $rootPage,
       title: 'Variations',
       name: 'variations',
     );
-
-    // set tags for all fields
-    foreach ($this->wire->fields as $field) {
-      if (!str_starts_with($field->name, "rockcommerce_")) continue;
-      $rm->setFieldData($field, ['tags' => 'RockCommerce']);
-    }
+    $rm->createPage(
+      template: self::template_taxrates,
+      parent: $rootPage,
+      title: 'Taxrates',
+      name: 'taxrates',
+    );
+    $rm->createPage(
+      template: self::template_settings,
+      parent: $rootPage,
+      title: 'Settings',
+      name: 'settings',
+    );
 
     // migrate all products
-    $fired = false;
-    foreach ($this->wire->templates as $tpl) {
-      $p = $this->wire->pages->newPage("template=$tpl");
-      if (!$p->isProduct) continue;
-
-      // trigger _migrate only once for the whole project
-      // this is so that when using multiple templates using the product trait
-      // we don't end up getting the _migrate() of the trait being triggered
-      // more than once
-      if ($fired) continue;
-      $fired = true;
-      $p->_migrate();
+    foreach ($this->productTemplates as $tpl) {
+      $fields = [
+        RockCommerce::field_shoptab,
+        RockCommerce::field_net,
+        RockCommerce::field_variations,
+        RockCommerce::field_productfields,
+        RockCommerce::field_shoptab . '_END',
+      ];
+      $rm->addFieldsToTemplate($fields, $tpl);
+      $rm->setFieldOrder($fields, $tpl);
     }
   }
 
@@ -564,7 +843,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function newCart(): Cart
   {
     return $this->wire->pages->new([
-      'template' => Cart::tpl,
+      'template' => self::template_cart,
     ]);
   }
 
@@ -572,7 +851,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     return $this->wire->pages->get([
       'parent' => $this->rootPage(),
-      'template' => Orders::tpl,
+      'template' => self::template_orders,
     ]);
   }
 
@@ -596,18 +875,101 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * Method that renders the frontend folder when the rootpage is viewed
-   * The heavy lifting is done by RockFrontend so that other modules can use
-   * the same concept as well :)
+   * This hook is used to make sure that when a breadcrumb item is clicked
+   * we don't land on the main pagelist but on the RockCommerce branch
    */
-  public function renderFrontend(): string
+  protected function redirectPageList(): void
   {
-    return $this->rockfrontend()->viewFolders(
-      self::viewFolders,
-      [
-        'trailingSlash' => $this->rootPage()->trailingslash(),
-      ]
-    );
+    if (wire()->config->ajax) return;
+    if (wire()->config->external) return;
+    if (wire()->input->get('id')) return;
+    $open = wire()->input->get('open', 'int');
+    if (!$open) return;
+    $p = wire()->pages->get($open);
+    $isRockCommerce = $p
+      ->closest('template=' . self::template_rootpage)
+      ->id > 0;
+    if (!$isRockCommerce) return;
+
+    // redirect to rockcommerce settings page
+    $url = $this->wire->pages->get(2)->url;
+    $p = rockcommerce()->rootPage();
+    $this->wire->session->redirect($url . "page/?id=$p&open=$open");
+  }
+
+  public function ___renderAddress($data): string
+  {
+    $parts = [];
+    if ($data->company) $parts[] = "$data->company";
+    $parts[] = "{$data->firstname} {$data->lastname} {$data->fullname}";
+    $parts[] = "$data->street";
+    $parts[] = "$data->zip $data->city";
+    $parts[] = "$data->countryName";
+
+    $addr = array_filter(array_map('trim', $parts));
+    return implode('<br>', $addr);
+  }
+
+  public function rockfrontend(): RockFrontend
+  {
+    return $this->wire->modules->get('RockFrontend');
+  }
+
+  public function rockmollie(): RockMollie
+  {
+    return $this->wire->modules->get('RockMollie');
+  }
+
+  public function rootPage(): RootPage|NullPage
+  {
+    return wire()->pages->get([
+      // 'parent' => 2,
+      'template' => self::template_rootpage,
+    ]);
+  }
+
+  public function sanitizeVariation(string|null $variation): string
+  {
+    if (is_null($variation)) return '';
+
+    $str = '';
+    // "6780:6730,6731-6789:6784"
+    // Split the variation string into individual key-value pairs
+    $pairs = explode('-', $variation);
+    foreach ($pairs as $pair) {
+      if (!strpos($pair, ':')) continue;
+
+      // Split each pair into key and values
+      list($key, $values) = explode(':', $pair);
+
+      // Sanitize key
+      $key = (int)$key;
+
+      // get variation from key
+      $variation = wire()->pages->get($key);
+      if (!$variation instanceof ProductVariation) continue;
+      $validOptionIds = [];
+      foreach ($variation->options() as $opt) {
+        $validOptionIds[] = $opt->option->id;
+      }
+
+      $sanitizedValues = [];
+
+      // Split values by comma and sanitize each
+      $valueArray = explode(',', $values);
+      foreach ($valueArray as $value) {
+        $value = (int)$value;
+        if (!in_array($value, $validOptionIds)) continue;
+        $sanitizedValues[] = $value;
+      }
+
+      // Only add to the sanitized string if key is valid and there are sanitized values
+      if (!empty($sanitizedValues)) {
+        $str .= ($str ? '-' : '') . $key . ':' . implode(',', $sanitizedValues);
+      }
+    }
+
+    return $str;
   }
 
   public function setCart(Cart $cart): void
@@ -615,54 +977,192 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->wire->session->set(self::session_cart, $cart->name);
   }
 
+  public function settings(): Settings
+  {
+    return wire()->pages->get([
+      'template' => self::template_settings,
+      'parent' => $this->rootPage(),
+    ]);
+  }
+
+  // /**
+  //  * Generate swap container for HTMX requests
+  //  *
+  //  * Usage example:
+  //  * echo $rc->swap([
+  //  *  'partials/cart-sidebar',
+  //  * ]);
+  //  */
+  // public function swap(array $files): string
+  // {
+  //   $out = "\n<div id='rc-swap' hidden>";
+
+  //   // before we render all views we make sure to call _init.php
+  //   $this->view('_init.php');
+
+  //   // then we render all requested views
+  //   foreach ($files as $file) {
+  //     // note: for security only partials can be swapped!
+  //     $out .= $this->view("partials/$file");
+  //   }
+
+  //   $out .= "</div>";
+  //   return $out;
+  // }
+
+  public function ___taxrate($product): float
+  {
+    return (float)$this->wire->config->rockcommerceTaxrate;
+  }
+
+  public function taxrates(): TaxratesArray
+  {
+    $arr = new TaxratesArray();
+    return $arr->import(wire()->pages->find([
+      'parent' => $this->rootPage()->path . 'taxrates',
+    ]));
+  }
+
+  public function taxratesPage(): Taxrates
+  {
+    return wire()->pages->get([
+      'template' => RockCommerce::template_taxrates,
+      'parent' => $this->rootPage(),
+    ]);
+  }
+
+  /**
+   * Convert path to url
+   * @return string
+   */
+  public function toUrl(string $path, $cachebuster = false): string
+  {
+    return rockfrontend()->toUrl($path, $cachebuster);
+  }
+
+  protected function tweakRockCommercePageList(HookEvent $event): void
+  {
+    if (wire()->config->ajax) return;
+    $id = wire()->input->get('id', 'int');
+
+    // to prevent endless loops if id is not set for whatever reason
+    if (!$id) return;
+
+    // only execute hook if ?id=XXX matches RC RootPage ID
+    if ($id !== $this->rootPage()->id) return;
+
+    // prevent double rendering of page list if ?id=XX&open=XX
+    if ($id === wire()->input->get('open', 'int')) {
+      $url = wire()->pages->get(2)->url . "page/";
+      wire()->session->redirect("$url?id=$id");
+      return;
+    }
+
+    $event->return = str_replace(
+      "<div id='PageListContainer'",
+      "<style>
+        #PageListContainer .PageListItem { --rock-muted-background: none; }
+      </style>
+      <div id='PageListContainer'",
+      $event->return
+    );
+  }
+
+  public function ___uninstall(): void
+  {
+    rockmigrations()->deleteFields('tags=RockCommerce');
+    rockmigrations()->deleteTemplates('tags=RockCommerce');
+    rockmigrations()->deletePermission(ProcessRockCommerce::permission);
+  }
+
+  /**
+   * Return a rockcommerce url in form /rc/whatever
+   *
+   * If second param is true this will return the current host, which will
+   * be either example.com or example.com.ddev.site or 12345.ngrok.app etc.
+   *
+   * Usage:
+   * $rc->url("/foo/bar") --> /rc/foo/bar
+   * $rc->url("/foo/bar", true) --> https://example.com/rc/foo/bar
+   */
+  public function url($str, $http = false): string
+  {
+    if ($http) $http = $this->host();
+    return $http . '/' . ltrim($str, "/");
+  }
+
+  /**
+   * Convert variation string to array
+   *
+   * Example return:
+   * [
+   *   6780 => [6730, 6731],
+   *   6799 => [6793, 6792],
+   * ]
+   */
+  public function variationArray(string $str): array
+  {
+    $str = $this->sanitizeVariation($str);
+    if (!$str) return [];
+
+    $result = [];
+    $variations = explode('-', $str);
+    foreach ($variations as $variation) {
+      list($key, $values) = explode(':', $variation);
+      $result[$key] = array_map('intval', explode(',', $values));
+    }
+    return $result;
+  }
+
+  public function variationsPage(): Variations
+  {
+    return $this->wire->pages->get([
+      'parent' => $this->rootPage(),
+      'name' => 'variations',
+    ]);
+  }
+
+  /**
+   * Turn a variation string like 6789:6784,6799-6793:6792
+   * into a variation table
+   *
+   * Note: We do not add <table> to make it easy to style the table on
+   * the frontend.
+   */
+  public function variationTableData(string $str): array
+  {
+    $variationArray = $this->variationArray($str);
+    if (empty($variationArray)) return [];
+
+    $result = [];
+    foreach ($variationArray as $variationId => $optionIds) {
+      $variationPage = wire()->pages->get($variationId);
+      $options = [];
+      foreach ($optionIds as $optionId) {
+        $option = wire()->pages->get($optionId);
+        $options[] = $option->title;
+      }
+      $result[] = [
+        'variation' => $variationPage->title(),
+        'options' => $options,
+      ];
+    }
+    return $result;
+  }
+
   public function ___view(
     string $file,
     array|Page $vars = [],
     Page $page = null,
   ): \Latte\Runtime\Html|string {
-    // make some defaults available in all frontend files:
-    $defaults = [
+    $file = $this->getFile($file);
+    $vars = [
       'rc' => $this,
       'rf' => rockfrontend(),
     ];
-
-    // if custom vars are specified merge them
-    $vars = array_merge($defaults, $vars);
-
-    // on the first request we need to tell rockfrontend
-    // which view folders to look into
-    if (!$this->viewFoldersSet) {
-      rockfrontend()->setViewFolders($this->viewFolders());
-      $this->viewFoldersSet = true;
-    }
-
-    // use rockfrontend to render the file
-    return rockfrontend()->view($file, $vars, $page);
-  }
-
-  /**
-   * Generate swap container for HTMX requests
-   *
-   * Usage example:
-   * echo $rc->swap([
-   *  'partials/cart-sidebar',
-   * ]);
-   */
-  public function swap(array $files): string
-  {
-    $out = "\n<div id='rc-swap' hidden>";
-
-    // before we render all views we make sure to call _init.php
-    $this->view('_init.php');
-
-    // then we render all requested views
-    foreach ($files as $file) {
-      // note: for security only partials can be swapped!
-      $out .= $this->view("partials/$file");
-    }
-
-    $out .= "</div>";
-    return $out;
+    $out = rockfrontend()->render($file, $vars);
+    if ($out instanceof \Latte\Runtime\Html) return $out;
+    return (string)$out;
   }
 
   /**
@@ -696,56 +1196,26 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $folders;
   }
 
-  public function rockfrontend(): RockFrontend
-  {
-    return $this->wire->modules->get('RockFrontend');
-  }
-
-  public function rockmollie(): RockMollie
-  {
-    return $this->wire->modules->get('RockMollie');
-  }
-
-  public function rootPage(): RootPage
-  {
-    return $this->wire->pages->get([
-      'parent' => 1,
-      'template' => RootPage::tpl,
-    ]);
-  }
-
-  /**
-   * Return a rockcommerce url in form /rc/whatever
-   *
-   * Usage:
-   * $rc->url("/foo/bar") --> /rc/foo/bar
-   * $rc->url("/foo/bar", true) --> https://example.com/rc/foo/bar
-   */
-  public function url($str, $http = false): string
-  {
-    return $this->rootPage()->url($http) . ltrim($str, "/");
-  }
-
   public function webhooksPage(): Webhooks
   {
     return $this->wire->pages->get([
-      'template' => Webhooks::tpl,
+      'template' => RockCommerce::template_webhooks,
       'parent' => $this->rootPage(),
     ]);
   }
 
   public function webhookUrl(): string
   {
-    return rtrim($this->webhook, "/") . self::webhookurl;
+    return $this->host() . self::webhookurl;
   }
 
   public function ___install(): void
   {
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    $rm->log("Installing RockCommerce");
+    rockmigrations()->log("Installing RockCommerce");
     $this->init();
+    rockmigrations()->runConfigMigrations(__DIR__ . '/RockMigrations/');
     $this->migrate();
+    rockmigrations()->log("Installing RockCommerce DONE");
   }
 
   /**
@@ -755,6 +1225,17 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function getModuleConfigInputfields($inputfields)
   {
     $name = strtolower($this);
+
+    if (!wire()->config->usePageClasses) {
+      $inputfields->add([
+        'type' => 'markup',
+        'label' => 'WARNING',
+        'value' => "<div class='uk-alert uk-alert-warning uk-margin-remove'>
+          This module requires the use of page classes. Please set <code>\$config->usePageClasses = true;</code> in your config.php file.
+        </div>",
+      ]);
+    }
+
     $inputfields->add([
       'type' => 'markup',
       'label' => 'Documentation & Updates',
@@ -768,122 +1249,54 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
         </ul>",
     ]);
 
+    // $inputfields->add([
+    //   'type' => 'markup',
+    //   'label' => 'Config Settings Override',
+    //   'value' => "You can override any setting in your config.php file:<br>
+    //     <pre class=uk-margin-small-top><code>\$config->rockcommerce['setting'] = 'newvalue';</code></pre>
+    //     <p>Active Overrides from \$config:</p>"
+    //     . rockmigrations()->dump(wire()->config->rockcommerce),
+    //   'icon' => 'life-ring',
+    //   'notes' => 'Use Shilft+Click on any field label to copy fieldname to clipboard.',
+    // ]);
+
     $inputfields->add([
-      'type' => 'markup',
-      'label' => 'Config Settings Override',
-      'value' => "You can override any setting in your config.php file:<br>
-        <pre class=uk-margin-small-top><code>\$config->rockcommerce['setting'] = 'newvalue';</code></pre>",
-      'icon' => 'life-ring',
-      'notes' => 'Use Shilft+Click on any field label to copy fieldname to clipboard.',
+      'type' => 'checkbox',
+      'name' => 'showHelp',
+      'checked' => $this->showHelp ? 'checked' : '',
+      'label' => 'Show help and API notes to superusers',
     ]);
-
-    $fs = new InputfieldFieldset();
-    $fs->label = 'Mail Settings';
-    $fs->icon = 'cogs';
-    $inputfields->add($fs);
-
-    // admin email address
-    $fs->add([
-      'type' => 'email',
-      'name' => 'adminmail',
-      'label' => 'Admin E-Mail',
-      'icon' => 'envelope-o',
-      'value' => $this->adminmail,
-      'notes' => "Send an email to this address on every new order.",
-      'columnWidth' => 33,
-    ]);
-
-    // email address used to send emails
-    $fs->add([
-      'type' => 'email',
-      'name' => 'mailfrom',
-      'label' => 'Mailfrom E-Mail Address',
-      'icon' => 'envelope-o',
-      'value' => $this->mailfrom,
-      'columnWidth' => 33,
-    ]);
-
-    // email name used to send emails
-    $fs->add([
-      'type' => 'text',
-      'name' => 'mailfromName',
-      'label' => 'Mailfrom E-Mail Name',
-      'icon' => 'user-o',
-      'value' => $this->mailfromName,
-      'columnWidth' => 33,
-    ]);
+    $inputfields->children->last()->notes = '$config->rockcommerce["showHelp"] = true/false;';
 
     // Pricing
     $fs = new InputfieldFieldset();
-    $fs->label = 'Pricing Settings';
+    $fs->label = 'Pricing';
     $fs->icon = 'money';
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
-
-    // taxrates
-    $fs->add([
-      'type' => 'text',
-      'name' => 'rawtaxrates',
-      'label' => 'Taxrates',
-      'notes' => 'Enter comma-seperated list of taxrates, eg "10.5, 20".
-        The first item in the list will be used as default value on new products.',
-      'value' => $this->rawtaxrates,
-      'icon' => 'percent',
-      'required' => true,
-      'columnWidth' => 50,
-    ]);
 
     // complex pricing?
     $fs->add([
       'type' => 'checkbox',
       'name' => 'noComplexPricing',
-      'label' => 'Allow only simple pricing for all products',
+      'label' => 'Disable Variations',
       'checked' => $this->noComplexPricing ? 'checked' : '',
-      'columnWidth' => 50,
-    ]);
-
-    // frontend pricing
-    $fs->add([
-      'type' => 'toggle',
-      'name' => 'priceType',
-      'label' => 'Frontend Pricing Display',
-      'formatType' => 0, // integer
-      'labelType' => 100, // custom
-      'useOther' => 0,
-      'icon' => 'money',
-      'yesLabel' => 'net',
-      'noLabel' => 'gross',
-      'defaultOption' => 'net',
-      'value' => $this->priceType,
-      'notes' => 'Choose how to display pricing on the frontend.',
-      'columnWidth' => 50,
-    ]);
-
-    $fs->add([
-      'type' => 'text',
-      'name' => 'frontendLocale',
-      'label' => 'Frontend Locale (JavaScript)',
-      'notes' => 'Used to render prices on the frontend. Default is de-DE.',
-      'value' => $this->frontendLocale,
-      'icon' => 'money',
-      'columnWidth' => 50,
+      'columnWidth' => 100,
     ]);
 
     $link = $this->wire->pages->get(2)->url . "module/edit?name=RockMoney";
     $fs->add([
       'type' => 'markup',
-      'value' => "Note: PHP pricing settings are defined in the <a href=$link>RockMoney module</a>.",
+      'value' => nl2br("PHP pricing settings are defined in the <a href=$link>RockMoney module</a>.
+        Frontend pricing can be customised via hooks."),
     ]);
 
-    // webhook url
-    $inputfields->add([
-      'type' => 'URL',
-      'name' => 'webhook',
-      'label' => 'Webhook Base Url',
-      'icon' => 'link',
-      'value' => $this->webhook,
-      'notes' => "This is the base url that the payment provider triggers on status updates.
-        Usually this is your production domain but during development it could be a temporary ngrok domain.",
-    ]);
+    // // Backend
+    // $fs = new InputfieldFieldset();
+    // $fs->label = 'Backend';
+    // $fs->icon = 'cogs';
+    // $fs->collapsed = Inputfield::collapsedYes;
+    // $inputfields->add($fs);
 
     return $inputfields;
   }

@@ -1,0 +1,237 @@
+/**
+ * RockCommerce Alpine Cart Component
+ * Access this component via RockCommerce.cart
+ * See docs for details.
+ *
+ * Available config attributes:
+ *
+ * rc-reload: Reload cart data via ajax when page is loaded
+ * rc-animation: Set to false to disable loading animation
+ */
+RockCommerce.addComponent("RcCart", {
+  count: 0,
+  id: false,
+  items: [],
+  doReload: false,
+
+  itemsNet: 0,
+  itemsVat: 0,
+  itemsGross: 0,
+  totalNet: 0,
+  totalVat: 0,
+  totalGross: 0,
+  shippingNet: 0,
+  shippingVat: 0,
+  shippingGross: 0,
+
+  ready() {
+    // we allow only one cart
+    if (RockCommerce.cart) return;
+    RockCommerce.cart = this;
+    this.$watch("items", this.update.bind(this));
+    this.wakeup();
+    if (this.$el.hasAttribute("rc-reload")) {
+      this.doReload = true;
+      this.reload();
+    }
+
+    // reset cart?
+    const reset = document.querySelector("[rc-cart-reset]");
+    if (reset) this.reset();
+  },
+
+  /**
+   * Add item to the JS cart
+   */
+  ___addItem(data) {
+    // send ajax request to add item to cart
+    RockCommerce.fetch("/cart/add", {
+      payload: data,
+    })
+      .then((data) => {
+        if (data.success) {
+          this.setData(data.cart);
+          this.itemAdded(data.itemAdded);
+        } else throw new Error("Error adding item to cart");
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  },
+
+  get count() {
+    let count = 0;
+    this.items.forEach((item) => {
+      count += parseInt(item.amount || 1);
+    });
+    return count;
+  },
+
+  deleteItem(id) {
+    RockCommerce.fetch("/cart/delete", {
+      payload: { id },
+    })
+      .then((data) => {
+        this.setData(data.cart);
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  },
+
+  getFromLocalStorage() {
+    return JSON.parse(localStorage.getItem("rc-cart") || "{}");
+  },
+
+  getItem(id) {
+    return this.items.find((item) => item.id === id);
+  },
+
+  getSleepValue() {
+    const data = {
+      id: this.id,
+      count: this.count,
+      items: this.items,
+      itemsNet: this.itemsNet,
+      itemsVat: this.itemsVat,
+      itemsGross: this.itemsGross,
+      totalNet: this.totalNet,
+      totalVat: this.totalVat,
+      totalGross: this.totalGross,
+      shippingNet: this.shippingNet,
+      shippingVat: this.shippingVat,
+      shippingGross: this.shippingGross,
+    };
+    return JSON.stringify(data);
+  },
+
+  /**
+   * Hookable method executed after an item has been added to the cart
+   */
+  ___itemAdded(item) {},
+
+  itemAmountAdd(id) {
+    const item = this.getItem(id);
+    item.amount++;
+    RockCommerce.debounce(
+      "rc-cart-item-amount",
+      () => this.setItemCount(id),
+      500
+    );
+  },
+
+  itemAmountSub(id) {
+    const item = this.getItem(id);
+    if (item.amount < 2) return;
+    item.amount--;
+    RockCommerce.debounce(
+      "rc-cart-item-amount",
+      () => this.setItemCount(id),
+      500
+    );
+  },
+
+  /**
+   * Reload cart data from backend
+   */
+  reload() {
+    RockCommerce.debounce(
+      "rc-cart-reload",
+      () => {
+        const options = {
+          animation: this.$rcattr("rc-animation"),
+        };
+        RockCommerce.fetch("/cart/get", options)
+          .then((response) => {
+            this.setData(response);
+          })
+          .catch((error) => {
+            console.error("Error loading cart from backend:", error);
+            alert("Error loading cart from backend. Please try again later.");
+          });
+      },
+      50
+    );
+  },
+
+  reset() {
+    RockCommerce.debounce("rc-cart-reset", () => {
+      localStorage.removeItem("rc-cart");
+      this.setData({});
+      RockCommerce.fetch("/cart/reset", { animation: false });
+    });
+  },
+
+  /**
+   * Save cart
+   */
+  save() {
+    this.update();
+    json = this.getSleepValue();
+    localStorage.setItem("rc-cart", json);
+  },
+
+  /**
+   * Set given data and save to localstorage
+   */
+  setData(data) {
+    this.id = data.id || false;
+    this.count = data.count || 0;
+    this.items = data.items || [];
+    this.itemsNet = data.itemsNet || 0;
+    this.itemsVat = data.itemsVat || 0;
+    this.itemsGross = data.itemsGross || 0;
+    this.totalNet = data.totalNet || 0;
+    this.totalVat = data.totalVat || 0;
+    this.totalGross = data.totalGross || 0;
+    this.shippingNet = data.shippingNet || 0;
+    this.shippingVat = data.shippingVat || 0;
+    this.shippingGross = data.shippingGross || 0;
+    this.save();
+  },
+  /**
+   * Set item count via AJAX
+   */
+  setItemCount(id) {
+    const item = this.getItem(id);
+    if (!item) return;
+    RockCommerce.fetch("/cart/set-item-amount", {
+      payload: { item: id, amount: item.amount },
+    }).then((data) => {
+      this.setData(data.cart);
+    });
+  },
+
+  /**
+   * General update method triggered on every change
+   */
+  update() {
+    RockCommerce.debounce("rc-cart-update", () => {
+      this.updateCartCount();
+    });
+  },
+
+  /**
+   * Update cart count on frontend
+   *
+   * This method populates all elements with rc-cart-count attribute
+   * so all you have to do to show the cart count is to add rc-cart-count="true" to an element
+   * Example: <div rc-cart-count>0</div>
+   */
+  updateCartCount() {
+    let elements = document.querySelectorAll("[rc-cart-count]");
+    elements.forEach((el) => {
+      el.textContent = this.count;
+      if (!el.hasAttribute("rc-autohide")) return;
+      if (this.count > 0) el.removeAttribute("hidden");
+      else el.setAttribute("hidden", true);
+    });
+  },
+
+  /**
+   * Wakeup: Read data from localstorage
+   */
+  wakeup() {
+    this.setData(this.getFromLocalStorage());
+  },
+});

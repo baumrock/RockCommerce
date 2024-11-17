@@ -11,14 +11,15 @@ $info = [
   'icon' => 'money',
   // PHP8.2 for constants in traits
   // PW 3.0.234 for repeater classes
+  // RockFrontend for AJAX endpoints
+  // Note: RockAssets is only needed for development, no global requirement
   'requires' => [
     'PHP>=8.2',
     'ProcessWire>=3.0.234',
-    'RockFrontend>=3.3.0',
-    'RockMigrations>=3.36',
-    'RockMoney>=1.0.1',
-    'RockMollie>=1.0.0',
-    'RockGrid>=2.2.0',
+    'RockMigrations>=5.4.1',
+    'RockFrontend>=3.22.0',
+    'RockMoney>=2.0.3',
+    'RockGrid>=1.0.2',
   ],
   'installs' => [
     'ProcessRockCommerce',
