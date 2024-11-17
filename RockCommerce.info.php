@@ -21,7 +21,6 @@ $info = [
     'RockFrontend>=3.22.0',
     'RockMoney>=2.0.3',
     'RockGrid>=1.0.2',
-    'Less>=0.0.5',
     'RockLoaders>=1.1.0',
     'RockJavaScriptHooks>=1.0.0',
   ],
