@@ -1,7 +1,7 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
 <div class="alert alert-info" style="margin-bottom: 20px; padding: 15px; border-left: 5px solid #17a2b8; background-color: #f8f9fa;">
-  <strong>📊 Dashboard Preview</strong><br>
+  <strong>Dashboard Preview</strong><br>
   This is a demo chart. A comprehensive dashboard with real-time data and basic analytics is currently under development and will be available in a future update.
 </div>
 
