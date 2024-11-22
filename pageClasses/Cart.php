@@ -7,6 +7,7 @@ use ProcessWire\NullPage;
 use ProcessWire\Page;
 use ProcessWire\RockCommerce;
 use ProcessWire\WireData;
+use ProcessWire\WireException;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
@@ -173,10 +174,15 @@ class Cart extends Page
     return $item;
   }
 
+  /**
+   * Get all cart items
+   * NOTE: include=all to make sure array contains items also for guest users!
+   */
   public function items(): ItemsArray
   {
     if ($this->cachedItems) return $this->cachedItems;
-    $this->cachedItems = (new ItemsArray())->import($this->children());
+    $this->cachedItems = (new ItemsArray())
+      ->import($this->children('include=all'));
     return $this->cachedItems;
   }
 
