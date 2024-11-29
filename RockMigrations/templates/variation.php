@@ -12,7 +12,10 @@ return [
     RockCommerce::field_comment => [
       'columnWidth' => 50,
     ],
-    RockCommerce::field_variationoptions,
+    // this will be added after installation to ugly workaround this issue:
+    // https://github.com/processwire/processwire-issues/issues/1995
+    // See RockCommerce::initWhenInstalled for more details
+    // RockCommerce::field_variationoptions,
   ],
   'noChildren' => true,
   'noUnpublish' => true,

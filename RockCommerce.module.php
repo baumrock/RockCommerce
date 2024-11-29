@@ -638,6 +638,19 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     if (!$this->isInstalled()) return;
 
+    // add field variationoptions to template rockcommerce_variation
+    // see template/variation.php for more details
+    $rm = rockmigrations();
+    $rm->once(
+      '2024-11-29: Add variationoptions field to template rockcommerce_variation',
+      function (RockMigrations $rm) {
+        $rm->addFieldToTemplate(
+          RockCommerce::field_variationoptions,
+          RockCommerce::template_variation
+        );
+      }
+    );
+
     // js config for the frontend
     $this->jsConfig();
 
