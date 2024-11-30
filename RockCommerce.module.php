@@ -38,7 +38,6 @@ function rockcommerce(): RockCommerce
  * @method Order createOrder(string $subject, Money|float $net, Money|float $vat, Money|float $total, string $email, array $pageProperties = [], array $meta = []) Hookable method to create an order
  */
 require_once __DIR__ . '/RockMigrationsConstants.php';
-require_once __DIR__ . '/classLoader/Product.php';
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
   use \RockCommerce\RockMigrationsConstants;
@@ -841,22 +840,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: 'Settings',
       name: 'settings',
     );
-
-    // migrate all products
-    // reset product templates cache to make sure we catch all templates
-    // where the trait might have just been added!
-    $this->loadProductTemplates(true);
-    foreach ($this->productTemplates as $tpl) {
-      $fields = [
-        RockCommerce::field_shoptab,
-        RockCommerce::field_net,
-        RockCommerce::field_variations,
-        RockCommerce::field_productfields,
-        RockCommerce::field_shoptab . '_END',
-      ];
-      $rm->addFieldsToTemplate($fields, $tpl);
-      $rm->setFieldOrder($fields, $tpl);
-    }
   }
 
   /**

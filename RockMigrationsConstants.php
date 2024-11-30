@@ -20,7 +20,6 @@ trait RockMigrationsConstants
   const field_paymentid = 'rockcommerce_paymentid';
   const field_paymentstatus = 'rockcommerce_paymentstatus';
   const field_product = 'rockcommerce_product';
-  const field_productfields = 'rockcommerce_productfields';
   const field_removeempty = 'rockcommerce_removeempty';
   const field_removefilled = 'rockcommerce_removefilled';
   const field_shoptab = 'rockcommerce_shoptab';
