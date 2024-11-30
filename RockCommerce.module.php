@@ -38,6 +38,7 @@ function rockcommerce(): RockCommerce
  * @method Order createOrder(string $subject, Money|float $net, Money|float $vat, Money|float $total, string $email, array $pageProperties = [], array $meta = []) Hookable method to create an order
  */
 require_once __DIR__ . '/RockMigrationsConstants.php';
+require_once __DIR__ . '/classLoader/Product.php';
 class RockCommerce extends WireData implements Module, ConfigurableModule
 {
   use \RockCommerce\RockMigrationsConstants;
