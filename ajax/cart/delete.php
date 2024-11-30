@@ -13,7 +13,10 @@ $id = (int)$input->id;
 
 // trash page id with given id
 $item = $cart->items()->get(['id' => $id]);
-if ($item->id) $item->trash();
+if ($item->id) {
+  $item->trash();
+  $cart->refreshItems();
+}
 
 return [
   'success' => 1,

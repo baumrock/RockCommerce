@@ -59,6 +59,14 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   const pricetype_gross = 0;
   const pricetype_runtime = 2; // not yet implemented
 
+  const field_variation = 'rockcommerce_variation';
+  const field_variations = 'rockcommerce_variations';
+  const field_variationcomment = 'rockcommerce_variationcomment';
+  const field_variationoptions = 'rockcommerce_variationoptions';
+  const field_variationstr = 'rockcommerce_variationstr';
+  const template_variations = 'rockcommerce_variations';
+  const template_variation = 'rockcommerce_variation';
+
   private $checkout = false;
 
   /** @var array */
@@ -81,6 +89,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   private $taxrates = false;
 
   public $taxselect;
+
+  public $useProductVariations = false;
 
   public function init()
   {
@@ -651,6 +661,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       }
     );
 
+    $this->installProductVariations();
+
     // js config for the frontend
     $this->jsConfig();
 
@@ -662,6 +674,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     wire()->cache->get(self::maintenance, $expire, function () {
       $this->maintenance();
     });
+  }
+
+  private function installProductVariations(): void
+  {
+    if (!$this->useProductVariations) return;
+
+    // install RockGrid if it is not installed
+    $rockgrid = wire()->modules->get('RockGrid');
+    if (!$rockgrid) {
+      // this prevents showing the warning when box is being unchecked
+      if (!wire()->input->post('submit_save_module')) {
+        $this->warning('Please install RockGrid to use product variations.');
+      }
+      return;
+    }
+    $this->migrate();
   }
 
   public function isInstalled(): bool
@@ -823,12 +851,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       status: [],
     );
     $rm->createPage(
-      template: self::template_variations,
-      parent: $rootPage,
-      title: 'Variations',
-      name: 'variations',
-    );
-    $rm->createPage(
       template: self::template_taxrates,
       parent: $rootPage,
       title: 'Taxrates',
@@ -839,6 +861,23 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       parent: $rootPage,
       title: 'Settings',
       name: 'settings',
+    );
+
+    $this->migrateVariations();
+  }
+
+  public function migrateVariations(): void
+  {
+    if (!$this->useProductVariations) return;
+    rockmigrations()->runConfigMigrations(
+      __DIR__ . '/RockMigrationsVariations',
+      false
+    );
+    rockmigrations()->createPage(
+      template: self::template_variations,
+      parent: $this->rootPage(),
+      title: 'Variations',
+      name: 'variations',
     );
   }
 
@@ -1119,7 +1158,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return $result;
   }
 
-  public function variationsPage(): Variations
+  public function variationsPage(): Variations|NullPage
   {
     return wire()->pages->get([
       'parent' => $this->rootPage(),
@@ -1288,16 +1327,18 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $fs = new InputfieldFieldset();
     $fs->label = 'Pricing';
     $fs->icon = 'money';
-    $fs->collapsed = Inputfield::collapsedYes;
+    $fs->collapsed = Inputfield::collapsedNo;
     $inputfields->add($fs);
 
-    // complex pricing?
+    // use product variations?
     $fs->add([
       'type' => 'checkbox',
-      'name' => 'noComplexPricing',
-      'label' => 'Disable Variations',
-      'checked' => $this->noComplexPricing ? 'checked' : '',
+      'name' => 'useProductVariations',
+      'label' => 'Enable Product Variations',
+      'checked' => $this->useProductVariations ? 'checked' : '',
       'columnWidth' => 100,
+      'notes' => 'This feature requires the RockGrid module. When checked, RockGrid and all related fields will be installed.
+        Once installed, unchecking the box will not remove the module or fields, it will just not use them.',
     ]);
 
     $link = wire()->pages->get(2)->url . "module/edit?name=RockMoney";

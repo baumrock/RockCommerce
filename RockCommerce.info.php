@@ -21,8 +21,5 @@ $info = [
   ],
   'installs' => [
     'ProcessRockCommerce',
-    'InputfieldRcPricing',
-    'FieldtypeRcVariations',
-    'InputfieldRcVariations',
   ],
 ];

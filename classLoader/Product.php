@@ -158,8 +158,12 @@ trait Product
     }
   }
 
-  public function variations(): RepeaterPageArray
+  /**
+   * Returns null if variations feature is disabled or variations field is not
+   * added to the product template.
+   */
+  public function variations(): RepeaterPageArray|array
   {
-    return $this->getFormatted(RockCommerce::field_variations);
+    return $this->getFormatted(RockCommerce::field_variations) ?: [];
   }
 }

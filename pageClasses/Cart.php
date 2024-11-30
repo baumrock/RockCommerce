@@ -120,7 +120,6 @@ class Cart extends Page
    */
   public function ___getJsonArray(): array
   {
-
     return [
       'id' => $this->name,
       'count' => $this->itemsCount(),
@@ -285,6 +284,11 @@ class Cart extends Page
   public function pageListLabel()
   {
     return date("Y-m-d H:i:s", $this->created) . " - " . $this->name;
+  }
+
+  public function refreshItems(): void
+  {
+    $this->cachedItems = false;
   }
 
   /**
