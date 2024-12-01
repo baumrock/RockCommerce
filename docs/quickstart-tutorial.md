@@ -562,12 +562,6 @@ And FINALLY! we can test our brand new ecommerce:
 
 <img src=https://i.imgur.com/Zm7BQ36.gif alt='Testing our new store' class=blur>
 
-Please note that showing the thank you page and processing the payment is NOT equivalent to also marking the order as paid! This has to be done with a separate request for security reasons!
-
-<img src=https://i.imgur.com/RJjPCIC.png alt='Order Backend' class=blur>
-
-As you can see in the screenshot, the payment status of the order is still "open". Please refer to the [docs about "Payment Webhooks"](../payment-webhooks/) for details on how to mark orders as paid!
-
 ## Bonus Track: Customize RockCommerce
 
 So, you thought I was going to leave you with a demo store without product photos? Come on! We act like RockStars here — we leave the best for the end of the concert!
