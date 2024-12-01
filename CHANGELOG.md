@@ -1,3 +1,13 @@
+## [0.4.1](https://github.com/baumrock/RockCommerce/compare/v0.4.0...v0.4.1) (2024-12-01)
+
+
+### Bug Fixes
+
+* cart item visibility issue for guest users ([4b499af](https://github.com/baumrock/RockCommerce/commit/4b499af6977780ee9a04f89db7678c9324b14839))
+* workaround to fix installation warnings ([9034487](https://github.com/baumrock/RockCommerce/commit/9034487b7f1d4a3cf300e9036d6027294fac4c81))
+
+
+
 # [0.4.0](https://github.com/baumrock/RockCommerce/compare/v0.3.0...v0.4.0) (2024-11-17)
 
 
