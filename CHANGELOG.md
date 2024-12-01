@@ -1,66 +1,23 @@
-# 0.8.0 (2024-12-01)
+## [1.0.0](https://github.com/baumrock/RockCommerce/compare/v0.8.0...v1.0.0) (2024-12-01)
 
 
-### Bug Fixes
+### ⚠ BREAKING CHANGES
 
-* "test" on invoice instead of subject ([24d254c](https://github.com/baumrock/RockCommerce/commit/24d254cba426c9a231d07e5266357729f3ff7e6b))
-* add .count to account for new variations ([ac2ae9f](https://github.com/baumrock/RockCommerce/commit/ac2ae9fe03eb097cea7c7ee34de85d1f84131f06))
-* add dependency version number ([e837d6b](https://github.com/baumrock/RockCommerce/commit/e837d6b2a288d38c818f619c10529c25963cb846))
-* add Less as required module ([bc5c1d9](https://github.com/baumrock/RockCommerce/commit/bc5c1d97a5d3fff083c3359ff2e6beb164f9e989))
-* add missing alt tag in email html ([521c521](https://github.com/baumrock/RockCommerce/commit/521c52132b5647d19ddfdccf543d5208eb002272))
-* add missing amount to invoice calculation ([68d6702](https://github.com/baumrock/RockCommerce/commit/68d67021d568eb5bb5ff707520169f570ce86260))
-* add missing cart properties for sleep() ([a28305b](https://github.com/baumrock/RockCommerce/commit/a28305b37ab4e321b004c041a3d6d203725cd8db))
-* add missing closest() call ([9e8c95e](https://github.com/baumrock/RockCommerce/commit/9e8c95e604d1feb9ac303201c45f4a902c055137))
-* add missing name on invoice ([5dfd11e](https://github.com/baumrock/RockCommerce/commit/5dfd11ee1cd15f7689580aa25d0579e715b3f292))
-* add permission and isViable for variations grid ([fc49680](https://github.com/baumrock/RockCommerce/commit/fc496805347ebc71374cab08cb00d42c29e05dd2))
-* adding items broken ([088db87](https://github.com/baumrock/RockCommerce/commit/088db873023b25cf949a9b2ab1c5b52074aca63b))
-* allow access to rockgrid js files ([5842d22](https://github.com/baumrock/RockCommerce/commit/5842d22e0fbf3a7b29b2eb1aa39ce67782cb4333))
-* avoid FOUC on init ([b03311c](https://github.com/baumrock/RockCommerce/commit/b03311ccdf864d9ba7ac65ca0ee0943718fbe854))
-* cart item visibility issue for guest users ([4b499af](https://github.com/baumrock/RockCommerce/commit/4b499af6977780ee9a04f89db7678c9324b14839))
-* catch error if invalid option id provided ([2d3be12](https://github.com/baumrock/RockCommerce/commit/2d3be12cad30d7d45f3adb0690c59db59f92b69e))
-* catch errors in product saveready hook ([1814c26](https://github.com/baumrock/RockCommerce/commit/1814c269e623eac4f37fe2364c27c6e65e48ac2c))
-* check to account for no taxrate yet ([62468c1](https://github.com/baumrock/RockCommerce/commit/62468c1763329b087de32f1c5b0fc831701caec5))
-* column width redraw ([cb9975d](https://github.com/baumrock/RockCommerce/commit/cb9975dc26892ecc816dc5982dc044bf5025b581))
-* dashboard breaks when no invoice number ([a726ad4](https://github.com/baumrock/RockCommerce/commit/a726ad4632ef10e4f83e401f718f24981217184f))
-* error on webhook if tracy not installed ([ef5f0db](https://github.com/baumrock/RockCommerce/commit/ef5f0dbfb3e4ba4693d61729fbe6aef255e7dd13))
-* error when not installed ([ab044e6](https://github.com/baumrock/RockCommerce/commit/ab044e60a90a09d142748b241635aba910933edc))
-* fix editing of variations not working ([8a717ee](https://github.com/baumrock/RockCommerce/commit/8a717eeeb18d53fd3e6cb906d0ed19851b4e9b9d))
-* fix missing tags ([090cde8](https://github.com/baumrock/RockCommerce/commit/090cde87c8729f9b12aa787dd2998adac9f3f671))
-* fix permissions of rockgrids ([8b2a3da](https://github.com/baumrock/RockCommerce/commit/8b2a3da327286d4ecf4649738ca96bed6e0251f0))
-* fix price editor showing wrong data ([d5cf5f3](https://github.com/baumrock/RockCommerce/commit/d5cf5f3c16b3a4ed50d529b0c73f1da75ddf979a))
-* fix typeof missing quotes ([7754aba](https://github.com/baumrock/RockCommerce/commit/7754aba729968e896b897683724c5dad89b86bad))
-* fix variation tpl prefix ([7cab083](https://github.com/baumrock/RockCommerce/commit/7cab083645cd18c1dd4073d0469df4a069d51f86))
-* frontend not usable if no cart exists ([73fc2aa](https://github.com/baumrock/RockCommerce/commit/73fc2aa5d9e85dd7b415dcc0c12dc277d84a2f24))
-* if no min and max are set we use 0/1 ([e6cea19](https://github.com/baumrock/RockCommerce/commit/e6cea1948898ca742969d68cb42cfb9a99c7d28c))
-* install not working ([2a1a002](https://github.com/baumrock/RockCommerce/commit/2a1a0029cd47573ed30a543e32c1eda1d7863b36))
-* installation issues ([91b13a8](https://github.com/baumrock/RockCommerce/commit/91b13a88667b255c81d3f15da9cc95ad29892155))
-* issue when no default taxrate is set ([c4ec233](https://github.com/baumrock/RockCommerce/commit/c4ec2336b5141b334402176f1a7f39498a2ccd3e))
-* load checkout only if rockforms is installed ([d66b613](https://github.com/baumrock/RockCommerce/commit/d66b613b3adb2169f1b2847bf1b403b8683a1735))
-* load currency in the backend ([b8f35c7](https://github.com/baumrock/RockCommerce/commit/b8f35c78300449904bafa7db51cc94f94c184f04))
-* loadProductConfig not called ([1a122c4](https://github.com/baumrock/RockCommerce/commit/1a122c46696984645993e6c5906dc84f9680f6b6))
-* move checkout to site folder ([397e1c3](https://github.com/baumrock/RockCommerce/commit/397e1c33d3659ffd2f9dc27450ee0f370432e0f4))
-* non-superusers seeing empty grid ([1c39f8c](https://github.com/baumrock/RockCommerce/commit/1c39f8c61414e68766a6a74fb0f0b4154d970abc))
-* notifyAdmin not working ([173daa3](https://github.com/baumrock/RockCommerce/commit/173daa33e7d68af124d1201ae3a9ef0d148f36b9))
-* only set image number on selected rows ([521937b](https://github.com/baumrock/RockCommerce/commit/521937bb767e7bbf712016cb663a0bd83d40b59e))
-* open basedir error ([5d3935e](https://github.com/baumrock/RockCommerce/commit/5d3935e6f7d3f1fce6fd5a8f6414ecb3a6f14756))
-* passing null to json_encode deprecated ([5feca9d](https://github.com/baumrock/RockCommerce/commit/5feca9dbc4ec85fb6f494df5c3c76befb4c95fc1))
-* prevent warning if selected == null ([44ab693](https://github.com/baumrock/RockCommerce/commit/44ab693d59bab97932d1c5307218b760e89a28a0))
-* remove bd() call ([10b124c](https://github.com/baumrock/RockCommerce/commit/10b124c041cab3c5301c5e4243b1e4a4964c207d))
-* remove console logs ([4222775](https://github.com/baumrock/RockCommerce/commit/4222775b00de34178c57541cafb5817de8ccc783))
-* remove console.log ([e6de096](https://github.com/baumrock/RockCommerce/commit/e6de096c0613745c32b9aaa348d5080af0766af7))
-* remove console.log ([fe7594b](https://github.com/baumrock/RockCommerce/commit/fe7594b98a22b3e9924bfdca4d5a814794772feb))
-* sendInvoice() not working on order ([a2f8bba](https://github.com/baumrock/RockCommerce/commit/a2f8bbaf552ce7a2d9e9a98e00befba802c09b5b))
-* set meta data only if page id ([b4a4296](https://github.com/baumrock/RockCommerce/commit/b4a429642fefbaeaeb318c8e349b82e5db0edac5))
-* set price on all rows not working ([83ebb89](https://github.com/baumrock/RockCommerce/commit/83ebb8973a45027d084b360576dd4f4f8aba1e69))
-* tax in cart not correct ([f763967](https://github.com/baumrock/RockCommerce/commit/f7639675f85f3ec7ca21a0a635e60f3d8d13d52e))
-* taxrate not working ([031372b](https://github.com/baumrock/RockCommerce/commit/031372b652dd53bd71c2bea04e55f04ad848067b))
-* tmp disable rockloaders ([fad533b](https://github.com/baumrock/RockCommerce/commit/fad533ba372afc884bfbe493572be6d78f7a3751))
-* trigger _init.php before swap ([4217dbc](https://github.com/baumrock/RockCommerce/commit/4217dbc7bb1933592e10cdbe354167f352af1883))
-* tweak name of invoice ([81f5ca2](https://github.com/baumrock/RockCommerce/commit/81f5ca2ee4103e5c30eb1949d2048f8613de4470))
-* typo ([02aed5a](https://github.com/baumrock/RockCommerce/commit/02aed5a714ecfd21469d76ff903094c7dc217983))
-* workaround to fix installation warnings ([9034487](https://github.com/baumrock/RockCommerce/commit/9034487b7f1d4a3cf300e9036d6027294fac4c81))
-* wrong payload in set-tax-id ([fe384ae](https://github.com/baumrock/RockCommerce/commit/fe384aed9df5b75233759b7560cb612a6c5a3d75))
+* initial release
+* bump version
 
+### Features
+
+* bump version ([f9743a7](https://github.com/baumrock/RockCommerce/commit/f9743a70f722530ba486fbb0ba781b1f60e05035))
+* initial release ([9fd6b6d](https://github.com/baumrock/RockCommerce/commit/9fd6b6d462eed12630f4d4f0dffd2366afd83273))
+
+## [0.8.0](https://github.com/baumrock/RockCommerce/compare/75b97f97de34164fdc799ce04c6a44a686b15ad6...v0.8.0) (2024-12-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* bump version
+* initial release
 
 ### Features
 
@@ -149,6 +106,7 @@
 * align axis ([c894da0](https://github.com/baumrock/RockCommerce/commit/c894da09c72ddecc0b0df9aae82b0a5783f2854d))
 * basic cart working ([a96e718](https://github.com/baumrock/RockCommerce/commit/a96e718d495eec7c062f034a3002f460cc93511a))
 * better labels for pricing type ([79032f1](https://github.com/baumrock/RockCommerce/commit/79032f12fdaeb361825943127a7876af667f7df4))
+* bump version ([26b974e](https://github.com/baumrock/RockCommerce/commit/26b974eaa9ff3fa4b15335ed4a9c7e2d4908b279))
 * delete unused carts ([dc1b55a](https://github.com/baumrock/RockCommerce/commit/dc1b55a0d768143544a40e39499ebd0b7f70949c))
 * exclude rootpage from sitemap ([b5089ad](https://github.com/baumrock/RockCommerce/commit/b5089ad2a4038c928977c1e9495c6255c442202a))
 * first working checkout + invoices + downloads ([87a37ba](https://github.com/baumrock/RockCommerce/commit/87a37ba23614bf5140efb66f9bc8123a03e68bbe))
@@ -220,4 +178,68 @@
 * work on variation select grid ([081bc6c](https://github.com/baumrock/RockCommerce/commit/081bc6cd68c651ebab7c209cb1cf2086dd74c3b7))
 
 
+### Bug Fixes
+
+* "test" on invoice instead of subject ([24d254c](https://github.com/baumrock/RockCommerce/commit/24d254cba426c9a231d07e5266357729f3ff7e6b))
+* add .count to account for new variations ([ac2ae9f](https://github.com/baumrock/RockCommerce/commit/ac2ae9fe03eb097cea7c7ee34de85d1f84131f06))
+* add dependency version number ([e837d6b](https://github.com/baumrock/RockCommerce/commit/e837d6b2a288d38c818f619c10529c25963cb846))
+* add Less as required module ([bc5c1d9](https://github.com/baumrock/RockCommerce/commit/bc5c1d97a5d3fff083c3359ff2e6beb164f9e989))
+* add missing alt tag in email html ([521c521](https://github.com/baumrock/RockCommerce/commit/521c52132b5647d19ddfdccf543d5208eb002272))
+* add missing amount to invoice calculation ([68d6702](https://github.com/baumrock/RockCommerce/commit/68d67021d568eb5bb5ff707520169f570ce86260))
+* add missing cart properties for sleep() ([a28305b](https://github.com/baumrock/RockCommerce/commit/a28305b37ab4e321b004c041a3d6d203725cd8db))
+* add missing closest() call ([9e8c95e](https://github.com/baumrock/RockCommerce/commit/9e8c95e604d1feb9ac303201c45f4a902c055137))
+* add missing name on invoice ([5dfd11e](https://github.com/baumrock/RockCommerce/commit/5dfd11ee1cd15f7689580aa25d0579e715b3f292))
+* add permission and isViable for variations grid ([fc49680](https://github.com/baumrock/RockCommerce/commit/fc496805347ebc71374cab08cb00d42c29e05dd2))
+* adding items broken ([088db87](https://github.com/baumrock/RockCommerce/commit/088db873023b25cf949a9b2ab1c5b52074aca63b))
+* allow access to rockgrid js files ([5842d22](https://github.com/baumrock/RockCommerce/commit/5842d22e0fbf3a7b29b2eb1aa39ce67782cb4333))
+* avoid FOUC on init ([b03311c](https://github.com/baumrock/RockCommerce/commit/b03311ccdf864d9ba7ac65ca0ee0943718fbe854))
+* cart item visibility issue for guest users ([4b499af](https://github.com/baumrock/RockCommerce/commit/4b499af6977780ee9a04f89db7678c9324b14839))
+* catch error if invalid option id provided ([2d3be12](https://github.com/baumrock/RockCommerce/commit/2d3be12cad30d7d45f3adb0690c59db59f92b69e))
+* catch errors in product saveready hook ([1814c26](https://github.com/baumrock/RockCommerce/commit/1814c269e623eac4f37fe2364c27c6e65e48ac2c))
+* check to account for no taxrate yet ([62468c1](https://github.com/baumrock/RockCommerce/commit/62468c1763329b087de32f1c5b0fc831701caec5))
+* column width redraw ([cb9975d](https://github.com/baumrock/RockCommerce/commit/cb9975dc26892ecc816dc5982dc044bf5025b581))
+* dashboard breaks when no invoice number ([a726ad4](https://github.com/baumrock/RockCommerce/commit/a726ad4632ef10e4f83e401f718f24981217184f))
+* error on webhook if tracy not installed ([ef5f0db](https://github.com/baumrock/RockCommerce/commit/ef5f0dbfb3e4ba4693d61729fbe6aef255e7dd13))
+* error when not installed ([ab044e6](https://github.com/baumrock/RockCommerce/commit/ab044e60a90a09d142748b241635aba910933edc))
+* fix editing of variations not working ([8a717ee](https://github.com/baumrock/RockCommerce/commit/8a717eeeb18d53fd3e6cb906d0ed19851b4e9b9d))
+* fix missing tags ([090cde8](https://github.com/baumrock/RockCommerce/commit/090cde87c8729f9b12aa787dd2998adac9f3f671))
+* fix permissions of rockgrids ([8b2a3da](https://github.com/baumrock/RockCommerce/commit/8b2a3da327286d4ecf4649738ca96bed6e0251f0))
+* fix price editor showing wrong data ([d5cf5f3](https://github.com/baumrock/RockCommerce/commit/d5cf5f3c16b3a4ed50d529b0c73f1da75ddf979a))
+* fix typeof missing quotes ([7754aba](https://github.com/baumrock/RockCommerce/commit/7754aba729968e896b897683724c5dad89b86bad))
+* fix variation tpl prefix ([7cab083](https://github.com/baumrock/RockCommerce/commit/7cab083645cd18c1dd4073d0469df4a069d51f86))
+* frontend not usable if no cart exists ([73fc2aa](https://github.com/baumrock/RockCommerce/commit/73fc2aa5d9e85dd7b415dcc0c12dc277d84a2f24))
+* if no min and max are set we use 0/1 ([e6cea19](https://github.com/baumrock/RockCommerce/commit/e6cea1948898ca742969d68cb42cfb9a99c7d28c))
+* install not working ([2a1a002](https://github.com/baumrock/RockCommerce/commit/2a1a0029cd47573ed30a543e32c1eda1d7863b36))
+* installation issues ([91b13a8](https://github.com/baumrock/RockCommerce/commit/91b13a88667b255c81d3f15da9cc95ad29892155))
+* issue when no default taxrate is set ([c4ec233](https://github.com/baumrock/RockCommerce/commit/c4ec2336b5141b334402176f1a7f39498a2ccd3e))
+* load checkout only if rockforms is installed ([d66b613](https://github.com/baumrock/RockCommerce/commit/d66b613b3adb2169f1b2847bf1b403b8683a1735))
+* load currency in the backend ([b8f35c7](https://github.com/baumrock/RockCommerce/commit/b8f35c78300449904bafa7db51cc94f94c184f04))
+* loadProductConfig not called ([1a122c4](https://github.com/baumrock/RockCommerce/commit/1a122c46696984645993e6c5906dc84f9680f6b6))
+* move checkout to site folder ([397e1c3](https://github.com/baumrock/RockCommerce/commit/397e1c33d3659ffd2f9dc27450ee0f370432e0f4))
+* non-superusers seeing empty grid ([1c39f8c](https://github.com/baumrock/RockCommerce/commit/1c39f8c61414e68766a6a74fb0f0b4154d970abc))
+* notifyAdmin not working ([173daa3](https://github.com/baumrock/RockCommerce/commit/173daa33e7d68af124d1201ae3a9ef0d148f36b9))
+* only set image number on selected rows ([521937b](https://github.com/baumrock/RockCommerce/commit/521937bb767e7bbf712016cb663a0bd83d40b59e))
+* open basedir error ([5d3935e](https://github.com/baumrock/RockCommerce/commit/5d3935e6f7d3f1fce6fd5a8f6414ecb3a6f14756))
+* passing null to json_encode deprecated ([5feca9d](https://github.com/baumrock/RockCommerce/commit/5feca9dbc4ec85fb6f494df5c3c76befb4c95fc1))
+* prevent warning if selected == null ([44ab693](https://github.com/baumrock/RockCommerce/commit/44ab693d59bab97932d1c5307218b760e89a28a0))
+* remove bd() call ([10b124c](https://github.com/baumrock/RockCommerce/commit/10b124c041cab3c5301c5e4243b1e4a4964c207d))
+* remove console logs ([4222775](https://github.com/baumrock/RockCommerce/commit/4222775b00de34178c57541cafb5817de8ccc783))
+* remove console.log ([e6de096](https://github.com/baumrock/RockCommerce/commit/e6de096c0613745c32b9aaa348d5080af0766af7))
+* remove console.log ([fe7594b](https://github.com/baumrock/RockCommerce/commit/fe7594b98a22b3e9924bfdca4d5a814794772feb))
+* sendInvoice() not working on order ([a2f8bba](https://github.com/baumrock/RockCommerce/commit/a2f8bbaf552ce7a2d9e9a98e00befba802c09b5b))
+* set meta data only if page id ([b4a4296](https://github.com/baumrock/RockCommerce/commit/b4a429642fefbaeaeb318c8e349b82e5db0edac5))
+* set price on all rows not working ([83ebb89](https://github.com/baumrock/RockCommerce/commit/83ebb8973a45027d084b360576dd4f4f8aba1e69))
+* tax in cart not correct ([f763967](https://github.com/baumrock/RockCommerce/commit/f7639675f85f3ec7ca21a0a635e60f3d8d13d52e))
+* taxrate not working ([031372b](https://github.com/baumrock/RockCommerce/commit/031372b652dd53bd71c2bea04e55f04ad848067b))
+* tmp disable rockloaders ([fad533b](https://github.com/baumrock/RockCommerce/commit/fad533ba372afc884bfbe493572be6d78f7a3751))
+* trigger _init.php before swap ([4217dbc](https://github.com/baumrock/RockCommerce/commit/4217dbc7bb1933592e10cdbe354167f352af1883))
+* tweak name of invoice ([81f5ca2](https://github.com/baumrock/RockCommerce/commit/81f5ca2ee4103e5c30eb1949d2048f8613de4470))
+* typo ([02aed5a](https://github.com/baumrock/RockCommerce/commit/02aed5a714ecfd21469d76ff903094c7dc217983))
+* workaround to fix installation warnings ([9034487](https://github.com/baumrock/RockCommerce/commit/9034487b7f1d4a3cf300e9036d6027294fac4c81))
+* wrong payload in set-tax-id ([fe384ae](https://github.com/baumrock/RockCommerce/commit/fe384aed9df5b75233759b7560cb612a6c5a3d75))
+
+
+### Miscellaneous Chores
+
+* initial release ([08bf7a4](https://github.com/baumrock/RockCommerce/commit/08bf7a4f214977e0325270ea7552711d3eaeb459))
 
