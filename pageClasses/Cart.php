@@ -72,7 +72,6 @@ class Cart extends Page
       pageProperties: $pageProperties,
       details: $mergedDetails,
     );
-    $order->setAndSave(RockCommerce::field_cart, $this);
     return $order;
   }
 

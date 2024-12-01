@@ -41,7 +41,6 @@ return [
     RockCommerce::field_paymentdate => [
       'columnWidth' => 33,
     ],
-    RockCommerce::field_cart,
     RockCommerce::field_orderfields,
   ],
   'parentTemplates' => [

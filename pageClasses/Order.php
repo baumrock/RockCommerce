@@ -43,16 +43,6 @@ class Order extends Page
     if ($f = $form->get('_pw_page_name')) {
       $f->collapsed = Inputfield::collapsedLocked;
     }
-
-    // show cart name and link to it
-    if ($f = $form->get(RockCommerce::field_cart)) {
-      $id = $f->value;
-      $url = wire()->pages->get(2)->url . "page/edit/?id=$id";
-      $f->collapsed = Inputfield::collapsedYesLocked;
-      $f->value = "<a href=$url>$id</a>";
-      rockcommerce()->helpNote($f, "This links to the cart that was used for creating this order.
-      IMPORTANT NOTE: Cart data is not persistant! Referenced products may be removed from the system or prices might get changed.");
-    }
   }
 
   public function editFormContent(InputfieldWrapper $form): void
