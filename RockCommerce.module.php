@@ -467,6 +467,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function getOrderByPaymentID(string $paymentid): Order|false
   {
+    $paymentid = wire()->sanitizer->selectorValue($paymentid);
+    if (!$paymentid) return false;
     $order = wire()->pages->get([
       'template' => self::template_order,
       self::field_paymentid => $paymentid,
