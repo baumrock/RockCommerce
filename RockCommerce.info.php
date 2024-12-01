@@ -15,8 +15,8 @@ $info = [
   'requires' => [
     'PHP>=8.2',
     'ProcessWire>=3.0.234',
-    'RockMigrations>=5.4.1',
-    'RockFrontend>=3.22.0',
+    'RockMigrations>=6.1.0',
+    'RockFrontend>=4.0.0',
     'RockMoney>=2.0.3',
   ],
   'installs' => [
