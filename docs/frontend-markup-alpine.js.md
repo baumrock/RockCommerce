@@ -1,14 +1,31 @@
-# Frontend
+# Frontend Markup + Alpine.js
+
+ProcessWire leaves it completely up to the developer how they want to handle their frontend. This makes it hard to develop modules that add functionality to the frontend, because every frontend is different!
+
+On the other hand, an E-Commerce module needs to be secure, which means that we have to do all the calculations on the server side. How to solve this?
+
+Our first approach was using HTMX and making every aspect of RockCommerce hookable. As a consequence, changing even the smallest detail required the developer to add a hook to make that change. We all know that hooks are great, but we also know that they add some boilerplate code if all you want to do is change a single line of markup.
+
+Alpine.js to the rescue!
 
 ## Alpine.js
 
-RockCommerce uses Alpine.js to make it as easy as it can get to add e-commerce logic to your frontend just by adding magic attributes to your markup.
+Alpine.js provides the perfect balance between flexibility and functionality for our e-commerce needs. It allows you to:
+
+1. Write your own custom markup exactly how you want it
+2. Easily add e-commerce features by using simple HTML attributes
+3. Access cart data, product info, and order details through Alpine's reactive data system
+4. Keep your frontend code clean and declarative without complex JavaScript
+
+This means you can build your store's frontend the way you envision it, while RockCommerce handles all the complex e-commerce logic behind the scenes. No need to fight with rigid templates or write extensive JavaScript - just add magic attributes to your HTML and you're ready to go.
 
 If you have never used Alpine.js before, I can recommend this video as a great introduction:
 
 https://www.youtube.com/watch?v=1rDU3Y0Wlnw
 
 Also check out the docs at https://alpinejs.dev/
+
+In RockCommerce, the main concept is that we register a global `RockCommerce` object, which has access to various components like `RcCart` or `RcProduct`. If you have purchased RockCommerce, I recommend you to check out those components and see how they work. A simple one to start is `/site/modules/RockCommerce/alpine/RcTaxselect.js`.
 
 ## Markup Injection
 
