@@ -1,4 +1,4 @@
-## [0.4.1](https://github.com/baumrock/RockCommerce/compare/v0.4.0...v0.4.1) (2024-12-01)
+## [0.4.2](https://github.com/baumrock/RockCommerce/compare/v0.4.0...v0.4.2) (2024-12-01)
 
 
 ### Bug Fixes
