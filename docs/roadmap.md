@@ -1,3 +1,0 @@
-# Roadmap
-
-- add translations support

@@ -1,6 +1,1 @@
-## Getting started
-
-- Introduction
-- Quickstart
-- Installation
-- Roadmap
+- Frontend

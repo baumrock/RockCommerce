@@ -11,4 +11,6 @@ return [
   'noChildren' => true,
   'noTrash' => true,
   'noMove' => true,
+  'noParents' => true,
+  'icon' => 'cogs',
 ];
