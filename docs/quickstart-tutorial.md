@@ -2,6 +2,8 @@
 
 > This tutorial was written by forum member @Sanyaissues while beta-testing RockCommerce. THANK YOU SO MUCH, Michael!
 
+<a href='https://www.youtube.com/watch?v=uK5rg6dvjRw'><img src=https://i.imgur.com/lQm5RO5.jpeg></a>
+
 The day has finally arrived! You need to build an ecommerce site. You’ve never done it before, but obviously, as the ProcessWire lover you are, there’s no way you’re Shopify-ing or Magento-ing your way into this. Nope, you want to do it yourself.
 
 What if I told you (*crescendo music kicks in*) you could create a shop, right here, right now, in less than an hour?
