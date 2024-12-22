@@ -14,9 +14,27 @@ RockCommerce leaves calculating shipping costs totally up to you as a developer 
 
 Just add the fields you need and hook into the shipping calculation process of the cart.
 
-## Example
+## Example 1: Free Shipping
 
-Let's show a simple (and stupid) example! Let's say we want to charge 10€ for shipping on Mondays and 20€ for shipping on every other day.
+Let's check out a more realistic example. Let's say we want to offer free shipping when the cart subtotal is over 100€.
+
+`label: /site/rockcommerce.php`
+```php
+wire()->addHookAfter('Cart::shippingNet', function (HookEvent $event) {
+  $cart = $event->object;
+  $itemsNet = $cart->itemsNet();
+
+  // if items net price is less than 100€, don't modify the shipping costs
+  if($itemsNet->isLessThan(100)) return;
+
+  // otherwise set the shipping costs to 0
+  $event->return = rockmoney()->parse(0);
+});
+```
+
+## Example 2: Shipping based on User Data
+
+Sorry for this stupid example, but I can't think of anything better. Let's say we want to charge 10€ for shipping on Mondays and 20€ for shipping on every other day.
 
 `label: /site/rockcommerce.php`
 ```php
@@ -67,23 +85,5 @@ wire()->addHookAfter('Cart::shippingNet', function (HookEvent $event) {
   if($data->shipping === 'foo') $event->return = rockmoney()->parse(20);
   elseif($data->shipping === 'bar') $event->return = rockmoney()->parse(30);
   elseif($data->shipping === 'baz') $event->return = rockmoney()->parse(40);
-});
-```
-
-## Example 2: Free Shipping
-
-Let's check out a more realistic example. Let's say we want to offer free shipping when the cart subtotal is over 100€.
-
-`label: /site/rockcommerce.php`
-```php
-wire()->addHookAfter('Cart::shippingNet', function (HookEvent $event) {
-  $cart = $event->object;
-  $itemsNet = $cart->itemsNet();
-
-  // if items net price is less than 100€, don't modify the shipping costs
-  if($itemsNet->isLessThan(100)) return;
-
-  // otherwise set the shipping costs to 0
-  $event->return = rockmoney()->parse(0);
 });
 ```
