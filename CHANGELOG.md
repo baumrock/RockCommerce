@@ -1,21 +1,17 @@
-## [1.0.0](https://github.com/baumrock/RockCommerce/compare/v0.8.0...v1.0.0) (2024-12-01)
+## [1.1.0](https://github.com/baumrock/RockCommerce/compare/v1.0.0...v1.1.0) (2025-02-24)
+
+
+### Features
+
+* discounts update ([bfc8da0](https://github.com/baumrock/RockCommerce/commit/bfc8da067bddad5e91739a57bf3ca2dfa4407d14))
+
+## [1.0.0](https://github.com/baumrock/RockCommerce/compare/75b97f97de34164fdc799ce04c6a44a686b15ad6...v1.0.0) (2024-12-01)
 
 
 ### ⚠ BREAKING CHANGES
 
 * initial release
 * bump version
-
-### Features
-
-* bump version ([f9743a7](https://github.com/baumrock/RockCommerce/commit/f9743a70f722530ba486fbb0ba781b1f60e05035))
-* initial release ([9fd6b6d](https://github.com/baumrock/RockCommerce/commit/9fd6b6d462eed12630f4d4f0dffd2366afd83273))
-
-## [0.8.0](https://github.com/baumrock/RockCommerce/compare/75b97f97de34164fdc799ce04c6a44a686b15ad6...v0.8.0) (2024-12-01)
-
-
-### ⚠ BREAKING CHANGES
-
 * bump version
 * initial release
 
@@ -106,6 +102,7 @@
 * align axis ([c894da0](https://github.com/baumrock/RockCommerce/commit/c894da09c72ddecc0b0df9aae82b0a5783f2854d))
 * basic cart working ([a96e718](https://github.com/baumrock/RockCommerce/commit/a96e718d495eec7c062f034a3002f460cc93511a))
 * better labels for pricing type ([79032f1](https://github.com/baumrock/RockCommerce/commit/79032f12fdaeb361825943127a7876af667f7df4))
+* bump version ([f9743a7](https://github.com/baumrock/RockCommerce/commit/f9743a70f722530ba486fbb0ba781b1f60e05035))
 * bump version ([26b974e](https://github.com/baumrock/RockCommerce/commit/26b974eaa9ff3fa4b15335ed4a9c7e2d4908b279))
 * delete unused carts ([dc1b55a](https://github.com/baumrock/RockCommerce/commit/dc1b55a0d768143544a40e39499ebd0b7f70949c))
 * exclude rootpage from sitemap ([b5089ad](https://github.com/baumrock/RockCommerce/commit/b5089ad2a4038c928977c1e9495c6255c442202a))
@@ -128,6 +125,7 @@
 * improve redirecturl and add debug info on order page ([9ecef61](https://github.com/baumrock/RockCommerce/commit/9ecef615e6636fdd263efbe19e1fe024adef24bf))
 * improve swapping concept ([9c7f152](https://github.com/baumrock/RockCommerce/commit/9c7f152abbd3321e79357e93fc5f88e2f826f5ed))
 * improve variation page edit ([cf2262c](https://github.com/baumrock/RockCommerce/commit/cf2262cf26aa39f93da505c02d61cd8865260fad))
+* initial release ([9fd6b6d](https://github.com/baumrock/RockCommerce/commit/9fd6b6d462eed12630f4d4f0dffd2366afd83273))
 * live calculation of price on frontend add to cart ([c389d39](https://github.com/baumrock/RockCommerce/commit/c389d39350cf61145bbf79a88b2e0b39385232c9))
 * load selected variation options from url hash ([fd29d91](https://github.com/baumrock/RockCommerce/commit/fd29d91298a01feac56bb9346447611a3b7fc299))
 * make item amount changeable in cart ([0d4ae82](https://github.com/baumrock/RockCommerce/commit/0d4ae82ffb1c16f407fd261850bfae1cda285f7f))
