@@ -23,6 +23,8 @@ class Item extends Page
   use MagicPage;
   use FieldMethod;
 
+  private $discountPage;
+
   public function __construct($parent = false)
   {
     try {
@@ -130,6 +132,9 @@ class Item extends Page
       'variation' => $this->variationString(),
       'variationTableData' => $this->variationTableData(),
 
+      // does it have a discounted price?
+      'hasDiscount' => $this->hasDiscount(),
+
       // urls to item's referenced product
       'url' => $this->fullUrl(),
       'shortUrl' => $this->shortUrl(),
@@ -137,14 +142,36 @@ class Item extends Page
       // this is individual for each project
       'pic' => '',
 
-      // prices
+      // item prices (discounts applied)
       'itemNet' => $this->itemNet()->format(),
       'itemVat' => $this->itemVat()->format(),
       'itemGross' => $this->itemGross()->format(),
+
+      // item prices without discounts
+      'itemNetNoDiscount' => $this->itemNet(discounts: false)->format(),
+      'itemVatNoDiscount' => $this->itemVat(discounts: false)->format(),
+      'itemGrossNoDiscount' => $this->itemGross(discounts: false)->format(),
+
+      // total prices (discounts applied)
       'totalNet' => $this->totalNet()->format(),
       'totalVat' => $this->totalVat()->format(),
       'totalGross' => $this->totalGross()->format(),
     ];
+  }
+
+  public function discountPage(): DiscountPage|false
+  {
+    if ($this->discountPage !== null) return $this->discountPage;
+    return $this->discountPage = rockcommerce()
+      ->discounts()
+      ->getActiveDiscountPage($this->product());
+  }
+
+  public function hasDiscount(): bool
+  {
+    return rockcommerce()
+      ->discounts()
+      ->hasActiveDiscount($this->product());
   }
 
   public function html($str)
@@ -153,29 +180,39 @@ class Item extends Page
   }
 
   /**
-   * Net price of this item (amount=1)
+   * Net price of this item (amount=1) with discounts applied
    */
-  public function itemNet(): Money
+  public function itemNet(bool $discounts = true): Money
   {
     // get base price from product
-    $product = $this->field('product', 'first');
-    return $product->priceNet($this->variationString());
+    $net = $this->product()->priceNet($this->variationString());
+    if ($discounts) {
+      $discount = $this->discountPage();
+      if ($discount instanceof DiscountPage) {
+        $net = $discount->applyTo($net);
+      }
+    }
+    return $net;
   }
 
   /**
    * Vat of this item (amount=1)
    */
-  public function itemVat(): Money
+  public function itemVat(bool $discounts = true): Money
   {
-    return $this->itemNet()->times($this->parent->taxrate());
+    return $this
+      ->itemNet(discounts: $discounts)
+      ->times($this->parent->taxrate());
   }
 
   /**
    * Gross price of this item (amount=1)
    */
-  public function itemGross(): Money
+  public function itemGross(bool $discounts = true): Money
   {
-    return $this->itemNet()->plus($this->itemVat());
+    return $this
+      ->itemNet(discounts: $discounts)
+      ->plus($this->itemVat());
   }
 
   public function product(): Page|false

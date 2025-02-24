@@ -6,6 +6,7 @@ use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Payment;
 use RockCommerce\Cart;
 use RockCommerce\Carts;
+use RockCommerce\Discounts;
 use RockCommerce\Frontend;
 use RockCommerce\Order;
 use RockCommerce\Orders;
@@ -68,6 +69,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   const template_variation = 'rockcommerce_variation';
 
   private $checkout = false;
+
+  private $discounts;
 
   /** @var array */
   public $findRawVariationOptions;
@@ -321,43 +324,39 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   /**
    * This method will only be executed if debug mode is enabled
-   * and $config->RockCommerceDev = true;
-   *
-   * // TODO: find a better way to do this
-   * Assets are pulled from other modules, but what if these modules are used
-   * already? Maybe add all files as single files and not a bundle?
+   * and $config->rockdevtools = true;
    */
   private function dev(): void
   {
     $config = wire()->config;
-    if (!$config->debug) return;
     if ($config->ajax) return;
     if ($config->external) return;
-    if (!$config->RockCommerceDev) return;
+    if (!$config->debug) return;
+    if (!$config->rockdevtools) return;
 
-    // we compile via RockAssets module, so if that does not exist, we exit
-    /** @var RockAssets $assets */
-    $assets = wire()->modules->get('RockAssets');
-    if (!$assets) return;
+    // compile all assets to one minified js file
+    if (!wire()->modules->isInstalled('RockDevTools')) return;
+    $dir = wire()->config->urls($this);
 
-    // compile all alpine js components to one JS file
-    // wire()->config->debug = false;
-    // wire()->config->rockassetsForceRecompile = true;
-    $assets
-      ->add('/site/modules/RockJavaScriptHooks/Hooks.js')
-      ->add('/site/modules/RockMoney/RockMoney.min.js')
-      ->add('/site/modules/RockMoney/lib/currency.min.js')
+    $tools = rockdevtools();
+    $tools
+      ->assets()
+      ->js()
+      // load healthchecks first
+      // this might help for debugging if any later file throws an error
+      ->add($dir . 'src/healthchecks.js')
+      // load base component before all others
+      ->add($dir . 'alpine/RockCommerce.js')
+      // then load all other alpine components
+      ->add($dir . 'alpine/*.js')
+      // save it to dst folder
+      ->save($dir . 'dst/RockCommerce.min.js');
+  }
 
-      // load alpine components, with main component first
-      ->add(__DIR__ . '/alpine/RockCommerce.js')
-      // then load all other components from alpine folder
-      ->addAll(__DIR__ . '/alpine')
-      // finally load alpinejs
-      ->add(__DIR__ . '/lib/alpine.min.js', preventMinify: true)
-      ->saveTo(
-        __DIR__ . '/dst/RockCommerce.min.js',
-        minify: true,
-      );
+  public function discounts(): Discounts
+  {
+    if ($this->discounts) return $this->discounts;
+    return $this->discounts = new Discounts();
   }
 
   public function findRawVariationOptions(): array

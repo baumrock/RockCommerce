@@ -37,6 +37,11 @@ trait Product
     }
   }
 
+  public function discountPage(): DiscountPage|false
+  {
+    return rockcommerce()->discounts()->getActiveDiscountPage($this);
+  }
+
   public function ___maxamount(): int
   {
     return 10;
@@ -91,12 +96,16 @@ trait Product
 
   public function rcAttributes(): string
   {
+    $discountAttrs = '';
+    $dp = $this->discountPage();
+    if ($dp) $discountAttrs = $dp->attrs();
     return rockcommerce()->attrs('RcProduct', "
       x-data='RcProduct'
       rc-pid=$this
       rc-price='{$this->price()->getFloat()}'
       rc-minamount='{$this->minamount()}'
       rc-maxamount='{$this->maxamount()}'
+      $discountAttrs
     ");
   }
 

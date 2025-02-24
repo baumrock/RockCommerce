@@ -8,13 +8,21 @@ namespace RockCommerce;
 trait RockMigrationsConstants
 {
   const field_amount = 'rockcommerce_amount';
+  const field_applyto = 'rockcommerce_applyto';
+  const field_applytorepeater = 'rockcommerce_applytorepeater';
   const field_comment = 'rockcommerce_comment';
+  const field_datefrom = 'rockcommerce_datefrom';
+  const field_dateto = 'rockcommerce_dateto';
   const field_defaulttaxrate = 'rockcommerce_defaulttaxrate';
+  const field_discount = 'rockcommerce_discount';
+  const field_discounttype = 'rockcommerce_discounttype';
   const field_max = 'rockcommerce_max';
   const field_min = 'rockcommerce_min';
   const field_net = 'rockcommerce_net';
   const field_order = 'rockcommerce_order';
   const field_orderfields = 'rockcommerce_orderfields';
+  const field_pages = 'rockcommerce_pages';
+  const field_pagesautocomplete = 'rockcommerce_pagesautocomplete';
   const field_paymentdate = 'rockcommerce_paymentdate';
   const field_paymentid = 'rockcommerce_paymentid';
   const field_paymentstatus = 'rockcommerce_paymentstatus';
@@ -27,6 +35,8 @@ trait RockMigrationsConstants
   const field_vat = 'rockcommerce_vat';
   const template_cart = 'rockcommerce_cart';
   const template_carts = 'rockcommerce_carts';
+  const template_discount = 'rockcommerce_discount';
+  const template_discounts = 'rockcommerce_discounts';
   const template_item = 'rockcommerce_item';
   const template_order = 'rockcommerce_order';
   const template_orders = 'rockcommerce_orders';

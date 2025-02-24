@@ -14,6 +14,10 @@ RockCommerce.addComponent("RcProduct", {
   // can be used to hide price if it is 0 via x-show="priceFloat > 0"
   priceFloat: 0,
 
+  // price with no discount applied
+  // can be used to show "instead" prices
+  priceNoDiscount: 0,
+
   // this is the base price money object
   money: null,
 
@@ -47,6 +51,27 @@ RockCommerce.addComponent("RcProduct", {
       variation: this.variationString(false, false),
       taxID: RockCommerce.taxrates.currentID,
     });
+  },
+
+  applyDiscount(money) {
+    if (!this.$rcattr("rc-has-discount")) return money;
+
+    // get discount value
+    const val = this.$rcattr("rc-discount-value");
+    const type = this.$rcattr("rc-discount-type");
+
+    // apply percentage discount
+    if (type === "percentage") {
+      return money.times(1 - val / 100);
+    }
+
+    // fixed price not allowed yet
+    // because calculations are more difficult (applying taxes!)
+    // if (type === "fixed") {
+    //   return money.minus(val * this.amount);
+    // }
+
+    return money;
   },
 
   getVariation(id) {
@@ -129,7 +154,12 @@ RockCommerce.addComponent("RcProduct", {
   },
 
   ___priceTotal(money) {
-    return money.times(this.amount);
+    let total = money.times(this.amount);
+    return this.applyDiscount(total);
+  },
+
+  ___setPriceNoDiscount(money) {
+    this.priceNoDiscount = money.times(this.amount).format();
   },
 
   update() {
@@ -145,12 +175,14 @@ RockCommerce.addComponent("RcProduct", {
       let money = this.money;
       money = this.priceInit(money);
       money = this.priceVar(money);
+      this.setPriceNoDiscount(money);
       money = this.priceTotal(money);
 
       // write formatted price to price property
       // so that the frontend can subscribe via x-text=price
       this.price = money.format();
       this.priceFloat = money.float();
+
       this.updateUrl();
     });
   },

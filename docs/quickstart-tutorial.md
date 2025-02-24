@@ -138,9 +138,10 @@ With RockCommerce installed and our basic html ready, we're just one step away f
 In your `site/templates/home.php` add this script-tag at the end of the `head` tag instead of the `<!-- Paste RockCommerce JS here -->` message:
 
 ```html
-<script
-    src="<?= $config->urls->siteModules ?>RockCommerce/dst/RockCommerce.min.js"
-    defer></script>
+<script src="<?= $config->urls->siteModules ?>RockJavaScriptHooks/dst/Hooks.min.js" defer></script>
+<script src="<?= $config->urls->siteModules ?>RockMoney/dst/RockMoney.min.js" defer></script>
+<script src="<?= $config->urls->siteModules ?>RockMoney/lib/currency.min.js" defer></script>
+<script src="<?= $config->urls->siteModules ?>RockCommerce/dst/RockCommerce.min.js" defer></script>
 ```
 
 Now, to test if it’s working, update the _Cart items: XXX_ line in the `header` tag with this one, which includes the magic attribute `rc-cart-count`. This attribute helps us display how many products have been added to the cart:
@@ -513,11 +514,10 @@ To finish, we are going to create a simple thanks page, by ripping of the layout
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.16/dist/js/uikit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.16/dist/js/uikit-icons.min.js"></script>
     <!-- RockCommerce JS -->
-    <script
-      src="<?= $config->urls
-        ->siteModules ?>RockCommerce/dst/RockCommerce.min.js"
-      defer
-    ></script>
+    <script src="<?= $config->urls->siteModules ?>RockJavaScriptHooks/dst/Hooks.min.js" defer></script>
+    <script src="<?= $config->urls->siteModules ?>RockMoney/dst/RockMoney.min.js" defer></script>
+    <script src="<?= $config->urls->siteModules ?>RockMoney/lib/currency.min.js" defer></script>
+    <script src="<?= $config->urls->siteModules ?>RockCommerce/dst/RockCommerce.min.js" defer></script>
   </head>
   <body>
     <header class="uk-navbar-container uk-padding-small">
