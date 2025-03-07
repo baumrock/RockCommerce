@@ -863,6 +863,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       title: 'Settings',
       name: 'settings',
     );
+    $rm->createPage(
+      template: self::template_discounts,
+      parent: $rootPage,
+      title: 'Discounts',
+      name: 'discounts',
+    );
 
     $this->migrateVariations();
   }
