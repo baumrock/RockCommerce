@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/baumrock/RockCommerce/compare/v1.1.0...v1.1.1) (2025-03-07)
+
+
+### Bug Fixes
+
+* installation issue due to discounts page creation ([0799696](https://github.com/baumrock/RockCommerce/commit/07996964764afba1de6214a217bb257903d4be22))
+
 ## [1.1.0](https://github.com/baumrock/RockCommerce/compare/v1.0.0...v1.1.0) (2025-02-24)
 
 
