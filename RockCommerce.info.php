@@ -18,6 +18,7 @@ $info = [
     'RockMigrations>=6.1.0',
     'RockFrontend>=4.0.0',
     'RockMoney>=2.0.3',
+    'RockJavaScriptHooks>=1.0.1',
   ],
   'installs' => [
     'ProcessRockCommerce',
