@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/baumrock/RockCommerce/compare/v1.1.2...v1.1.3) (2025-03-30)
+
+
+### Bug Fixes
+
+* add healthcheck for alpine.js and add missing script on the quickstart tutorial ([a17e919](https://github.com/baumrock/RockCommerce/commit/a17e9194ad0a4ac5b760b8f348afa4c1c87036d4))
+
 ## [1.1.2](https://github.com/baumrock/RockCommerce/compare/v1.1.1...v1.1.2) (2025-03-16)
 
 
