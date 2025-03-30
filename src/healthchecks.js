@@ -12,3 +12,16 @@ if (typeof ProcessWire.addHookAfter !== "function") {
 if (typeof RockMoney === "undefined") {
   alert("Please load RockMoney before loading RockCommerce!");
 }
+
+(() => {
+  let alpineLoaded = false;
+  document.addEventListener("alpine:init", () => (alpineLoaded = true));
+
+  setTimeout(() => {
+    if (!alpineLoaded) {
+      alert(
+        "Alpine.js not loaded - RockCommerce needs Alpine.js to work on the frontend of your site! Please see the quickstart guide in the docs!"
+      );
+    }
+  }, 2000);
+})();

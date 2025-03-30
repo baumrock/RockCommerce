@@ -138,10 +138,13 @@ With RockCommerce installed and our basic html ready, we're just one step away f
 In your `site/templates/home.php` add this script-tag at the end of the `head` tag instead of the `<!-- Paste RockCommerce JS here -->` message:
 
 ```html
+<!-- note: load scripts in this order! -->
 <script src="<?= $config->urls->siteModules ?>RockJavaScriptHooks/dst/Hooks.min.js" defer></script>
 <script src="<?= $config->urls->siteModules ?>RockMoney/dst/RockMoney.min.js" defer></script>
 <script src="<?= $config->urls->siteModules ?>RockMoney/lib/currency.min.js" defer></script>
 <script src="<?= $config->urls->siteModules ?>RockCommerce/dst/RockCommerce.min.js" defer></script>
+<!-- you need to add alpine.js to your frontend (after loading RockCommerce) -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 ```
 
 Now, to test if it’s working, update the _Cart items: XXX_ line in the `header` tag with this one, which includes the magic attribute `rc-cart-count`. This attribute helps us display how many products have been added to the cart:
