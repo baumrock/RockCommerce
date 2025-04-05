@@ -74,21 +74,17 @@ wire()->addHookAfter('Item::getJsonArray', function ($event) {
 
   // Get the product page using the ID in the data
   $product = wire()->pages->get($data['product']);
-  if (!$product->id) {
-    // Return if the product doesn't exist
-    return;
+
+  // Early exit if the product doesn't exist
+  if (!$product->id) return;
+
+  // Add the product image URL if it exists
+  if ($product->productimage) {
+    $data['pic'] = $product->productimage->width(60)->url;
   }
 
-  if ($product->rockcommerce_productfields->product_image) {
-    // Add the product image URL if it exists
-    $data['pic'] = $product->rockcommerce_productfields->product_image->width(
-      60
-    )->url;
-  }
-
-  // Add the product description if it's available
-  $data['description'] =
-    $product->rockcommerce_productfields->product_description ?? null;
+  // Use regular PW API to add custom data
+  $data['foo'] = $product->foo;
 
   // Set the modified data back to the event return
   $event->return = $data;
