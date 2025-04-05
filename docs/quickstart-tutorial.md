@@ -521,6 +521,8 @@ To finish, we are going to create a simple thanks page, by ripping of the layout
     <script src="<?= $config->urls->siteModules ?>RockMoney/dst/RockMoney.min.js" defer></script>
     <script src="<?= $config->urls->siteModules ?>RockMoney/lib/currency.min.js" defer></script>
     <script src="<?= $config->urls->siteModules ?>RockCommerce/dst/RockCommerce.min.js" defer></script>
+    <!-- Alpine.js (after RockCommerce) -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   </head>
   <body>
     <header class="uk-navbar-container uk-padding-small">
