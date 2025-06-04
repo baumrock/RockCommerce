@@ -216,7 +216,12 @@ class Order extends Page
   public function getPageListLabel()
   {
     $date = date("d.m.Y H:i:s", $this->created);
-    return "&nbsp;&nbsp;" . $date . "&nbsp;&nbsp;" . $this->net();
+    $status = $this->paymentstatus(1);
+    $paymentstatus = rockmigrations()->pageListBadge(
+      $status,
+      $status === 'paid' ? ['style' => 'background-color: #C8E6C9;'] : [],
+    );
+    return "&nbsp;&nbsp;{$date}&nbsp;&nbsp;{$this->net()} $paymentstatus";
   }
 
   /**
