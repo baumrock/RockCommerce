@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/baumrock/RockCommerce/compare/v1.2.0...v1.2.1) (2025-06-16)
+
+
+### Bug Fixes
+
+* update minified js file ([ebbf18d](https://github.com/baumrock/RockCommerce/commit/ebbf18dffa501be6fe415f49828cb628a45b45b0))
+
 ## [1.2.0](https://github.com/baumrock/RockCommerce/compare/v1.1.3...v1.2.0) (2025-06-04)
 
 
@@ -25,11 +32,4 @@
 ### Bug Fixes
 
 * installation issue due to discounts page creation ([0799696](https://github.com/baumrock/RockCommerce/commit/07996964764afba1de6214a217bb257903d4be22))
-
-## [1.1.0](https://github.com/baumrock/RockCommerce/compare/v1.0.0...v1.1.0) (2025-02-24)
-
-
-### Features
-
-* discounts update ([bfc8da0](https://github.com/baumrock/RockCommerce/commit/bfc8da067bddad5e91739a57bf3ca2dfa4407d14))
 
