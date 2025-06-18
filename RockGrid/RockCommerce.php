@@ -49,6 +49,8 @@ class RockCommerce extends Grid
       'title',
       Order::field_invoice . "." . Invoice::field_number => 'invoice',
       Order::field_net => 'net',
+      Order::field_vat => 'vat',
+      Order::field_total => 'total',
       Order::field_paymentstatus => 'status',
       'created' => 'date',
       'meta.details' => 'recipient',

@@ -28,6 +28,14 @@ $(document).on("RockGrid", function () {
           col.title = "Net";
           RockGrid.setColDef(col, "money");
           col.width = 100;
+        } else if (name == "vat") {
+          col.title = "VAT";
+          RockGrid.setColDef(col, "money");
+          col.width = 100;
+        } else if (name == "total") {
+          col.title = "Total";
+          RockGrid.setColDef(col, "money");
+          col.width = 100;
         } else if (name == "status") {
           col.title = "Status";
           col.width = 100;
