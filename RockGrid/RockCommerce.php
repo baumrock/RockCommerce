@@ -54,6 +54,7 @@ class RockCommerce extends Grid
       Order::field_paymentstatus => 'status',
       'created' => 'date',
       'meta.details' => 'recipient',
+      'email',
     ]);
 
     // convert invoice number to plain number
