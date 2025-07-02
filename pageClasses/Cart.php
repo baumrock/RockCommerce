@@ -7,7 +7,6 @@ use ProcessWire\NullPage;
 use ProcessWire\Page;
 use ProcessWire\RockCommerce;
 use ProcessWire\WireData;
-use ProcessWire\WireException;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
