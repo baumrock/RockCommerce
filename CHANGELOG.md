@@ -1,3 +1,15 @@
+## [1.3.0](https://github.com/baumrock/RockCommerce/compare/v1.2.1...v1.3.0) (2025-07-02)
+
+
+### Features
+
+* add note and check for proper rockgrid version ([566d5c1](https://github.com/baumrock/RockCommerce/commit/566d5c1b8b37379cdac8a7d4b7e3aa57c76d4cdc))
+
+
+### Bug Fixes
+
+* implicit nullable deprecation ([3d68c02](https://github.com/baumrock/RockCommerce/commit/3d68c028a0e162c83d3edb5dd875aa14ed971153))
+
 ## [1.2.1](https://github.com/baumrock/RockCommerce/compare/v1.2.0...v1.2.1) (2025-06-16)
 
 
@@ -25,11 +37,4 @@
 ### Bug Fixes
 
 * add missing dependency ([f58033f](https://github.com/baumrock/RockCommerce/commit/f58033f404dde545ea8973c00df16b3e85c19740))
-
-## [1.1.1](https://github.com/baumrock/RockCommerce/compare/v1.1.0...v1.1.1) (2025-03-07)
-
-
-### Bug Fixes
-
-* installation issue due to discounts page creation ([0799696](https://github.com/baumrock/RockCommerce/commit/07996964764afba1de6214a217bb257903d4be22))
 
