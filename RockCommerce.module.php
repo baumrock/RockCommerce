@@ -1338,15 +1338,30 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $inputfields->add($fs);
 
     // use product variations?
-    $fs->add([
-      'type' => 'checkbox',
-      'name' => 'useProductVariations',
-      'label' => 'Enable Product Variations',
-      'checked' => $this->useProductVariations ? 'checked' : '',
-      'columnWidth' => 100,
-      'notes' => 'This feature requires the RockGrid module. When checked, RockGrid and all related fields will be installed.
-        Once installed, unchecking the box will not remove the module or fields, it will just not use them.',
-    ]);
+    if (!wire()->modules->isInstalled('RockGrid')) {
+      $fs->add([
+        'type' => 'markup',
+        'value' => 'Product variations require RockGrid>=1.3.0. Please install RockGrid first.',
+      ]);
+    } else {
+      // check if RockGrid is at least 1.3.0
+      if (version_compare(wire()->modules->get('RockGrid')->version, '1.3.0') < 0) {
+        $fs->add([
+          'type' => 'markup',
+          'value' => 'Product variations require RockGrid>=1.3.0. Please update RockGrid to the latest version.',
+        ]);
+      } else {
+        $fs->add([
+          'type' => 'checkbox',
+          'name' => 'useProductVariations',
+          'label' => 'Enable Product Variations',
+          'checked' => $this->useProductVariations ? 'checked' : '',
+          'columnWidth' => 100,
+          'notes' => 'When checked, RockGrid and all related fields will be installed.
+          Once installed, unchecking the box will not remove the module or fields, it will just not use them.',
+        ]);
+      }
+    }
 
     $link = wire()->pages->get(2)->url . "module/edit?name=RockMoney";
     $fs->add([

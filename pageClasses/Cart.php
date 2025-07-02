@@ -7,7 +7,6 @@ use ProcessWire\NullPage;
 use ProcessWire\Page;
 use ProcessWire\RockCommerce;
 use ProcessWire\WireData;
-use ProcessWire\WireException;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
@@ -24,8 +23,8 @@ class Cart extends Page
 
   public function addItem(
     string|int|Page $product,
-    int $amount = null,
-    string $variation = null,
+    ?int $amount = null,
+    ?string $variation = null,
   ): Item {
     if (!$amount) $amount = 1;
     $product = rockcommerce()->getProduct($product);
@@ -157,7 +156,7 @@ class Cart extends Page
 
   public function item(
     int|string|Page $product,
-    string $variation = null,
+    ?string $variation = null,
   ): Page|false {
     // create selector as string
     // this is to make it match pipes in the value and not treat them as OR
