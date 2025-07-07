@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/baumrock/RockCommerce/compare/v1.3.0...v1.3.1) (2025-07-07)
+
+
+### Bug Fixes
+
+* hidden taxrates not listed ([4f4a349](https://github.com/baumrock/RockCommerce/commit/4f4a349e58ea1e1c89e58ff02b036ffe90a4a9bd))
+
 ## [1.3.0](https://github.com/baumrock/RockCommerce/compare/v1.2.1...v1.3.0) (2025-07-02)
 
 
@@ -30,11 +37,4 @@
 ### Bug Fixes
 
 * add healthcheck for alpine.js and add missing script on the quickstart tutorial ([a17e919](https://github.com/baumrock/RockCommerce/commit/a17e9194ad0a4ac5b760b8f348afa4c1c87036d4))
-
-## [1.1.2](https://github.com/baumrock/RockCommerce/compare/v1.1.1...v1.1.2) (2025-03-16)
-
-
-### Bug Fixes
-
-* add missing dependency ([f58033f](https://github.com/baumrock/RockCommerce/commit/f58033f404dde545ea8973c00df16b3e85c19740))
 
