@@ -160,3 +160,5 @@ The final working code is this:
   <a class="uk-button uk-button-primary" href="#" @click.prevent='addToCart'>Add to cart</a>
 </div>
 ```
+
+For all the options that are available, please check out all the source files of all Alpine components in the folder `/site/modules/RockCommerce/alpine`!
