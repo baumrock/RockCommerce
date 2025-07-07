@@ -1068,10 +1068,11 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function taxrates(): TaxratesArray
   {
-    $arr = new TaxratesArray();
-    return $arr->import(wire()->pages->find([
+    $rates = wire()->pages->find([
       'parent' => $this->rootPage()->path . 'taxrates',
-    ]));
+      'include' => 'all',
+    ]);
+    return (new TaxratesArray())->import($rates);
   }
 
   public function taxratesPage(): Taxrates
