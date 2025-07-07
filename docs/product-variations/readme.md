@@ -39,3 +39,124 @@ You can either select all options of the variation by clicking on the variation'
 <img src=https://i.imgur.com/OLu4s8Q.gif class=blur>
 
 Each variation has a price. You can either use "0" as base price and enter the variation price for each variation (eg, 10€ / 20€ / 30€) or sometimes you might want to set a total price. To save you or your clients from the hassle of calculating all price differences there is the "total" column that you can use and RockCommerce will calculate the difference for you.
+
+## API
+
+This is how you can loop over all variations from PHP:
+
+```php
+$page = wire()->pages->get(123);
+foreach($page->variations() as $variation) {
+  echo "<div>{$variation->title()}</div>";
+}
+```
+
+For every variation we usually have several options to choose from. You can access them from the variation via its `options()` method:
+
+```php
+foreach($variation->options() as $option) {
+  echo $option->title;
+}
+```
+
+## Frontend
+
+We assume you followed the quickstart tutorial where we explained how RockCommerce works and how it uses Alpine to apply some magic!
+
+There we showed how to list products with their price and an add to cart button.
+
+Next we want to list selectable product variations and add an inputfield to enter the amount of products to order with some nice buttons to increase and decrease the amount.
+
+To recap, this was the code we had so far:
+
+```php
+<div <?= $product->rcAttributes() ?>>
+  <img src="https://placehold.co/300x300/jpg" />
+  <h2><?= $product->title ?></h2>
+  <p><strong><?= $product->rockcommerce_net ?></strong></p>
+  <a class="uk-button uk-button-primary" href="#" @click.prevent='addToCart'>Add to cart</a>
+</div>
+```
+
+Now let's add an input to allow ordering multiple items:
+
+```php
+<div>
+  <input type="number" x-model="amount" value="1" />
+</div>
+```
+
+The `x-model` attribute tells Alpine to update the `amount` property of this `RcProduct` object whenever we change the value of the input. This already makes it impossible to enter negative numbers!
+
+Maybe you have realised that we are not yet done: The price does not update when changing the amount! This is because we populated the price via PHP but we didn't tell Alpine to update it as well. We can fix this easily:
+
+```php
+// change this
+<p><strong><?= $product->rockcommerce_net ?></strong></p>
+
+// to that
+<p><strong x-text="price"><?= $product->rockcommerce_net ?></strong></p>
+```
+
+Now whenever you change the amount the price should update instantly! 🚀
+
+Next, let's add a plus and minus button:
+
+```php
+<div>
+  <button @click="minus">-</button>
+  <input type="number" x-model="amount" value="1" />
+  <button @click="plus">+</button>
+</div>
+```
+
+## Variations
+
+Finally let's add our product's variations!
+
+```php
+<?php foreach($product->variations() as $variation): ?>
+  <div <?= $variation->rcAttributes() ?>>
+    <div><strong><?= $variation->title() ?></strong></div>
+    <div>
+      <?php foreach($variation->options() as $option): ?>
+        <a href <?= $option->rcAttributes() ?>>
+          <?= $option->title ?>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endforeach; ?>
+```
+
+Once you add this code you should already be able to click on the variation options and if you set a price for that option in the backend the product's price should update immediately.
+
+But not only the price will update - RockCommerce will also add or remove the `rc-active` class from each option as you select/unselect it!
+
+The final working code is this:
+
+```php
+<div <?= $product->rcAttributes() ?>>
+  <img src="https://placehold.co/300x300/jpg" />
+  <h2><?= $product->title ?></h2>
+  <p><strong x-text="price"><?= $product->rockcommerce_net ?></strong></p>
+  <?php foreach($product->variations() as $variation): ?>
+    <div <?= $variation->rcAttributes() ?>>
+      <div><strong><?= $variation->title() ?></strong></div>
+      <div>
+        <?php foreach($variation->options() as $option): ?>
+          <a href <?= $option->rcAttributes() ?>>
+            <?= $option->title ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  <?php endforeach; ?>
+  <div>
+    <button @click="minus">-</button>
+    <input type="number" x-model="amount" value="1" />
+    <button @click="plus">+</button>
+  </div>
+  <a class="uk-button uk-button-primary" href="#" @click.prevent='addToCart'>Add to cart</a>
+</div>
+```

@@ -249,7 +249,7 @@ Update the `Product` region in your `site/templates/home.php` file with the foll
 <div id="products" class="uk-width-2-3">
   <div class="uk-grid uk-grid-medium uk-child-width-expand">
 
-    <?php foreach (pages('template=product') as $product): ?>
+    <?php foreach ($pages->find('template=product,limit=5') as $product): ?>
       <div <?= $product->rcAttributes() ?>>
         <img src="https://placehold.co/300x300/jpg" />
         <h2><?= $product->title ?></h2>
