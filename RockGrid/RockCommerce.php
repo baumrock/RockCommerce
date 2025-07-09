@@ -5,6 +5,8 @@ namespace RockGrid;
 use RockCommerce\Invoice;
 use RockCommerce\Order;
 
+use function ProcessWire\wire;
+
 class RockCommerce extends Grid
 {
 
@@ -41,21 +43,7 @@ class RockCommerce extends Grid
     // we use findRaw in this example because it is shipped with the core
     // my recommendation is to use RockFinder3 as it provides a lot more
     // and customized options for working with PW page data in grids
-    $data = $this->findRaw([
-      'template' => Order::tpl,
-      'sort' => '-id',
-    ], [
-      'id',
-      'title',
-      Order::field_invoice . "." . Invoice::field_number => 'invoice',
-      Order::field_net => 'net',
-      Order::field_vat => 'vat',
-      Order::field_total => 'total',
-      Order::field_paymentstatus => 'status',
-      'created' => 'date',
-      'meta.details' => 'recipient',
-      'email',
-    ]);
+    $data = $this->getOrders();
 
     // convert invoice number to plain number
     foreach ($data as $row) {
@@ -78,6 +66,25 @@ class RockCommerce extends Grid
     }
 
     return $data;
+  }
+
+  public static function getOrders()
+  {
+    return wire()->modules->get('RockGrid')->findRaw([
+      'template' => Order::tpl,
+      'sort' => '-id',
+    ], [
+      'id',
+      'title',
+      Order::field_invoice . "." . Invoice::field_number => 'invoice',
+      Order::field_net => 'net',
+      Order::field_vat => 'vat',
+      Order::field_total => 'total',
+      Order::field_paymentstatus => 'status',
+      'created' => 'date',
+      'meta.details' => 'recipient',
+      'email',
+    ]);
   }
 
   /**
