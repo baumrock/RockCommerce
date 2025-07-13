@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/baumrock/RockCommerce/compare/v1.3.1...v1.3.2) (2025-07-13)
+
+
+### Bug Fixes
+
+* deprecation warning due to rockgrid version ([794e0b6](https://github.com/baumrock/RockCommerce/commit/794e0b663111b7196854bf3e644704ff3c34c3cb))
+
 ## [1.3.1](https://github.com/baumrock/RockCommerce/compare/v1.3.0...v1.3.1) (2025-07-07)
 
 
@@ -30,11 +37,4 @@
 ### Features
 
 * add labels for order payment status in pagetree ([162e1b7](https://github.com/baumrock/RockCommerce/commit/162e1b7444f6c491d75205651be638100b871a5e))
-
-## [1.1.3](https://github.com/baumrock/RockCommerce/compare/v1.1.2...v1.1.3) (2025-03-30)
-
-
-### Bug Fixes
-
-* add healthcheck for alpine.js and add missing script on the quickstart tutorial ([a17e919](https://github.com/baumrock/RockCommerce/commit/a17e9194ad0a4ac5b760b8f348afa4c1c87036d4))
 
