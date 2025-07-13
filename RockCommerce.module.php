@@ -1346,7 +1346,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       ]);
     } else {
       // check if RockGrid is at least 1.3.0
-      if (version_compare(wire()->modules->get('RockGrid')->version, '1.3.0') < 0) {
+      $version = wire()->modules->get('RockGrid')->config->version;
+      if (version_compare($version, '1.3.0') < 0) {
         $fs->add([
           'type' => 'markup',
           'value' => 'Product variations require RockGrid>=1.3.0. Please update RockGrid to the latest version.',
