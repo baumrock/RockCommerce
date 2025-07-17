@@ -10,6 +10,7 @@ use RockCommerce\Discounts;
 use RockCommerce\Frontend;
 use RockCommerce\Order;
 use RockCommerce\Orders;
+use RockCommerce\PaymentProvider;
 use RockCommerce\ProductPage;
 use RockCommerce\ProductVariation;
 use RockCommerce\RootPage;
@@ -126,7 +127,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // payment status webhook
     // For the webhook we allow both slash and no slash urls!
     // This is because different payment providers might add/remove slashes.
-    wire()->addHookAfter(self::webhookurl . "/?", $this, "handleWebhookHook");
+    wire()->addHookAfter(self::webhookurl . "/?", $this, "hookHandleWebhook");
 
     // hooks
     wire()->addHookAfter('ProcessPageList::execute', $this, 'redirectPageList');
@@ -530,7 +531,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function ___handleWebhook(
     Webhook $log,
     $input,
-    $info,
+    $info, // request info (to be available in hooks)
   ) {
     // get payment ID from input
     $paymentID = wire()->sanitizer->filename($input->id);
@@ -545,25 +546,24 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // all good, continue
     $log->echo("Found order $order for payment $paymentID");
 
-    // update order status
-    // get order status from mollie and then write it to the order
-    // note: you might wonder why mollie does not send the status with the webhook.
-    // The reason is security. In that way it is impossible to manipulate the
-    // order status from a manipulated webhook request.
-    /** @var MollieApiClient $api */
-    /** @var RockMollie $mollie */
-    $mollie = wire()->modules->get('RockMollie');
-    $api = $mollie->api();
-    $payment = $api->payments->get($paymentID);
-    if ($payment instanceof Payment) {
-      $log->echo("Updating payment status to '$payment->status'");
+    // get provider
+    $provider = rockcommerce()->paymentProvider();
+    if (!$provider) {
+      $log->echo("No payment provider configured");
+      return;
+    }
+
+    // get payment from provider
+    $payment = $provider->getPayment($paymentID);
+    if ($payment) {
+      $log->echo("Updating payment status to '{$payment->status}'");
       $order->setPaymentStatus($payment->status);
     } else {
-      $log->echo("Payment not found: " . $paymentID);
+      $log->echo("Payment not found or status not available for payment ID: " . $paymentID);
     }
   }
 
-  public function handleWebhookHook(HookEvent $event)
+  public function hookHandleWebhook(HookEvent $event)
   {
     // NOTE: We allow all requests (GET/POST)
     // This is to get maximum compatibility with all possible payment providers
@@ -904,6 +904,39 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'parent' => $this->rootPage(),
       'template' => self::template_orders,
     ]);
+  }
+
+  /**
+   * Get the payment provider that is configured in the module's config
+   */
+  public function paymentProvider(): PaymentProvider|false
+  {
+    // if not paymentprovider is configured, return the first available provider
+    if (!$this->paymentprovider) {
+      $providers = $this->paymentProviders();
+      foreach ($providers as $provider) return $provider;
+      return false;
+    }
+
+    // get the payment provider from the module's config
+    $name = $this->paymentprovider;
+    $provider = wire()->modules->get($name);
+    if (!$provider instanceof PaymentProvider) return false;
+    return $provider;
+  }
+
+  /**
+   * Get an array of all available (installed) payment providers
+   */
+  public function paymentProviders(): array
+  {
+    // get all modules that implement PaymentProvider
+    $providers = [];
+    foreach (wire()->modules as $module) {
+      if (!$module instanceof PaymentProvider) continue;
+      $providers[] = $module;
+    }
+    return $providers;
   }
 
   public function priceType(): string
@@ -1330,6 +1363,19 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'label' => 'Show help and API notes to superusers',
     ]);
     $inputfields->children->last()->notes = '$config->rockcommerce["showHelp"] = true/false;';
+
+    // payment providers
+    $f = new InputfieldRadios();
+    $f->label = 'Payment Provider';
+    $f->icon = 'money';
+    $f->name = 'paymentprovider';
+    $f->options = [];
+    foreach ($this->paymentProviders() as $provider) {
+      if (!$provider instanceof Module) continue;
+      $name = $provider->className();
+      $f->addOption($name, $name, ['selected' => $name === $this->paymentprovider]);
+    }
+    $inputfields->add($f);
 
     // Pricing
     $fs = new InputfieldFieldset();

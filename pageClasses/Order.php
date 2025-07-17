@@ -2,12 +2,10 @@
 
 namespace RockCommerce;
 
-use Mollie\Api\Resources\Payment;
 use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use ProcessWire\RockCommerce;
-use ProcessWire\RockMollie;
 use ProcessWire\WireData;
 use ProcessWire\WireException;
 use ProcessWire\WireMail;
@@ -16,7 +14,6 @@ use RockMoney\Money;
 
 use function ProcessWire\rockcommerce;
 use function ProcessWire\rockmigrations;
-use function ProcessWire\wire;
 
 class Order extends Page
 {
@@ -225,50 +222,27 @@ class Order extends Page
   }
 
   /**
-   * Get payment from mollie
+   * Get payment from the payment provider
    */
   public function getPayment(): Payment|false
   {
-    try {
-      /** @var RockMollie $mollie */
-      $mollie = $this->wire->modules->get('RockMollie');
-      return $mollie->api()->payments->get($this->paymentId());
-    } catch (\Throwable $th) {
-      rockcommerce()->log($th->getMessage());
-    }
-    return false;
+    $provider = rockcommerce()->paymentProvider();
+    if (!$provider) throw new WireException("No payment provider configured.");
+    return $provider->getPayment($this->paymentId());
   }
 
   public function createPayment(
-    $redirectUrl,
+    string $redirectUrl = '',
+    array $data = [],
   ): Payment|false {
-    if ($this->paymentId()) throw new WireException("A payment for this order has already been created.");
+    $provider = rockcommerce()->paymentProvider();
+    if (!$provider) throw new WireException("No payment provider configured.");
 
-    // create mollie payment
-    /** @var RockMollie $mollie */
-    $mollie = $this->wire->modules->get('RockMollie');
-    $rc = rockcommerce();
-    try {
-      $total = $this->total(1);
-      if (!$total instanceof Money) throw new WireException("Invalid Price");
-      $data = [
-        "amount" => [
-          "currency" => (string)$total->money->getCurrency(),
-          "value" => $total->formatMollie(),
-        ],
-        "description" => (string)$this->title,
-        "redirectUrl" => $this->redirectUrl($redirectUrl),
-        "webhookUrl" => $rc->webhookUrl(),
-        "metadata" => ["orderid" => $this->name],
-      ];
-      $payment = $mollie->api()->payments->create($data);
-      $this->setPayment($payment);
-      return $payment;
-    } catch (\Throwable $th) {
-      $this->wire->log($th->getMessage());
-    }
+    // merge redirectUrl into data
+    if ($redirectUrl) $data['redirectUrl'] = $redirectUrl;
 
-    return false;
+    // create payment
+    return $provider->createPayment($this, $data);
   }
 
   public function getDetails(): WireData
@@ -332,11 +306,6 @@ class Order extends Page
     }
   }
 
-  public function redirectUrl($url): string
-  {
-    return rockcommerce()->url($url . "?id={$this->name}", true);
-  }
-
   /**
    * Hookable method that defines what happens if an order is marked as paid
    */
@@ -365,7 +334,7 @@ class Order extends Page
   public function setPayment(Payment $payment): void
   {
     $this->setAndSave(RockCommerce::field_paymentid, $payment->id);
-    $this->meta('payment', json_encode($payment));
+    $this->meta('payment', json_encode($payment->ref));
     $this->setPaymentStatus($payment->status);
   }
 
