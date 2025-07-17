@@ -14,7 +14,7 @@ use RockMoney\Money;
 use function ProcessWire\rockcommerce;
 use function ProcessWire\wire;
 
-require_once wire()->config->paths->siteModules . '/RockCommerce/classLoader/PaymentProvider.php';
+require_once wire()->config->paths->siteModules . 'RockCommerce/classLoader/PaymentProvider.php';
 
 class Mollie
 extends WireData
