@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/baumrock/RockCommerce/compare/v1.4.0...v1.4.1) (2025-07-17)
+
+
+### Bug Fixes
+
+* remove double slashfrom require call ([97bb1e9](https://github.com/baumrock/RockCommerce/commit/97bb1e9f4040e8934495542dfad5e9e757a01a67))
+
 ## [1.4.0](https://github.com/baumrock/RockCommerce/compare/v1.3.2...v1.4.0) (2025-07-17)
 
 
@@ -30,11 +37,4 @@
 ### Bug Fixes
 
 * implicit nullable deprecation ([3d68c02](https://github.com/baumrock/RockCommerce/commit/3d68c028a0e162c83d3edb5dd875aa14ed971153))
-
-## [1.2.1](https://github.com/baumrock/RockCommerce/compare/v1.2.0...v1.2.1) (2025-06-16)
-
-
-### Bug Fixes
-
-* update minified js file ([ebbf18d](https://github.com/baumrock/RockCommerce/commit/ebbf18dffa501be6fe415f49828cb628a45b45b0))
 
