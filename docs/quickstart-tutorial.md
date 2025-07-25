@@ -430,6 +430,8 @@ We'll disable the button when the cart is empty and enable it when products are 
 </form>
 ```
 
+You are wondering what these `:class` and `:disabled` attributes are? That's AlpineJS syntax! Check out https://alpinejs.dev/directives/bind
+
 <img src=https://i.imgur.com/Ckcqyo4.gif alt='Dynamic Payment Button' class=blur>
 
 ### Use Mollie as a Payment Service Provider

@@ -2,8 +2,6 @@
 
 namespace ProcessWire;
 
-use Mollie\Api\MollieApiClient;
-use Mollie\Api\Resources\Payment;
 use RockCommerce\Cart;
 use RockCommerce\Carts;
 use RockCommerce\Discounts;
