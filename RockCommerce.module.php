@@ -154,7 +154,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     echo "$str\n\n";
   }
 
-  public function getOrder(string $orderid = null): Order|false
+  public function getOrder(?string $orderid = null): Order|false
   {
     if ($orderid === null) $orderid = $this->wire->input->get('id', 'string');
     $order = $this->wire->pages->get([
