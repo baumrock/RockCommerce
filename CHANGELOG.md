@@ -1,3 +1,14 @@
+## [3.0.0](https://github.com/baumrock/RockCommerce/compare/v2.0.0...v3.0.0) (2026-01-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* change license to MIT
+
+### Bug Fixes
+
+* change license to MIT ([e039bbf](https://github.com/baumrock/RockCommerce/commit/e039bbf99e1b727f4f9cd85e357b328f9ae68cae))
+
 ## [2.0.0](https://github.com/baumrock/RockCommerce/compare/v1.4.1...v2.0.0) (2025-07-25)
 
 
@@ -29,11 +40,4 @@
 ### Bug Fixes
 
 * deprecation warning due to rockgrid version ([794e0b6](https://github.com/baumrock/RockCommerce/commit/794e0b663111b7196854bf3e644704ff3c34c3cb))
-
-## [1.3.1](https://github.com/baumrock/RockCommerce/compare/v1.3.0...v1.3.1) (2025-07-07)
-
-
-### Bug Fixes
-
-* hidden taxrates not listed ([4f4a349](https://github.com/baumrock/RockCommerce/commit/4f4a349e58ea1e1c89e58ff02b036ffe90a4a9bd))
 
