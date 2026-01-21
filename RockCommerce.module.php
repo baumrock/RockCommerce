@@ -32,7 +32,7 @@ function rockcommerce(): RockCommerce
 
 /**
  * @author Bernhard Baumrock, 24.07.2023
- * @license COMMERCIAL PLEASE DO NOT DISTRIBUTE
+ * @license MIT as of 2026-01-21
  * @link https://www.baumrock.com
  *
  * @method Order createOrder(string $subject, Money|float $net, Money|float $vat, Money|float $total, string $email, array $pageProperties = [], array $meta = []) Hookable method to create an order
