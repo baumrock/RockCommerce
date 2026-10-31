@@ -399,7 +399,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    * $rockcommerce->getCart("abc");
    */
   public function getCart(
-    int|string $id = null,
+    int|string|null $id = null,
     $create = false, // create if not exists?
     $session = false, // save to session?
   ): Cart|false {
@@ -448,7 +448,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    * Get order by id or name
    * returns false if order is not found
    */
-  public function getOrder(string $orderid = null): Order|false
+  public function getOrder(?string $orderid = null): Order|false
   {
     if ($orderid === null) $orderid = wire()->input->get('id', 'string');
     $order = wire()->pages->get([
@@ -1236,7 +1236,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   public function ___view(
     string $file,
     array|Page $vars = [],
-    Page $page = null,
+    ?Page $page = null,
   ): \Latte\Runtime\Html|string {
     $file = $this->getFile($file);
     $vars = [
