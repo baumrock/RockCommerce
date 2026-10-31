@@ -549,6 +549,26 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Clamp cart line quantity to the product's minamount/maxamount hooks.
+   */
+  public function ___normalizeProductAmount(Page $product, int $amount): int
+  {
+    $min = 1;
+    $max = PHP_INT_MAX;
+    if (!empty($product->isProduct)) {
+      $min = (int) $product->minamount();
+      $max = (int) $product->maxamount();
+    }
+    if ($max < $min) $max = $min;
+    return max($min, min($max, $amount));
+  }
+
+  public function normalizeProductAmount(Page $product, int $amount): int
+  {
+    return $this->___normalizeProductAmount($product, $amount);
+  }
+
+  /**
    * Get all product templates
    */
   private function getProductTemplates(): WireArray

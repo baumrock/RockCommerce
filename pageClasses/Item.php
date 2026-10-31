@@ -226,6 +226,9 @@ class Item extends Page
    */
   public function setAmount(int $amount): void
   {
+    $product = $this->product();
+    if (!$product || !$product->id) return;
+    $amount = rockcommerce()->normalizeProductAmount($product, $amount);
     $this->setAndSave(RockCommerce::field_amount, $amount);
   }
 
