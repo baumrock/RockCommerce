@@ -6,6 +6,7 @@ use ProcessWire\Inputfield;
 use ProcessWire\InputfieldWrapper;
 use ProcessWire\Page;
 use ProcessWire\RockCommerce;
+use ProcessWire\WireException;
 use RockFrontend\FieldMethod;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
@@ -226,6 +227,9 @@ class Item extends Page
    */
   public function setAmount(int $amount): void
   {
+    if ($amount <= 0) {
+      throw new WireException('Item amount must be greater than zero');
+    }
     $this->setAndSave(RockCommerce::field_amount, $amount);
   }
 
