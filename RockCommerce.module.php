@@ -572,6 +572,26 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     } catch (\Throwable $th) {
     }
 
+    $input = wire()->input->post;
+    $info = [
+      'method' => $_SERVER['REQUEST_METHOD'] ?? '',
+      'IP' => $_SERVER['REMOTE_ADDR'] ?? '',
+    ];
+
+    if (!$this->isWebhookRateLimitOk()) {
+      wire()->log->save('rockcommerce-webhooks', 'Rate limited webhook from ' . ($info['IP'] ?: 'unknown'));
+      header('HTTP/1.1 429 Too Many Requests');
+      echo 'rate limited';
+      return true;
+    }
+
+    if (!$this->verifyWebhookRequest($input, $info)) {
+      wire()->log->save('rockcommerce-webhooks', 'Rejected webhook request');
+      header('HTTP/1.1 403 Forbidden');
+      echo 'forbidden';
+      return true;
+    }
+
     // log this request to a processwire page
     $webhook = wire()->pages->new([
       "template" => RockCommerce::template_webhook,
@@ -582,7 +602,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->cleanupOldWebhookPages();
 
     // save request input
-    $input = wire()->input->post;
     $webhook->meta(Webhook::meta_input, $input->getArray());
 
     // save request info
@@ -594,6 +613,29 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     $webhook->echo("done");
 
+    return true;
+  }
+
+  /**
+   * Hookable gate before webhook logging or PSP API calls.
+   * Return false to reject the request (403).
+   */
+  public function ___verifyWebhookRequest($input, array $info): bool
+  {
+    return true;
+  }
+
+  /**
+   * Per-IP webhook rate limit (requests per minute).
+   */
+  protected function isWebhookRateLimitOk(int $maxPerMinute = 120): bool
+  {
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    $key = 'rockcommerce_webhook_' . md5($ip);
+    $cache = wire()->cache;
+    $count = (int) $cache->get($key);
+    if ($count >= $maxPerMinute) return false;
+    $cache->save($key, $count + 1, 60);
     return true;
   }
 

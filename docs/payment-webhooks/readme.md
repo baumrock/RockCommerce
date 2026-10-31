@@ -45,3 +45,19 @@ Next, place an order from your store, but be sure to access the store from the N
 
 <img src=https://i.imgur.com/tVelB76.png class=blur>
 
+## Security notes
+
+The webhook URL is **not authenticated by default**. Anyone who can reach `/rockcommerce/webhook` can trigger logging and PSP API lookups. Payment status still comes from the provider API (not from the POST body), but unauthenticated access enables abuse (rate limits, enumeration, log spam).
+
+- RockCommerce applies a **per-IP rate limit** before creating webhook log pages.
+- Implement provider verification in a hook, for example Mollie signing or IP allowlists:
+
+```php
+$wire->addHookAfter('RockCommerce::verifyWebhookRequest', function ($event) {
+  // return false to respond with HTTP 403
+});
+```
+
+- With `$config->debug` enabled, webhook debug output may leak order/payment hints in HTTP responses. Keep debug off on internet-facing staging/production hosts.
+- Manual POST testing (Postman, etc.) is for local development only; never expose debug staging to the public without extra protection.
+
