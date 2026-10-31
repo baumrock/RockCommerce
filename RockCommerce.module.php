@@ -89,6 +89,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public $showHelp = false;
 
+  /** @var bool Register webhook URL with PSPs and handle /rockcommerce/webhook */
+  public $webhooksEnabled = true;
+
+  /**
+   * Webhook path without trailing slash (e.g. /myshop/payment-hook).
+   * Empty = default /rockcommerce/webhook
+   */
+  public $webhookPath = '';
+
   private $taxrates = false;
 
   public $taxselect;
@@ -126,7 +135,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     // payment status webhook
     // For the webhook we allow both slash and no slash urls!
     // This is because different payment providers might add/remove slashes.
-    wire()->addHookAfter(self::webhookurl . "/?", $this, "hookHandleWebhook");
+    wire()->addHookAfter($this->getWebhookPath() . "/?", $this, "hookHandleWebhook");
 
     // hooks
     wire()->addHookAfter('ProcessPageList::execute', $this, 'redirectPageList');
@@ -645,6 +654,12 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function hookHandleWebhook(HookEvent $event)
   {
+    if (!$this->webhooksAreEnabled()) {
+      header('HTTP/1.1 404 Not Found');
+      echo 'not found';
+      return true;
+    }
+
     // NOTE: We allow all requests (GET/POST)
     // This is to get maximum compatibility with all possible payment providers
 
@@ -652,6 +667,26 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     try {
       \Tracy\Debugger::$showBar = false;
     } catch (\Throwable $th) {
+    }
+
+    $input = wire()->input->post;
+    $info = [
+      'method' => $_SERVER['REQUEST_METHOD'] ?? '',
+      'IP' => $_SERVER['REMOTE_ADDR'] ?? '',
+    ];
+
+    if (!$this->isWebhookRateLimitOk()) {
+      wire()->log->save('rockcommerce-webhooks', 'Rate limited webhook from ' . ($info['IP'] ?: 'unknown'));
+      header('HTTP/1.1 429 Too Many Requests');
+      echo 'rate limited';
+      return true;
+    }
+
+    if (!$this->verifyWebhookRequest($input, $info)) {
+      wire()->log->save('rockcommerce-webhooks', 'Rejected webhook request');
+      header('HTTP/1.1 403 Forbidden');
+      echo 'forbidden';
+      return true;
     }
 
     // log this request to a processwire page
@@ -664,7 +699,6 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $this->cleanupOldWebhookPages();
 
     // save request input
-    $input = wire()->input->post;
     $webhook->meta(Webhook::meta_input, $input->getArray());
 
     // save request info
@@ -676,6 +710,29 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
     $webhook->echo("done");
 
+    return true;
+  }
+
+  /**
+   * Hookable gate before webhook logging or PSP API calls.
+   * Return false to reject the request (403).
+   */
+  public function ___verifyWebhookRequest($input, array $info): bool
+  {
+    return true;
+  }
+
+  /**
+   * Per-IP webhook rate limit (requests per minute).
+   */
+  protected function isWebhookRateLimitOk(int $maxPerMinute = 120): bool
+  {
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    $key = 'rockcommerce_webhook_' . md5($ip);
+    $cache = wire()->cache;
+    $count = (int) $cache->get($key);
+    if ($count >= $maxPerMinute) return false;
+    $cache->save($key, $count + 1, 60);
     return true;
   }
 
@@ -1411,7 +1468,46 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function webhookUrl(): string
   {
-    return $this->host() . self::webhookurl;
+    if (!$this->webhooksAreEnabled()) return '';
+    return $this->host() . $this->getWebhookPath();
+  }
+
+  /**
+   * Resolved webhook path on this site (no trailing slash).
+   */
+  public function getWebhookPath(): string
+  {
+    return $this->normalizeWebhookPath((string) $this->webhookPath);
+  }
+
+  public function webhooksAreEnabled(): bool
+  {
+    return (bool) $this->webhooksEnabled;
+  }
+
+  /**
+   * @return string Path such as /rockcommerce/webhook
+   */
+  protected function normalizeWebhookPath(string $path): string
+  {
+    $path = trim($path);
+    if ($path === '') return self::webhookurl;
+
+    if (str_contains($path, '://')) {
+      $parsed = parse_url($path, PHP_URL_PATH);
+      $path = is_string($parsed) ? $parsed : '';
+    }
+
+    $path = '/' . trim($path, '/');
+    $segments = [];
+    foreach (explode('/', trim($path, '/')) as $segment) {
+      if ($segment === '' || $segment === '.' || $segment === '..') continue;
+      if (!preg_match('/^[a-zA-Z0-9._-]+$/', $segment)) return self::webhookurl;
+      $segments[] = $segment;
+    }
+
+    if (!$segments) return self::webhookurl;
+    return '/' . implode('/', $segments);
   }
 
   public function ___install(): void
@@ -1421,6 +1517,15 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     rockmigrations()->runConfigMigrations(__DIR__ . '/RockMigrations/');
     $this->migrate();
     rockmigrations()->log("Installing RockCommerce DONE");
+  }
+
+  public function ___saveModuleConfig(array $data): array
+  {
+    if (array_key_exists('webhookPath', $data)) {
+      $normalized = $this->normalizeWebhookPath((string) $data['webhookPath']);
+      $data['webhookPath'] = $normalized === self::webhookurl ? '' : $normalized;
+    }
+    return $data;
   }
 
   /**
@@ -1483,6 +1588,35 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
       'label' => 'Show help and API notes to superusers',
     ]);
     $inputfields->children->last()->notes = '$config->rockcommerce["showHelp"] = true/false;';
+
+    $fsWebhooks = new InputfieldFieldset();
+    $fsWebhooks->label = 'Payment webhooks';
+    $fsWebhooks->icon = 'link';
+    $fsWebhooks->collapsed = Inputfield::collapsedNo;
+    $inputfields->add($fsWebhooks);
+
+    $fsWebhooks->add([
+      'type' => 'checkbox',
+      'name' => 'webhooksEnabled',
+      'checked' => $this->webhooksAreEnabled() ? 'checked' : '',
+      'label' => 'Webhooks enabled',
+    ]);
+    $fsWebhooks->children->last()->notes =
+      'When disabled, no webhook URL is sent to the payment provider and requests to the webhook path return 404. '
+      . 'Override: $config->rockcommerce["webhooksEnabled"] = false;';
+
+    $fsWebhooks->add([
+      'type' => 'text',
+      'name' => 'webhookPath',
+      'value' => (string) $this->webhookPath,
+      'label' => 'Webhook path',
+      'placeholder' => self::webhookurl,
+      'size' => 70,
+    ]);
+    $fsWebhooks->children->last()->notes =
+      'Path only, without domain. Empty = default <code>' . self::webhookurl . '</code>. '
+      . 'Current full URL: <code>' . wire()->sanitizer->entities($this->webhookUrl() ?: '(disabled)') . '</code>. '
+      . 'Override: $config->rockcommerce["webhookPath"] = "/my-project/payment-hook";';
 
     // payment providers
     $f = new InputfieldRadios();
