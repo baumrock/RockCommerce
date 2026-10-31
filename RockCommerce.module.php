@@ -13,6 +13,7 @@ use RockCommerce\ProductPage;
 use RockCommerce\ProductVariation;
 use RockCommerce\RootPage;
 use RockCommerce\Settings;
+use RockCommerce\Taxrate;
 use RockCommerce\Taxrates;
 use RockCommerce\TaxratesArray;
 use RockCommerce\TaxSelect;
