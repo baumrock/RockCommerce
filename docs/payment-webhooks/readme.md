@@ -45,9 +45,38 @@ Next, place an order from your store, but be sure to access the store from the N
 
 <img src=https://i.imgur.com/tVelB76.png class=blur>
 
+## Custom webhook path
+
+Each project can use its own path (for example a hard-to-guess URL). Default: `/rockcommerce/webhook`.
+
+**Modules → RockCommerce → Payment webhooks → Webhook path**, or in `site/config.php`:
+
+```php
+$config->rockcommerce['webhookPath'] = '/maletschek/mollie-hook-x7k2';
+```
+
+You can paste a full URL; only the path is used. Segments may contain letters, numbers, dots, underscores, and hyphens.
+
+Register the payment provider with `rockcommerce()->webhookUrl()` so the path and domain stay in sync.
+
+## Disabling webhooks
+
+For local development (no public URL) or when you sync payment status on the return URL or via cron, you can disable webhooks in **Modules → RockCommerce → Payment webhooks enabled**, or in `site/config.php`:
+
+```php
+$config->rockcommerce['webhooksEnabled'] = false;
+```
+
+When disabled:
+
+- `rockcommerce()->webhookUrl()` returns an empty string (payment providers should not receive a webhook URL).
+- HTTP requests to `/rockcommerce/webhook` respond with **404**.
+
+Do not disable webhooks on a live shop unless payment status is updated another way.
+
 ## Security notes
 
-The webhook URL is **not authenticated by default**. Anyone who can reach `/rockcommerce/webhook` can trigger logging and PSP API lookups. Payment status still comes from the provider API (not from the POST body), but unauthenticated access enables abuse (rate limits, enumeration, log spam).
+The webhook URL is **not authenticated by default**. Anyone who can reach your configured webhook path can trigger logging and PSP API lookups. Payment status still comes from the provider API (not from the POST body), but unauthenticated access enables abuse (rate limits, enumeration, log spam).
 
 - RockCommerce applies a **per-IP rate limit** before creating webhook log pages.
 - Implement provider verification in a hook, for example Mollie signing or IP allowlists:
