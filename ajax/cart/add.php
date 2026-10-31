@@ -15,7 +15,9 @@ $variation = (string)rockcommerce()->sanitizeVariation($input->variation);
 $taxID     = (int)$input->taxID;
 
 // update taxID in cart
-$cart->setTaxID($taxID);
+if (!$cart->setTaxID($taxID)) {
+  return ['error' => 'Invalid tax rate for this cart'];
+}
 
 // product to add
 $product = rockcommerce()->getProduct($pid);

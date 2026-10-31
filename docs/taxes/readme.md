@@ -50,3 +50,14 @@ The global taxrate for the current user is stored in his/her cart. Note that you
 ```php
 rockcommerce()->cart()->setTaxID(1030);
 ```
+
+## Security (cart ajax)
+
+Public ajax endpoints accept a client-supplied tax rate page ID. By default any valid tax rate under Shop → Taxrates can be selected. To require that the selected rate matches each product's configured rate, enable:
+
+```php
+$config->rockcommerceLockCartTaxToProducts = true;
+```
+
+For country/VAT-based rules, hook `RockCommerce::allowTaxrateForCart` in `site/rockcommerce.php`.
+
