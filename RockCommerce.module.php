@@ -404,11 +404,39 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $session = false, // save to session?
   ): Cart|false {
     if (!$id) $id = wire()->session->get(self::session_cart);
-    $cart = wire()->pages->get($id);
-    if ($cart instanceof NullPage && $create) $cart = $this->newCart();
+    $cart = $this->findCartPage($id);
+    if (!$cart->id && $create) $cart = $this->newCart();
     if (!$cart instanceof Cart) return false;
     if ($session) $this->setCart($cart);
     return $cart;
+  }
+
+  /**
+   * Load a cart page scoped to the carts container (template + parent).
+   */
+  protected function findCartPage(int|string|null $id): Page
+  {
+    if ($id === null || $id === '') {
+      return wire()->pages->newNullPage();
+    }
+
+    $parent = $this->cartsPage();
+    if (!$parent->id) {
+      return wire()->pages->newNullPage();
+    }
+
+    $selector = [
+      'template' => self::template_cart,
+      'parent' => $parent,
+    ];
+
+    if (is_int($id) || (is_string($id) && ctype_digit($id))) {
+      $selector['id'] = (int) $id;
+    } else {
+      $selector['name'] = (string) $id;
+    }
+
+    return wire()->pages->get($selector);
   }
 
   /**
