@@ -615,7 +615,22 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
    */
   public function host(): string
   {
-    return rtrim('https://' . $_SERVER['HTTP_HOST'], '/');
+    $config = wire()->config;
+    $httpHost = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    $hosts = $config->httpHosts;
+    if (is_array($hosts) && count($hosts)) {
+      if (!in_array($httpHost, $hosts, true)) {
+        $httpHost = (string) $hosts[0];
+      }
+    } elseif (!$httpHost) {
+      $httpHost = 'localhost';
+    }
+
+    $scheme = ($config->https || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'))
+      ? 'https'
+      : 'http';
+
+    return rtrim("$scheme://$httpHost", '/');
   }
 
   /**
