@@ -314,14 +314,17 @@ class Cart extends Page
     return $this->shippingNet()->plus($this->shippingVat());
   }
 
-  public function setTaxID(int|string $id): void
+  public function setTaxID(int|string $id): bool
   {
     $taxrate = wire()->pages->get([
       'id' => $id,
       'template' => RockCommerce::template_taxrate,
       'parent' => rockcommerce()->taxratesPage(),
     ]);
+    if (!$taxrate->id || !$taxrate instanceof Taxrate) return false;
+    if (!rockcommerce()->allowTaxrateForCart($this, $taxrate)) return false;
     $this->setAndSave(RockCommerce::field_taxid, $taxrate);
+    return true;
   }
 
   /**

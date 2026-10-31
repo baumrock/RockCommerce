@@ -14,7 +14,9 @@ $taxID = (int)$input->taxID;
 
 // save taxID to cart
 $cart = rockcommerce()->cart();
-$cart->setTaxID($taxID);
+if (!$cart->setTaxID($taxID)) {
+  return ['error' => 'Invalid tax rate for this cart'];
+}
 
 return [
   'success' => 1,

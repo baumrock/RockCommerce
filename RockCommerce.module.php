@@ -1155,6 +1155,30 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   //   return $out;
   // }
 
+  /**
+   * Hookable: may this tax rate be applied to the cart (ajax/checkout)?
+   * When $config->rockcommerceLockCartTaxToProducts is true, each cart
+   * product's taxrate() must match the selected tax rate page.
+   */
+  public function ___allowTaxrateForCart(Cart $cart, Taxrate $taxrate): bool
+  {
+    if (empty(wire()->config->rockcommerceLockCartTaxToProducts)) return true;
+
+    foreach ($cart->items() as $item) {
+      $product = $item->product();
+      if (!$product || !$product->id) continue;
+      $productRate = $this->taxrate($product);
+      if (abs($productRate - $taxrate->taxrate()) > 0.00001) return false;
+    }
+
+    return true;
+  }
+
+  public function allowTaxrateForCart(Cart $cart, Taxrate $taxrate): bool
+  {
+    return $this->___allowTaxrateForCart($cart, $taxrate);
+  }
+
   public function ___taxrate($product): float
   {
     return (float)wire()->config->rockcommerceTaxrate;
