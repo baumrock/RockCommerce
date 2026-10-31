@@ -47,6 +47,7 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   const permission_variations = 'rockcommerce-variations';
 
   const session_cart = 'rockcommerce_cart';
+  const session_cart_token = 'rockcommerce_cart_token';
   const viewFolders = [
     '/site/templates/RockCommerce/frontend',
     '/site/modules/RockCommerce/frontend',
@@ -403,11 +404,44 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     $create = false, // create if not exists?
     $session = false, // save to session?
   ): Cart|false {
-    if (!$id) $id = wire()->session->get(self::session_cart);
+    if (!$id) {
+      $cart = $this->getCartFromSession();
+      if ($cart instanceof Cart) {
+        if ($session) $this->setCart($cart);
+        return $cart;
+      }
+      if (!$create) return false;
+      $cart = $this->newCart();
+      if ($session) $this->setCart($cart);
+      return $cart;
+    }
+
     $cart = $this->findCartPage($id);
     if (!$cart->id && $create) $cart = $this->newCart();
     if (!$cart instanceof Cart) return false;
     if ($session) $this->setCart($cart);
+    return $cart;
+  }
+
+  /**
+   * HMAC token binding the session to one cart page ID.
+   */
+  public function cartSessionToken(Cart $cart): string
+  {
+    $salt = (string) wire()->config->userAuthSalt;
+    return hash_hmac('sha256', (string) $cart->id, $salt);
+  }
+
+  protected function getCartFromSession(): Cart|false
+  {
+    $cartId = (int) wire()->session->get(self::session_cart);
+    $token = (string) wire()->session->get(self::session_cart_token);
+    if (!$cartId || $token === '') return false;
+
+    $cart = $this->findCartPage($cartId);
+    if (!$cart instanceof Cart || !$cart->id) return false;
+    if (!hash_equals($this->cartSessionToken($cart), $token)) return false;
+
     return $cart;
   }
 
@@ -1084,7 +1118,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
 
   public function setCart(Cart $cart): void
   {
-    wire()->session->set(self::session_cart, $cart->name);
+    wire()->session->set(self::session_cart, $cart->id);
+    wire()->session->set(self::session_cart_token, $this->cartSessionToken($cart));
   }
 
   public function settings(): Settings

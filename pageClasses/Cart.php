@@ -296,6 +296,7 @@ class Cart extends Page
   public function reset(): void
   {
     wire()->session->remove(RockCommerce::session_cart);
+    wire()->session->remove(RockCommerce::session_cart_token);
   }
 
   public function ___shippingNet(): Money
