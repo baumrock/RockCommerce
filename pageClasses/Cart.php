@@ -7,6 +7,7 @@ use ProcessWire\NullPage;
 use ProcessWire\Page;
 use ProcessWire\RockCommerce;
 use ProcessWire\WireData;
+use ProcessWire\WireException;
 use RockMigrations\MagicPage;
 use RockMoney\Money;
 
@@ -26,6 +27,9 @@ class Cart extends Page
     ?int $amount = null,
     ?string $variation = null,
   ): Item {
+    if ($amount !== null && $amount <= 0) {
+      throw new WireException('Item amount must be greater than zero');
+    }
     if (!$amount) $amount = 1;
     $product = rockcommerce()->getProduct($product);
     $amount = rockcommerce()->normalizeProductAmount($product, $amount);
@@ -36,7 +40,7 @@ class Cart extends Page
     if ($item) {
       // increase amount
       $item->of(false);
-      $item->set(RockCommerce::field_amount, $item->amount() + $amount);
+      $item->setAmount($item->amount() + $amount);
     } else {
       // create new item
       $item = new Item($this);
