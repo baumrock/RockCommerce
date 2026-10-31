@@ -28,6 +28,7 @@ class Cart extends Page
   ): Item {
     if (!$amount) $amount = 1;
     $product = rockcommerce()->getProduct($product);
+    $amount = rockcommerce()->normalizeProductAmount($product, $amount);
 
     // try to find existing item
     $item = $this->item($product, $variation);
