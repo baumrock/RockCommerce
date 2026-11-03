@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/baumrock/RockCommerce/compare/v3.1.0...v3.1.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* import RockCommerce\Taxrate to fix TypeError in allowTaxrateForCart ([bcbbcf5](https://github.com/baumrock/RockCommerce/commit/bcbbcf5c3ca06be5305232a12ac530f65ae534f0))
+
 ## [3.1.0](https://github.com/baumrock/RockCommerce/compare/v3.0.0...v3.1.0) (2026-10-31)
 
 
@@ -46,11 +53,4 @@
 ### Bug Fixes
 
 * remove double slashfrom require call ([97bb1e9](https://github.com/baumrock/RockCommerce/commit/97bb1e9f4040e8934495542dfad5e9e757a01a67))
-
-## [1.4.0](https://github.com/baumrock/RockCommerce/compare/v1.3.2...v1.4.0) (2025-07-17)
-
-
-### Features
-
-* add support for other payment providers ([83f0f29](https://github.com/baumrock/RockCommerce/commit/83f0f29d6e185f3a207c83bcefa90f95d081e4cf))
 
