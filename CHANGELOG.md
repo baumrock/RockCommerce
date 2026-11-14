@@ -1,3 +1,10 @@
+## [3.1.2](https://github.com/baumrock/RockCommerce/compare/v3.1.1...v3.1.2) (2026-11-14)
+
+
+### Bug Fixes
+
+* register classLoader namespace in init ([35300f1](https://github.com/baumrock/RockCommerce/commit/35300f1f1c736660e439505b1481935dd326468b))
+
 ## [3.1.1](https://github.com/baumrock/RockCommerce/compare/v3.1.0...v3.1.1) (2026-11-03)
 
 
@@ -46,11 +53,4 @@
 ### Miscellaneous Chores
 
 * move mollie payment provider to RockMollie module ([d795474](https://github.com/baumrock/RockCommerce/commit/d795474e7f92b72574f4f45ff595cfb0f17e8a26))
-
-## [1.4.1](https://github.com/baumrock/RockCommerce/compare/v1.4.0...v1.4.1) (2025-07-17)
-
-
-### Bug Fixes
-
-* remove double slashfrom require call ([97bb1e9](https://github.com/baumrock/RockCommerce/commit/97bb1e9f4040e8934495542dfad5e9e757a01a67))
 
