@@ -109,6 +109,8 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
   {
     // add classloader
     // should be done by rockmigrations but does not work during installation
+    // classLoader must be registered before Frontend / Product trait are used
+    wire()->classLoader->addNamespace('RockCommerce', __DIR__ . '/classLoader');
     wire()->classLoader->addNamespace('RockCommerce', __DIR__ . '/pageClasses');
 
     // attach hooks from rockcommerce.php
