@@ -1277,6 +1277,51 @@ class RockCommerce extends WireData implements Module, ConfigurableModule
     return (float)wire()->config->rockcommerceTaxrate;
   }
 
+  /**
+   * Convert a gross (incl. VAT) amount to the net value stored in rockcommerce_net.
+   *
+   * Uses the same rounding as the admin pricing UI (2 decimal places) so that
+   * cart gross = net + round(net * taxrate) lands on the requested gross.
+   *
+   * @param float|string $gross Gross amount including VAT
+   * @param float|null $taxrate Fraction (0.2) or percent (20); null = config
+   */
+  public function netFromGross(float|string $gross, ?float $taxrate = null): float
+  {
+    $gross = (float) $gross;
+    $taxrate = $this->normalizeTaxrateFraction($taxrate);
+    if ($taxrate <= -1) {
+      throw new WireException("Invalid taxrate for netFromGross");
+    }
+    return round($gross / (1 + $taxrate), 2);
+  }
+
+  /**
+   * Store rockcommerce_net from a desired gross price.
+   *
+   * @return float Stored net amount
+   */
+  public function setNetFromGross(Page $product, float|string $gross, ?float $taxrate = null): float
+  {
+    $net = $this->netFromGross($gross, $taxrate);
+    $product->of(false);
+    $product->setAndSave(self::field_net, rockmoney()->parse($net));
+    return $net;
+  }
+
+  /**
+   * Accept config fraction (0.2) or UI percent (20).
+   */
+  private function normalizeTaxrateFraction(?float $taxrate): float
+  {
+    if ($taxrate === null) {
+      $taxrate = (float) wire()->config->rockcommerceTaxrate;
+    }
+    // Values like 20 mean percent; 0.2 means fraction
+    if ($taxrate > 1) $taxrate = $taxrate / 100;
+    return $taxrate;
+  }
+
   public function taxrates(): TaxratesArray
   {
     $rates = wire()->pages->find([
